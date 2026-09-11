@@ -1,7 +1,12 @@
-cat > .gitignore << 'EOF'
 .venv/
 __pycache__/
 *.pyc
-db.sqlite3
 .env
-EOF
+
+# Base de datos local (SQLite) - NO se versiona el binario.
+# Solo puede existir en /data, así que lo apuntamos explícito ahí.
+/data/db.sqlite3
+/db.sqlite3
+
+# Pero SÍ versionamos la carpeta para que exista tras el clone
+!data/.gitkeep

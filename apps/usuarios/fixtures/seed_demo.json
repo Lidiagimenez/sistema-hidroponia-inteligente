@@ -1,0 +1,82 @@
+[
+{
+  "model": "usuarios.usuario",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$nTx3bAR7iWcoLYiRMc8gPO$UB4exYIyU2M4KJKN21XZYBf75Vy3EjFDuMBLMoDDRh8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "admin_test",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-09T15:14:02.839Z",
+    "rol": "administrador",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "usuarios.usuario",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$lXgd2V2J4zWyt6MQZU0tCR$OwTroU62h1fWaRaEeWWd/qsxLMfzzj9ltG1a+psHCLo=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "operador_test",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-09-09T15:15:49.125Z",
+    "rol": "operador",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "usuarios.usuario",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1500000$5zs2x5ipmhGTmeeA05IcLc$VJTfx+bTsiK0tQIeRu1mcP/Jppztz7WCJXaMwLOwrI0=",
+    "last_login": "2026-09-10T12:19:23.751Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-09-09T15:21:06.159Z",
+    "rol": "administrador",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "cultivos.cultivo",
+  "pk": 1,
+  "fields": {
+    "nombre": "Lechuga",
+    "tipo_cultivo": "No especificado",
+    "fecha_creacion": "2026-09-09",
+    "usuario": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "cultivos.cicloproduccion",
+  "pk": 1,
+  "fields": {
+    "cultivo": 1,
+    "fecha_inicio": "2026-09-09",
+    "fecha_fin_estimada": null,
+    "fecha_fin_real": null,
+    "estado": "germinacion"
+  }
+}
+]
