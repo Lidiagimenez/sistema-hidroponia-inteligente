@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'apps.intervenciones',
     'apps.inteligencia',
     'apps.reportes',
+    "django_filters",
 ]
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
