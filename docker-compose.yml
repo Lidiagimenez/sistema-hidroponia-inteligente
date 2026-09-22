@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    container_name: hidroponia-django
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app          # bind mount único: tu carpeta local completa,
+                         # incluida data/, se refleja 1:1 dentro del contenedor
+    environment:
+      - PYTHONUNBUFFERED=1
