@@ -10,3 +10,11 @@ __pycache__/
 
 # Pero SÍ versionamos la carpeta para que exista tras el clone
 !data/.gitkeep
+# Media (archivos subidos por usuarios y reportes generados)
+media/
+
+# Logs
+*.log
+
+# VSCode (opcional)
+.vscode/

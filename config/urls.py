@@ -14,16 +14,28 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+"""
+URL configuration for config project.
+"""
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path("api/", include("apps.dispositivos.urls")),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     path("api/auth/", include("apps.usuarios.urls")),
+    path("api/", include("apps.cultivos.urls")),
+    path("api/", include("apps.dispositivos.urls")),
     path("api/", include("apps.monitoreo.urls")),
     path("api/", include("apps.eventos.urls")),
-        path("api/", include("apps.alertas.urls")),
-        path("api/", include("apps.intervenciones.urls")),
-    path("api/", include("apps.cultivos.urls")),
+    path("api/", include("apps.alertas.urls")),
+    path("api/", include("apps.intervenciones.urls")),
+    # Módulos nuevos (A y B)
+    path("api/", include("apps.inteligencia.urls")),
+    path("api/", include("apps.reportes.urls")),
 ]
+
+# Servir media en desarrollo (solo si DEBUG=True)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

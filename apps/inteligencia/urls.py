@@ -1,4 +1,3 @@
-python
 from rest_framework.routers import DefaultRouter
 from apps.inteligencia.views import (
     ParametroImagenViewSet, AnalisisImagenViewSet,

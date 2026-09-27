@@ -18,7 +18,7 @@ def _datos_monitoreo(reporte):
     ).select_related("sensor", "sensor__tipo_sensor")
     if reporte.cultivo:
         qs = qs.filter(sensor__dispositivo__cultivo=reporte.cultivo)
-    return list(qs.values("id_medicion", "sensor__tipo_sensor__nombre", "valor", "fecha_hora"))
+    return list(qs.values("id", "sensor__tipo_sensor__nombre", "valor", "fecha_hora"))
 
 
 def _datos_alertas(reporte):
@@ -86,7 +86,8 @@ DISPATCH = {
 
 
 # ---------------------------------------------------------------------------
-# GENERADORES: convierten la lista de datos al formato pedido.-
+# GENERADORES: convierten la lista de datos al formato pedido.
+
 
 def _generar_csv(datos):
     if not datos:

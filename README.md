@@ -190,3 +190,59 @@ python manage.py loaddata seed_demo.json
 python manage.py test                  # todos
 python manage.py test apps.usuarios    # una app puntual
 ```
+
+
+---
+
+## 7. Estado actual (actualizado 2026-09-27)
+
+| App | Modelos/Migraciones | API | Tests |
+|---|---|---|---|
+| `usuarios` | ✅ | ✅ JWT + permisos | ✅ |
+| `cultivos` | ✅ | ✅ | ✅ |
+| `dispositivos` | ✅ | ✅ | ✅ |
+| `monitoreo` | ✅ | ✅ | ✅ |
+| `eventos` | ✅ | ✅ | ✅ |
+| `alertas` | ✅ | ✅ | ✅ |
+| `intervenciones` | ✅ | ✅ | ✅ |
+| `inteligencia` | ✅ | ✅ | ✅ (13 tests) |
+| `reportes` | ✅ | ✅ | ✅ (10 tests) |
+
+**Todas las apps enrutadas en `config/urls.py`.** Media servida con `static()` en desarrollo.
+
+### Dependencias
+
+Todas las dependencias tienen versión fija en `requirements.txt`:
+- Django==6.1
+- djangorestframework-simplejwt==5.3.1
+- Pillow==12.3.0
+- django-filter==26.1
+- requests==2.34.2
+- openpyxl==3.1.5
+- reportlab==5.0.1
+
+---
+
+## 8. Tareas programadas (cron — producción)
+
+Los siguientes management commands están pensados para correrse periódicamente
+en el servidor de producción (Linux). En desarrollo (Windows + Docker) se
+ejecutan manualmente según necesidad.
+
+### Programación sugerida (cron)
+
+```cron
+# Chequeo de eventos (RF-18, RF-31, RF-32) — cada 5 minutos
+*/5 * * * * cd /app && python manage.py chequear_eventos >> /var/log/hidroponia/eventos.log 2>&1
+
+# Captura periódica de cámaras — cada 30 min entre 8:00 y 19:00
+*/30 8-19 * * * cd /app && python manage.py poll_camaras >> /var/log/hidroponia/camaras.log 2>&1
+
+# Sincronización de huecos desde SD — cada hora
+0 * * * * cd /app && python manage.py sync_camaras --dias 1 >> /var/log/hidroponia/sync.log 2>&1
+
+# Limpieza de imágenes antiguas — diario a las 3:00 AM
+0 3 * * * cd /app && python manage.py limpiar_imagenes_antiguas >> /var/log/hidroponia/limpieza.log 2>&1
+
+# Recomendaciones del motor de reglas — cada 6 horas
+0 */6 * * * cd /app && python manage.py evaluar_recomendaciones >> /var/log/hidroponia/recomendaciones.log 2>&1

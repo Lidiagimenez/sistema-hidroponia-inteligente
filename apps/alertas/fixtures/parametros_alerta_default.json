@@ -1,0 +1,134 @@
+[
+    {
+        "model": "monitoreo.tiposensor",
+        "pk": 1,
+        "fields": {
+            "nombre": "ph",
+            "unidad_medida": "pH",
+            "valor_min_fisico": 0.0,
+            "valor_max_fisico": 14.0
+        }
+    },
+    {
+        "model": "monitoreo.tiposensor",
+        "pk": 2,
+        "fields": {
+            "nombre": "conductividad",
+            "unidad_medida": "uS/cm",
+            "valor_min_fisico": 0.0,
+            "valor_max_fisico": 5000.0
+        }
+    },
+    {
+        "model": "monitoreo.tiposensor",
+        "pk": 3,
+        "fields": {
+            "nombre": "temperatura",
+            "unidad_medida": "C",
+            "valor_min_fisico": -10.0,
+            "valor_max_fisico": 60.0
+        }
+    },
+    {
+        "model": "monitoreo.tiposensor",
+        "pk": 4,
+        "fields": {
+            "nombre": "humedad",
+            "unidad_medida": "%",
+            "valor_min_fisico": 0.0,
+            "valor_max_fisico": 100.0
+        }
+    },
+    {
+        "model": "monitoreo.tiposensor",
+        "pk": 5,
+        "fields": {
+            "nombre": "caudal",
+            "unidad_medida": "L/min",
+            "valor_min_fisico": 0.0,
+            "valor_max_fisico": 100.0
+        }
+    },
+    {
+        "model": "monitoreo.tiposensor",
+        "pk": 6,
+        "fields": {
+            "nombre": "nivel",
+            "unidad_medida": "cm",
+            "valor_min_fisico": 0.0,
+            "valor_max_fisico": 100.0
+        }
+    },
+    {
+        "model": "alertas.parametroalerta",
+        "pk": 1,
+        "fields": {
+            "tipo_sensor": 1,
+            "tiempo_maximo_sin_lectura": "00:10:00",
+            "lecturas_consecutivas_apertura": 3,
+            "lecturas_consecutivas_cierre": 3,
+            "umbral_desviacion_alta": 25.0,
+            "valor_umbral_alerta": null
+        }
+    },
+    {
+        "model": "alertas.parametroalerta",
+        "pk": 2,
+        "fields": {
+            "tipo_sensor": 2,
+            "tiempo_maximo_sin_lectura": "00:10:00",
+            "lecturas_consecutivas_apertura": 3,
+            "lecturas_consecutivas_cierre": 3,
+            "umbral_desviacion_alta": 25.0,
+            "valor_umbral_alerta": null
+        }
+    },
+    {
+        "model": "alertas.parametroalerta",
+        "pk": 3,
+        "fields": {
+            "tipo_sensor": 3,
+            "tiempo_maximo_sin_lectura": "00:10:00",
+            "lecturas_consecutivas_apertura": 3,
+            "lecturas_consecutivas_cierre": 3,
+            "umbral_desviacion_alta": 20.0,
+            "valor_umbral_alerta": null
+        }
+    },
+    {
+        "model": "alertas.parametroalerta",
+        "pk": 4,
+        "fields": {
+            "tipo_sensor": 4,
+            "tiempo_maximo_sin_lectura": "00:10:00",
+            "lecturas_consecutivas_apertura": 3,
+            "lecturas_consecutivas_cierre": 3,
+            "umbral_desviacion_alta": 20.0,
+            "valor_umbral_alerta": null
+        }
+    },
+    {
+        "model": "alertas.parametroalerta",
+        "pk": 5,
+        "fields": {
+            "tipo_sensor": 5,
+            "tiempo_maximo_sin_lectura": "00:10:00",
+            "lecturas_consecutivas_apertura": 2,
+            "lecturas_consecutivas_cierre": 2,
+            "umbral_desviacion_alta": 30.0,
+            "valor_umbral_alerta": 0.5
+        }
+    },
+    {
+        "model": "alertas.parametroalerta",
+        "pk": 6,
+        "fields": {
+            "tipo_sensor": 6,
+            "tiempo_maximo_sin_lectura": "00:10:00",
+            "lecturas_consecutivas_apertura": 3,
+            "lecturas_consecutivas_cierre": 3,
+            "umbral_desviacion_alta": 25.0,
+            "valor_umbral_alerta": null
+        }
+    }
+]
