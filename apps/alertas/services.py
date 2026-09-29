@@ -20,7 +20,7 @@ def verificar_lecturas_consecutivas_y_generar_alerta(sensor):
         return None
 
     n_apertura = parametro.lecturas_consecutivas_apertura
-    ultimas = list(sensor.mediciones.order_by("-fecha_hora")[:n_apertura])
+    ultimas = list(sensor.mediciones.order_by("-pk")[:n_apertura])
     if len(ultimas) < n_apertura:
         return None
 
@@ -49,7 +49,7 @@ def verificar_cierre_por_lecturas_normales(sensor):
         return
 
     n_cierre = parametro.lecturas_consecutivas_cierre
-    ultimas = list(sensor.mediciones.order_by("-fecha_hora")[:n_cierre])
+    ultimas = list(sensor.mediciones.order_by("-pk")[:n_cierre])
     if len(ultimas) < n_cierre:
         return
 

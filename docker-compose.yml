@@ -2,11 +2,18 @@ services:
   web:
     build: .
     container_name: hidroponia-django
-    command: python manage.py runserver 0.0.0.0:8000
+    # Al arrancar: aplica migraciones, deja el planificador en segundo plano
+    # y levanta el servidor. Todo en UN contenedor a propósito: SQLite se lleva
+    # mal con varios procesos escribiendo desde contenedores distintos.
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             (python manage.py planificador &) &&
+             python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     volumes:
-      - .:/app          # bind mount único: tu carpeta local completa,
-                         # incluida data/, se refleja 1:1 dentro del contenedor
+      - .:/app          # bind mount único: data/ y media/ se comparten 1:1 con tu carpeta local
     environment:
       - PYTHONUNBUFFERED=1
+      - DJANGO_DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1

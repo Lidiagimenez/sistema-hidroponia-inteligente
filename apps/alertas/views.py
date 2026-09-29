@@ -8,7 +8,7 @@ from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 
 class ParametroAlertaViewSet(viewsets.ModelViewSet):
     # RF-30: solo el Administrador configura
-    queryset = ParametroAlerta.objects.all()
+    queryset = ParametroAlerta.objects.all().order_by("pk")
     serializer_class = ParametroAlertaSerializer
     permission_classes = [EsAdministrador]
 

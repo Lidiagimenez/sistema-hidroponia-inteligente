@@ -84,10 +84,10 @@ mkdir -p data
 docker compose up --build
 ```
 
-En otra terminal, con el contenedor arriba:
+Al arrancar, el contenedor aplica las migraciones y deja corriendo el planificador
+(ver sección 7). Solo falta cargar los datos de prueba, en otra terminal:
 
 ```bash
-docker compose exec web python manage.py migrate
 docker compose exec web python manage.py loaddata seed_demo.json
 ```
 
@@ -170,79 +170,101 @@ python manage.py loaddata seed_demo.json
 
 ---
 
-## 5. Estado del proyecto por app
-
-| App | Responsable | Modelos/Migraciones | API (serializers/views/urls) |
-|---|---|---|---|
-| `usuarios` | Persona 1 | ✅ | ✅ completa (JWT, permisos, tests) |
-| `cultivos` | Persona 1 | ✅ | ⏳ pendiente |
-| `dispositivos`, `monitoreo`, `eventos` | Persona 2 | ✅ | ⏳ pendiente |
-| `alertas`, `intervenciones` | Persona 3 | ✅ | ⏳ pendiente |
-| `inteligencia`, `reportes` | Persona 3 | ⏳ no iniciado | ⏳ no iniciado |
-
-**Pendiente transversal:** ninguna app (ni siquiera `cultivos`) está enrutada todavía en `config/urls.py` — hoy solo incluye `apps.usuarios.urls`. Al implementar la API de cada app, agregar también su `include()` correspondiente.
-
 ---
 
-## 6. Tests
+## 5. Tests
 
 ```bash
-python manage.py test                  # todos
+python manage.py test                  # todos (108)
 python manage.py test apps.usuarios    # una app puntual
 ```
 
-
 ---
 
-## 7. Estado actual (actualizado 2026-09-27)
+## 6. Estado actual (actualizado 2026-09-28)
 
 | App | Modelos/Migraciones | API | Tests |
 |---|---|---|---|
 | `usuarios` | ✅ | ✅ JWT + permisos | ✅ |
-| `cultivos` | ✅ | ✅ | ✅ |
-| `dispositivos` | ✅ | ✅ | ✅ |
-| `monitoreo` | ✅ | ✅ | ✅ |
-| `eventos` | ✅ | ✅ | ✅ |
+| `cultivos` | ✅ | ✅ | ✅ modelo, API y permisos |
+| `dispositivos` | ✅ (+ campos de red y API key) | ✅ | ✅ modelo, permisos e ingesta |
+| `monitoreo` | ✅ | ✅ (lectura + ingesta por API key) | ✅ |
+| `eventos` | ✅ | ✅ solo lectura | ✅ |
 | `alertas` | ✅ | ✅ | ✅ |
 | `intervenciones` | ✅ | ✅ | ✅ |
-| `inteligencia` | ✅ | ✅ | ✅ (13 tests) |
-| `reportes` | ✅ | ✅ | ✅ (10 tests) |
+| `inteligencia` | ✅ | ✅ | ✅ incluye cámaras (con `requests` simulado) |
+| `reportes` | ✅ | ✅ | ✅ |
 
-**Todas las apps enrutadas en `config/urls.py`.** Media servida con `static()` en desarrollo.
+**Pendiente:** análisis real de imagen con OpenCV (`inteligencia/services.py` devuelve
+métricas vacías), documentación Swagger/OpenAPI y frontend.
 
 ### Dependencias
 
-Todas las dependencias tienen versión fija en `requirements.txt`:
-- Django==6.1
-- djangorestframework-simplejwt==5.3.1
-- Pillow==12.3.0
-- django-filter==26.1
-- requests==2.34.2
-- openpyxl==3.1.5
-- reportlab==5.0.1
+Todas con versión fija en `requirements.txt` (Django, djangorestframework-simplejwt,
+Pillow, django-filter, requests, openpyxl, reportlab).
 
 ---
 
-## 8. Tareas programadas (cron — producción)
+## 7. Dispositivos (ESP32): autenticación por API key
 
-Los siguientes management commands están pensados para correrse periódicamente
-en el servidor de producción (Linux). En desarrollo (Windows + Docker) se
-ejecutan manualmente según necesidad.
+Los dispositivos **no** usan usuario/contraseña. Cada uno tiene una API key propia:
 
-### Programación sugerida (cron)
+1. Un administrador la genera (se muestra **una sola vez**, en la base se guarda solo su hash):
+   ```
+   POST /api/dispositivos/<id>/regenerar-api-key/      (con JWT de administrador)
+   ```
+2. El ESP32 envía cada lectura así:
+   ```
+   POST /api/ingesta/mediciones/
+   Header:  X-API-Key: <la clave>
+   Body:    {"sensor": 3, "valor": 6.4}
+   ```
+   El sensor debe pertenecer a ese dispositivo y el dispositivo debe estar `activo`.
+
+Las personas (JWT) **solo consultan** `/api/mediciones/`; no pueden crear, editar ni borrar lecturas.
+
+---
+
+## 8. Tareas periódicas
+
+### Desarrollo y Docker: `planificador`
+
+```bash
+python manage.py planificador          # queda corriendo; Ctrl+C para parar
+python manage.py planificador --once   # corre todo una vez y termina
+```
+
+| Tarea | Frecuencia |
+|---|---|
+| `chequear_eventos` | cada 5 min |
+| `poll_camaras` | cada 30 min |
+| `evaluar_recomendaciones` | cada 1 h |
+| `sync_camaras` | cada 24 h |
+| `limpiar_imagenes_antiguas` | cada 24 h |
+
+Con Docker se inicia solo. Local: abrir una segunda terminal con el venv activado.
+Si una tarea falla, se registra el error y el planificador sigue con las demás.
+
+### Producción (Linux): cron
 
 ```cron
-# Chequeo de eventos (RF-18, RF-31, RF-32) — cada 5 minutos
-*/5 * * * * cd /app && python manage.py chequear_eventos >> /var/log/hidroponia/eventos.log 2>&1
-
-# Captura periódica de cámaras — cada 30 min entre 8:00 y 19:00
+*/5 * * * *  cd /app && python manage.py chequear_eventos >> /var/log/hidroponia/eventos.log 2>&1
 */30 8-19 * * * cd /app && python manage.py poll_camaras >> /var/log/hidroponia/camaras.log 2>&1
+0 * * * *    cd /app && python manage.py sync_camaras --dias 1 >> /var/log/hidroponia/sync.log 2>&1
+0 3 * * *    cd /app && python manage.py limpiar_imagenes_antiguas >> /var/log/hidroponia/limpieza.log 2>&1
+0 */6 * * *  cd /app && python manage.py evaluar_recomendaciones >> /var/log/hidroponia/recomendaciones.log 2>&1
+```
 
-# Sincronización de huecos desde SD — cada hora
-0 * * * * cd /app && python manage.py sync_camaras --dias 1 >> /var/log/hidroponia/sync.log 2>&1
+---
 
-# Limpieza de imágenes antiguas — diario a las 3:00 AM
-0 3 * * * cd /app && python manage.py limpiar_imagenes_antiguas >> /var/log/hidroponia/limpieza.log 2>&1
+## 9. Variables de entorno
 
-# Recomendaciones del motor de reglas — cada 6 horas
-0 */6 * * * cd /app && python manage.py evaluar_recomendaciones >> /var/log/hidroponia/recomendaciones.log 2>&1
+Ver `.env.example`. Si no están definidas, se usan valores de desarrollo.
+
+| Variable | Para qué | Default |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Clave secreta de Django | clave de desarrollo |
+| `DJANGO_DEBUG` | `1` = debug, `0` = producción | `1` |
+| `DJANGO_ALLOWED_HOSTS` | Hosts permitidos, separados por coma | vacío |
+
+**En producción** hay que poner `DJANGO_DEBUG=0`, una `DJANGO_SECRET_KEY` propia y los hosts reales.
