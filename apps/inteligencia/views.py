@@ -19,7 +19,7 @@ from apps.inteligencia.recomendaciones import evaluar_recomendaciones
 
 
 class ParametroImagenViewSet(viewsets.ModelViewSet):
-    queryset = ParametroImagen.objects.select_related("cultivo").all()
+    queryset = ParametroImagen.objects.select_related("cultivo").order_by("pk")
     serializer_class = ParametroImagenSerializer
 
     def get_permissions(self):
@@ -32,7 +32,7 @@ class AnalisisImagenViewSet(viewsets.ModelViewSet):
     queryset = (
         AnalisisImagen.objects
         .select_related("cultivo", "ciclo", "dispositivo")
-        .all()
+        .order_by("pk")
     )
     serializer_class = AnalisisImagenSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -121,7 +121,7 @@ class AvisoCrecimientoViewSet(viewsets.ModelViewSet):
     queryset = (
         AvisoCrecimiento.objects
         .select_related("cultivo", "analisis_origen")
-        .all()
+        .order_by("pk")
     )
     serializer_class = AvisoCrecimientoSerializer
 
@@ -139,7 +139,7 @@ class AvisoCrecimientoViewSet(viewsets.ModelViewSet):
 
 
 class RecomendacionViewSet(viewsets.ModelViewSet):
-    queryset = Recomendacion.objects.select_related("cultivo").all()
+    queryset = Recomendacion.objects.select_related("cultivo").order_by("pk")
     serializer_class = RecomendacionSerializer
 
     def get_permissions(self):
