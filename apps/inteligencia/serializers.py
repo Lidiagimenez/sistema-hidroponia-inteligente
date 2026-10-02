@@ -1,6 +1,7 @@
 from rest_framework import serializers
+
 from apps.inteligencia.models import (
-    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion,
+    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion, Anomalia,
 )
 
 
@@ -55,17 +56,50 @@ class RecomendacionSerializer(serializers.ModelSerializer):
     prioridad_display = serializers.CharField(
         source="get_prioridad_display", read_only=True
     )
-class RecomendacionSerializer(serializers.ModelSerializer):
-    tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
-    prioridad_display = serializers.CharField(
-        source="get_prioridad_display", read_only=True
-    )
     cultivo_nombre = serializers.CharField(source="cultivo.nombre", read_only=True)
 
     class Meta:
         model = Recomendacion
         fields = "__all__"
         read_only_fields = ("fecha", "regla_origen")
+
+
+class AnomaliaSerializer(serializers.ModelSerializer):
+    """
+    Serializer para Anomalia detectada por IA.
+
+    Expone:
+      - Los datos del modelo Anomalia.
+      - Campos calculados: cultivo_nombre, sensor_nombre, tipo_sensor_nombre,
+        origen_display, estado_display, prioridad (derivada del score).
+    """
+
+    cultivo_nombre = serializers.CharField(source="cultivo.nombre", read_only=True)
+    sensor_nombre = serializers.CharField(
+        source="sensor.tipo_sensor.nombre", read_only=True, default=None
+    )
+    origen_display = serializers.CharField(source="get_origen_display", read_only=True)
+    estado_display = serializers.CharField(source="get_estado_display", read_only=True)
+
+    # La prioridad se deriva del score, no se guarda en la DB
+    prioridad = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Anomalia
+        fields = "__all__"
+        read_only_fields = (
+            "cultivo", "sensor", "medicion", "origen", "score",
+            "valor_observado", "valor_esperado_min", "valor_esperado_max",
+            "descripcion", "modelo_version", "fecha_deteccion",
+        )
+
+    def get_prioridad(self, obj):
+        """Deriva una prioridad legible del score de anomalía."""
+        if obj.score >= 0.75:
+            return "alta"
+        if obj.score >= 0.5:
+            return "media"
+        return "baja"
 
 
 class SubirImagenSerializer(serializers.Serializer):

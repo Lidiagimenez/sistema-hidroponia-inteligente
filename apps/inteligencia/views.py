@@ -7,12 +7,12 @@ from apps.cultivos.models import Cultivo, CicloProduccion
 from apps.dispositivos.models import Dispositivo
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 from apps.inteligencia.models import (
-    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion,
+    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion, Anomalia,
 )
 from apps.inteligencia.serializers import (
     ParametroImagenSerializer, AnalisisImagenSerializer,
     AvisoCrecimientoSerializer, RecomendacionSerializer,
-    SubirImagenSerializer,
+    AnomaliaSerializer, SubirImagenSerializer,
 )
 from apps.inteligencia.services import procesar_analisis, traer_captura
 from apps.inteligencia.recomendaciones import evaluar_recomendaciones
@@ -176,3 +176,55 @@ class RecomendacionViewSet(viewsets.ModelViewSet):
             "generadas": len(generadas),
             "recomendaciones": RecomendacionSerializer(generadas, many=True).data,
         })
+
+
+class AnomaliaViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para Anomalías detectadas por IA.
+
+    Solo lectura para Operador. Solo Admin puede eliminar (por ejemplo,
+    para descartar detecciones que no fueron útiles).
+    """
+    queryset = (
+        Anomalia.objects
+        .select_related("cultivo", "sensor", "sensor__tipo_sensor", "medicion")
+        .order_by("-fecha_deteccion")
+    )
+    serializer_class = AnomaliaSerializer
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [EsAdministrador()]
+        return [EsAdministradorOOperador()]
+
+    @action(detail=True, methods=["post"])
+    def revisar(self, request, pk=None):
+        """Marca una anomalía como revisada."""
+        anomalia = self.get_object()
+        anomalia.estado = Anomalia.Estado.REVISADA
+        anomalia.save(update_fields=["estado"])
+        return Response(self.get_serializer(anomalia).data)
+
+    @action(detail=True, methods=["post"])
+    def descartar(self, request, pk=None):
+        """Marca una anomalía como descartada (falso positivo)."""
+        anomalia = self.get_object()
+        anomalia.estado = Anomalia.Estado.DESCARTADA
+        anomalia.save(update_fields=["estado"])
+        return Response(self.get_serializer(anomalia).data)
+
+    @action(detail=False, methods=["get"], url_path=r"cultivo/(?P<cultivo_id>\d+)")
+    def por_cultivo(self, request, cultivo_id=None):
+        """Lista anomalías de un cultivo específico."""
+        qs = self.get_queryset().filter(cultivo_id=cultivo_id)
+
+        estado = request.query_params.get("estado")
+        if estado:
+            qs = qs.filter(estado=estado)
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            return self.get_paginated_response(
+                self.get_serializer(page, many=True).data
+            )
+        return Response(self.get_serializer(qs, many=True).data)
