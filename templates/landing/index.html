@@ -1,12 +1,328 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>HidroSensor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HidroSensor — Tecnología y naturaleza en equilibrio</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark:    "#0F3B26",
+                            DEFAULT: "#15803D",
+                            light:   "#DCFCE7",
+                        },
+                        cream: "#F5F1E8",
+                    },
+                    fontFamily: {
+                        serif: ["'Playfair Display'", "Georgia", "serif"],
+                        sans:  ["Inter", "system-ui", "sans-serif"],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+
+        html { scroll-behavior: smooth; }
+
+        .hero-overlay {
+            background: linear-gradient(90deg, rgba(245,241,232,0.95) 0%, rgba(245,241,232,0.75) 40%, rgba(245,241,232,0.2) 70%, transparent 100%);
+        }
+    </style>
 </head>
-<body>
-    <h1>HidroSensor</h1>
-    <p>Landing en construcción</p>
-    <p><a href="/login/">Ir a Iniciar sesión</a></p>
+<body class="bg-cream">
+
+    <!-- NAV -->
+    <header class="absolute top-0 left-0 right-0 z-30">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+
+            <a href="/" class="flex items-center gap-3">
+                <img src="{% static 'img/logo.png' %}" alt="HidroSensor" class="h-12 w-auto">
+                <span class="font-serif text-2xl font-bold text-brand-dark tracking-wide">
+                    HIDRO<span class="text-brand">SENSOR</span>
+                </span>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#inicio" class="text-sm font-medium text-gray-800 hover:text-brand transition">Inicio</a>
+                <a href="#caracteristicas" class="text-sm font-medium text-gray-800 hover:text-brand transition">Características</a>
+                <a href="#beneficios" class="text-sm font-medium text-gray-800 hover:text-brand transition">Beneficios</a>
+                <a href="/login/" class="bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
+                    Inicio de Sesión
+                </a>
+            </nav>
+
+            <button id="btn-menu-movil" class="md:hidden p-2 text-gray-800">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div id="menu-movil" class="hidden md:hidden bg-white shadow-lg mx-6 rounded-2xl p-4 space-y-2">
+            <a href="#inicio" class="block px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-lg">Inicio</a>
+            <a href="#caracteristicas" class="block px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-lg">Características</a>
+            <a href="#beneficios" class="block px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-lg">Beneficios</a>
+            <a href="/login/" class="block px-4 py-2 bg-brand text-white font-semibold rounded-lg text-center">Inicio de Sesión</a>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section id="inicio" class="relative min-h-[600px] flex items-center overflow-hidden">
+        <div class="absolute inset-0 -z-10">
+            <img
+                src="{% static 'img/fondo-login.jpeg' %}"
+                alt="Invernadero hidropónico"
+                class="w-full h-full object-cover"
+            >
+        </div>
+
+        <div class="absolute inset-0 hero-overlay -z-10"></div>
+
+        <div class="relative max-w-7xl mx-auto px-6 pt-40 pb-20 w-full">
+            <div class="max-w-2xl">
+
+                <p class="text-xs font-semibold text-brand tracking-widest uppercase mb-4 flex items-center gap-2">
+                    <i data-lucide="sprout" class="w-4 h-4"></i>
+                    Sistema de gestión y Monitoreo Hidropónico
+                </p>
+
+                <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl font-bold text-brand-dark leading-[1.05] mb-6">
+                    Tecnología y naturaleza en equilibrio
+                </h1>
+
+                <p class="text-lg text-gray-700 mb-8 max-w-xl">
+                    Controlá tu cultivo hidropónico en tiempo real. Monitoreo inteligente, alertas automáticas y recomendaciones basadas en datos para producir más y mejor.
+                </p>
+
+                <div class="flex items-center gap-4 flex-wrap">
+                    <a href="/login/" class="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white font-semibold px-6 py-3.5 rounded-xl transition shadow-lg shadow-brand/30">
+                        Comenzar ahora
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                    <a href="#caracteristicas" class="inline-flex items-center gap-2 text-gray-800 hover:text-brand font-semibold px-6 py-3.5 rounded-xl transition border border-gray-300 hover:border-brand">
+                        Ver características
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 5 FEATURES -->
+    <section id="caracteristicas" class="py-20 bg-cream">
+        <div class="max-w-7xl mx-auto px-6">
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-6">
+
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto bg-brand-dark rounded-full flex items-center justify-center mb-5">
+                        <i data-lucide="leaf" class="w-9 h-9 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold text-brand mb-3 text-sm">Monitoreo en tiempo real</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Controlá tus cultivos y sensores desde cualquier dispositivo.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto bg-brand-dark rounded-full flex items-center justify-center mb-5">
+                        <i data-lucide="bell" class="w-9 h-9 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold text-brand mb-3 text-sm">Alertas inteligentes</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Detecta problemas antes de que afecten tu cosecha.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto bg-brand-dark rounded-full flex items-center justify-center mb-5">
+                        <i data-lucide="brain-circuit" class="w-9 h-9 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold text-brand mb-3 text-sm">IA y recomendaciones</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Recibí recomendaciones para optimizar el crecimiento de tus plantas.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto bg-brand-dark rounded-full flex items-center justify-center mb-5">
+                        <i data-lucide="shield-check" class="w-9 h-9 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold text-brand mb-3 text-sm">Gestión completa</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Administrá cultivos, dispositivos, usuarios y reportes en un solo lugar.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto bg-brand-dark rounded-full flex items-center justify-center mb-5">
+                        <i data-lucide="droplets" class="w-9 h-9 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold text-brand mb-3 text-sm">Uso eficiente del agua</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Tecnología que cuida el recurso más valioso.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN SOLUCIÓN -->
+    <section id="beneficios" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+                <div class="relative">
+                    <div class="rounded-3xl overflow-hidden shadow-2xl">
+                        <img
+                            src="{% static 'img/fondo-login.jpeg' %}"
+                            alt="Cultivo hidropónico monitoreado"
+                            class="w-full h-96 object-cover"
+                        >
+                    </div>
+
+                    <div class="absolute -bottom-8 -right-4 md:-right-8 w-48 md:w-64 rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
+                        <img
+                            src="{% static 'img/fondo-login.jpeg' %}"
+                            alt="Dashboard en tablet"
+                            class="w-full h-32 object-cover"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-xs font-semibold text-brand tracking-widest uppercase mb-4">
+                        Una solución completa
+                    </p>
+
+                    <h2 class="font-serif text-4xl md:text-5xl font-bold text-brand mb-6 leading-tight">
+                        Todo lo que necesitás en un solo lugar
+                    </h2>
+
+                    <p class="text-gray-700 mb-8 leading-relaxed">
+                        Desde la gestión de tus cultivos hasta el análisis de datos con inteligencia, HidroSensor te brinda las herramientas para llevar tu producción al siguiente nivel.
+                    </p>
+
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <span class="w-6 h-6 bg-brand rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+                            </span>
+                            <span class="text-gray-800">Control de sensores y dispositivos IoT</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-6 h-6 bg-brand rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+                            </span>
+                            <span class="text-gray-800">Alertas y registro de intervenciones</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-6 h-6 bg-brand rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+                            </span>
+                            <span class="text-gray-800">Gráficos y análisis de mediciones</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-6 h-6 bg-brand rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+                            </span>
+                            <span class="text-gray-800">Reportes y exportación de datos</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-6 h-6 bg-brand rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>
+                            </span>
+                            <span class="text-gray-800">Galería de imágenes del cultivo</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="bg-brand-dark py-16">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
+
+            <div class="flex items-center gap-6">
+                <i data-lucide="sprout" class="w-16 h-16 text-green-400 flex-shrink-0"></i>
+                <div>
+                    <h2 class="font-serif text-3xl md:text-4xl font-bold text-white mb-2">
+                        Tu cultivo, bajo control.
+                    </h2>
+                    <p class="text-white/80">
+                        Tecnología, datos y experiencia al servicio de la producción
+                    </p>
+                </div>
+            </div>
+
+            <a href="/login/" class="inline-flex items-center gap-2 bg-brand hover:bg-green-700 text-white font-semibold px-6 py-3.5 rounded-xl transition shadow-lg flex-shrink-0">
+                Comenzar ahora
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-white py-10 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+
+            <a href="/" class="flex items-center gap-3">
+                <img src="{% static 'img/logo.png' %}" alt="HidroSensor" class="h-10 w-auto">
+                <span class="font-serif text-xl font-bold text-brand-dark tracking-wide">
+                    HIDRO<span class="text-brand">SENSOR</span>
+                </span>
+            </a>
+
+            <nav class="flex items-center gap-8">
+                <a href="#inicio" class="text-sm text-gray-700 hover:text-brand transition">Inicio</a>
+                <a href="#caracteristicas" class="text-sm text-gray-700 hover:text-brand transition">Características</a>
+                <a href="#beneficios" class="text-sm text-gray-700 hover:text-brand transition">Beneficios</a>
+            </nav>
+
+            <p class="text-xs text-gray-500">
+                © 2025 HidroSensor. Todos los derechos reservados.
+            </p>
+
+        </div>
+    </footer>
+
+    <script>
+        const btnMenu = document.getElementById("btn-menu-movil");
+        const menuMovil = document.getElementById("menu-movil");
+
+        if (btnMenu && menuMovil) {
+            btnMenu.addEventListener("click", () => {
+                menuMovil.classList.toggle("hidden");
+            });
+        }
+
+        menuMovil.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", () => {
+                menuMovil.classList.add("hidden");
+            });
+        });
+
+        lucide.createIcons();
+    </script>
 </body>
 </html>
