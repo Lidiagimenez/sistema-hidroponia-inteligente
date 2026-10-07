@@ -18,9 +18,9 @@ urlpatterns = [
 
     # --- App (requieren login) ---
     path("dashboard/", TemplateView.as_view(template_name="dashboard/index.html"), name="dashboard"),
+    path("alertas/", TemplateView.as_view(template_name="alertas/index.html"), name="alertas"),
     path("cultivos/", TemplateView.as_view(template_name="en-construccion.html"), name="cultivos"),
     path("monitoreo/", TemplateView.as_view(template_name="en-construccion.html"), name="monitoreo"),
-    path("alertas/", TemplateView.as_view(template_name="en-construccion.html"), name="alertas"),
     path("intervenciones/", TemplateView.as_view(template_name="en-construccion.html"), name="intervenciones"),
     path("ia/", TemplateView.as_view(template_name="en-construccion.html"), name="ia"),
     path("imagenes/", TemplateView.as_view(template_name="en-construccion.html"), name="imagenes"),

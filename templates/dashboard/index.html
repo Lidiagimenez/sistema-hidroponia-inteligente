@@ -4,22 +4,282 @@
 
 {% block content %}
 
-    <div class="mb-6">
-        <h1 class="font-serif text-3xl font-bold text-gray-900 mb-1">
-            ¡Bienvenido/a, <span id="saludo-username">Usuario</span>!
-        </h1>
-        <p class="text-gray-600">Este es el layout base. Ahora vamos a meter el contenido real.</p>
+<!-- ==================== BANNER CULTIVO ACTIVO ==================== -->
+<div class="relative bg-gradient-to-r from-green-50 via-white to-green-50/30 rounded-2xl overflow-hidden border border-green-100 mb-6">
+    <div class="flex items-center justify-between p-6">
+
+        <!-- Izquierda: info del cultivo -->
+        <div class="flex items-center gap-5">
+            <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="sprout" class="w-7 h-7 text-brand"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 font-medium mb-0.5">Cultivo activo</p>
+                <h2 class="font-serif text-3xl font-bold text-gray-900 leading-tight">Lechuga</h2>
+                <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                    <span>Etapa: <span class="font-semibold text-gray-800">Crecimiento</span></span>
+                    <span class="text-gray-300">|</span>
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                        Día <span class="font-semibold">12</span> de <span class="font-semibold">28</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Derecha: badge estado -->
+        <div class="flex items-center gap-4">
+            <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-sm font-semibold px-4 py-1.5 rounded-full">
+                <span class="w-2 h-2 bg-green-600 rounded-full"></span>
+                Normal
+            </span>
+        </div>
+
+    </div>
+    <!-- Decoración verde arriba derecha -->
+    <div class="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-green-100/50 to-transparent pointer-events-none"></div>
+</div>
+
+<!-- ==================== STAT CARDS ==================== -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    <!-- Sensores online -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="smartphone" class="w-6 h-6 text-brand"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Sensores online</p>
+                <p class="text-2xl font-bold text-gray-900">
+                    <span class="text-brand">5</span>
+                    <span class="text-gray-300 text-lg font-normal">/ 6</span>
+                </p>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl">
-        <p class="font-semibold mb-1">✅ Layout funcionando</p>
-        <p class="text-sm">El sidebar y el topbar ya están puestos. Ahora armamos el dashboard de Figma.</p>
+    <!-- Alertas activas -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="bell" class="w-6 h-6 text-red-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Alertas activas</p>
+                <p class="text-2xl font-bold text-gray-900">2</p>
+            </div>
+        </div>
     </div>
+
+    <!-- Última medición -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="droplet" class="w-6 h-6 text-blue-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Última medición</p>
+                <p class="text-2xl font-bold text-gray-900">pH 6.2</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Días del ciclo -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="calendar-days" class="w-6 h-6 text-cyan-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Días del ciclo</p>
+                <p class="text-2xl font-bold text-gray-900">
+                    12 <span class="text-gray-300 text-lg font-normal">/ 28</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ==================== FILA PRINCIPAL: GRÁFICO + ALERTAS + IMAGEN ==================== -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+
+    <!-- GRÁFICO: Evolución pH (2 columnas de ancho) -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-serif text-xl font-bold text-gray-900">Evolución de pH</h3>
+            <span class="text-xs text-gray-500">Últimas 24 horas</span>
+        </div>
+        <div class="h-64">
+            <canvas id="chart-ph"></canvas>
+        </div>
+        <!-- Leyenda -->
+        <div class="flex items-center justify-center gap-6 mt-4 text-xs text-gray-600">
+            <span class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-brand rounded-full"></span>
+                Valores
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="w-6 border-t-2 border-dashed border-gray-400"></span>
+                Rango permitido (5.5 - 6.5)
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                Fuera de rango
+            </span>
+        </div>
+    </div>
+
+    <!-- ALERTAS QUE REQUIEREN ATENCIÓN -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <h3 class="font-serif text-lg font-bold text-gray-900 mb-4">Alertas que requieren atención</h3>
+
+        <div class="space-y-3">
+
+            <!-- Alerta crítica -->
+            <div class="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-100">
+                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">pH fuera de rango</p>
+                    <p class="text-xs text-gray-600 mt-0.5">Lechuga · pH 7.01</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Hace 1 h</p>
+                </div>
+                <span class="text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    Crítica
+                </span>
+            </div>
+
+            <!-- Alerta advertencia -->
+            <div class="flex items-start gap-3 p-3 rounded-xl bg-orange-50 border border-orange-100">
+                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-orange-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">Conductividad baja</p>
+                    <p class="text-xs text-gray-600 mt-0.5">Lechuga · EC 0.8</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Hace 3 h</p>
+                </div>
+                <span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    Aviso
+                </span>
+            </div>
+
+            <!-- Alerta info -->
+            <div class="flex items-start gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">Dispositivo sin conexión</p>
+                    <p class="text-xs text-gray-600 mt-0.5">EPS03 · Lechuga</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Hace 5 h</p>
+                </div>
+                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    Info
+                </span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ÚLTIMA IMAGEN DEL CULTIVO -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <h3 class="font-serif text-lg font-bold text-gray-900 mb-4">Última imagen del cultivo</h3>
+
+        <div class="rounded-xl overflow-hidden aspect-square bg-gray-100 mb-3">
+            <!-- Placeholder mientras llega la imagen real -->
+            <div class="w-full h-full flex items-center justify-center">
+                <i data-lucide="image" class="w-12 h-12 text-gray-300"></i>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 text-center">
+            Hoy, 09:16
+        </p>
+    </div>
+
+</div>
 
 {% endblock %}
 
+
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    document.getElementById("saludo-username").textContent = localStorage.getItem("username") || "Usuario";
+    // ============ GRÁFICO DE pH ============
+    const ctx = document.getElementById("chart-ph").getContext("2d");
+
+    // Datos de ejemplo (después los traemos de la API)
+    const horas = ["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00","24:00"];
+    const valores = [6.2, 6.1, 6.2, 6.3, 6.2, 6.4, 6.5, 6.3, 6.2, 6.1, 6.3, 6.2, 6.2];
+
+    // Zona verde (rango permitido 5.5 - 6.5)
+    const rangoMin = 5.5;
+    const rangoMax = 6.5;
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: horas,
+            datasets: [
+                {
+                    label: "pH",
+                    data: valores,
+                    borderColor: "#15803D",
+                    backgroundColor: "rgba(21, 128, 61, 0.1)",
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: "#15803D",
+                    pointBorderColor: "#fff",
+                    pointBorderWidth: 2,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: "#0F3B26",
+                    titleColor: "#fff",
+                    bodyColor: "#fff",
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: (ctx) => `pH: ${ctx.parsed.y}`,
+                    },
+                },
+            },
+            scales: {
+                y: {
+                    min: 5.0,
+                    max: 7.0,
+                    ticks: {
+                        stepSize: 0.5,
+                        color: "#9CA3AF",
+                        font: { size: 11 },
+                    },
+                    grid: {
+                        color: "#F3F4F6",
+                    },
+                },
+                x: {
+                    ticks: {
+                        color: "#9CA3AF",
+                        font: { size: 11 },
+                    },
+                    grid: {
+                        display: false,
+                    },
+                },
+            },
+        },
+    });
 </script>
 {% endblock %}

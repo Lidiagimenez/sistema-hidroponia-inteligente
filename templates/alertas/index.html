@@ -1,0 +1,458 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Alertas — HidroSensor{% endblock %}
+
+{% block content %}
+
+<!-- ==================== HEADER ==================== -->
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+            <i data-lucide="bell" class="w-6 h-6 text-red-600"></i>
+        </div>
+        <div>
+            <h1 class="font-serif text-3xl font-bold text-gray-900">Alertas</h1>
+            <p class="text-sm text-gray-600">Eventos y situaciones que requieren atención</p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TABS + FILTROS ==================== -->
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-2 mb-4 overflow-x-auto">
+        <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap" data-tab="todas">
+            Todas (7)
+        </button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="criticas">
+            Críticas (3)
+        </button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="advertencias">
+            Advertencias (2)
+        </button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="informativas">
+            Informativas (2)
+        </button>
+        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="resueltas">
+            Resueltas (12)
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex flex-wrap items-center gap-3">
+        <select class="filter-select px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <option>Todos los cultivos</option>
+            <option>Lechuga</option>
+            <option>Albahaca</option>
+            <option>Tomate cherry</option>
+            <option>Frutilla</option>
+        </select>
+
+        <select class="filter-select px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <option>Todos los tipos</option>
+            <option>pH</option>
+            <option>Conductividad</option>
+            <option>Temperatura</option>
+            <option>Conexión</option>
+        </select>
+
+        <select class="filter-select px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <option>Todos los estados</option>
+            <option>Activa</option>
+            <option>Resuelta</option>
+        </select>
+
+        <div class="flex-1 min-w-[200px] relative">
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input
+                type="text"
+                placeholder="Buscar alertas..."
+                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+            >
+        </div>
+    </div>
+
+</div>
+
+<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- ========== LISTA DE ALERTAS ========== -->
+    <div class="lg:col-span-2 space-y-3">
+
+        <!-- Alerta 1 (crítica) -->
+        <div class="alerta-card bg-red-50 rounded-2xl border border-red-200 p-4 cursor-pointer hover:shadow-md transition" data-alerta-id="1">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">pH fuera de rango</h3>
+                        <span class="text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            ● Crítica
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">Lechuga · Sala de cultivo 1</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 1 h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta 2 (advertencia) -->
+        <div class="alerta-card bg-orange-50 rounded-2xl border border-orange-200 p-4 cursor-pointer hover:shadow-md transition" data-alerta-id="2">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">Conductividad baja</h3>
+                        <span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            ▲ Advertencia
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">Tomate cherry · Sala de cultivo 2</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 3 h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta 3 (crítica) -->
+        <div class="alerta-card bg-red-50 rounded-2xl border border-red-200 p-4 cursor-pointer hover:shadow-md transition" data-alerta-id="3">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="thermometer" class="w-5 h-5 text-red-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">Temperatura alta</h3>
+                        <span class="text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            ● Crítica
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">Frutilla · Invernadero 1</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 5 h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta 4 (info) -->
+        <div class="alerta-card bg-blue-50 rounded-2xl border border-blue-200 p-4 cursor-pointer hover:shadow-md transition" data-alerta-id="4">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">Dispositivo sin conexión</h3>
+                        <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            i Info
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">EPS03 · Lechuga</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 6 h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta 5 (advertencia) -->
+        <div class="alerta-card bg-orange-50 rounded-2xl border border-orange-200 p-4 cursor-pointer hover:shadow-md transition" data-alerta-id="5">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">Nivel de agua bajo</h3>
+                        <span class="text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            ▲ Advertencia
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">Tanque principal</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 8 h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta 6 (info) -->
+        <div class="alerta-card bg-blue-50 rounded-2xl border border-blue-200 p-4 cursor-pointer hover:shadow-md transition" data-alerta-id="6">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">Lectura anómala de luz</h3>
+                        <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            i Info
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">Albahaca · Sala de cultivo 2</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 12 h</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta 7 (resuelta) -->
+        <div class="alerta-card bg-green-50 rounded-2xl border border-green-200 p-4 cursor-pointer hover:shadow-md transition opacity-75" data-alerta-id="7">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold text-gray-900">Sensor recuperado</h3>
+                        <span class="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                            ✓ Resuelta
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600">Kale · Invernadero 2</p>
+                    <p class="text-xs text-gray-400 mt-1">Hace 1 día</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========== PANEL DE DETALLE (sticky) ========== -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl border border-gray-200 p-5 sticky top-24">
+
+            <!-- Header del detalle -->
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <h2 class="font-serif text-xl font-bold text-gray-900">Detalle de alerta</h2>
+                <span class="text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    ● Crítica
+                </span>
+            </div>
+
+            <!-- Ícono + título -->
+            <div class="flex items-start gap-3 mb-5">
+                <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-900">pH fuera de rango</h3>
+                    <p class="text-sm text-gray-600">Lechuga · Sala de cultivo 1</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Hace 1 h (12 ago 2025, 09:24)</p>
+                </div>
+            </div>
+
+            <!-- Grid de detalles -->
+            <div class="grid grid-cols-2 gap-x-4 gap-y-3 mb-5 pb-5 border-b border-gray-100 text-sm">
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Tipo de alerta</p>
+                    <p class="font-medium text-gray-900">pH</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Estado</p>
+                    <p class="font-semibold text-red-600">● Activa</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Valor detectado</p>
+                    <p class="font-semibold text-gray-900">7.01</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Prioridad</p>
+                    <p class="font-semibold text-red-600">Crítica</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Rango permitido</p>
+                    <p class="font-medium text-gray-900">5.5 - 6.5</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Tiempo activa</p>
+                    <p class="font-medium text-gray-900">1 h 20 min</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Dispositivo</p>
+                    <p class="font-medium text-gray-900">EPS01</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Reportado por</p>
+                    <p class="font-medium text-gray-900">Sistema</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">Ubicación</p>
+                    <p class="font-medium text-gray-900">Sala de cultivo 1</p>
+                </div>
+
+                <div>
+                    <p class="text-xs text-gray-500 mb-0.5">ID de alerta</p>
+                    <p class="font-mono text-xs text-gray-700">ALT-2025-08-12-001</p>
+                </div>
+
+            </div>
+
+            <!-- Gráfico de evolución -->
+            <div class="mb-5">
+                <h4 class="font-semibold text-sm text-gray-900 mb-3">Evolución del pH</h4>
+                <div class="h-32">
+                    <canvas id="chart-alerta"></canvas>
+                </div>
+                <div class="flex items-center justify-center gap-4 mt-3 text-[10px] text-gray-600">
+                    <span class="flex items-center gap-1">
+                        <span class="w-2 h-2 bg-brand rounded-full"></span>
+                        Valores
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="w-4 border-t border-dashed border-gray-400"></span>
+                        Rango (5.5 - 6.5)
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        Fuera
+                    </span>
+                </div>
+            </div>
+
+            <!-- Acciones sugeridas -->
+            <div class="bg-green-50 border border-green-100 rounded-xl p-3 mb-4">
+                <div class="flex items-start gap-2 mb-2">
+                    <i data-lucide="lightbulb" class="w-4 h-4 text-brand flex-shrink-0 mt-0.5"></i>
+                    <p class="text-xs font-semibold text-gray-900">Acciones sugeridas</p>
+                </div>
+                <ul class="text-xs text-gray-700 space-y-1 ml-6 list-disc">
+                    <li>Verificar dosificación de pH.</li>
+                    <li>Revisar estado de la bomba dosificadora.</li>
+                    <li>Validar calibración del sensor.</li>
+                    <li>Si el problema persiste, contactar al administrador.</li>
+                </ul>
+            </div>
+
+            <!-- Botón marcar como resuelta -->
+            <button
+                id="btn-resolver"
+                class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2"
+            >
+                <i data-lucide="check" class="w-4 h-4"></i>
+                Marcar como resuelta
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // ============ TABS ============
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab-btn").forEach(b => {
+                b.classList.remove("active", "bg-brand", "text-white", "font-semibold");
+                b.classList.add("text-gray-600", "font-medium", "hover:bg-gray-100");
+            });
+            btn.classList.add("active", "bg-brand", "text-white", "font-semibold");
+            btn.classList.remove("text-gray-600", "font-medium", "hover:bg-gray-100");
+        });
+    });
+
+    // Aplicar estilos al tab activo al inicio
+    const activeTab = document.querySelector(".tab-btn.active");
+    if (activeTab) {
+        activeTab.classList.add("bg-brand", "text-white", "font-semibold");
+    }
+    document.querySelectorAll(".tab-btn:not(.active)").forEach(b => {
+        b.classList.add("text-gray-600", "font-medium", "hover:bg-gray-100");
+    });
+
+    // ============ SELECCIÓN DE ALERTA ============
+    document.querySelectorAll(".alerta-card").forEach(card => {
+        card.addEventListener("click", () => {
+            document.querySelectorAll(".alerta-card").forEach(c => {
+                c.classList.remove("ring-2", "ring-offset-2", "ring-brand");
+            });
+            card.classList.add("ring-2", "ring-offset-2", "ring-brand");
+        });
+    });
+
+    // Marcar la primera alerta como seleccionada al inicio
+    const primeraAlerta = document.querySelector(".alerta-card");
+    if (primeraAlerta) {
+        primeraAlerta.classList.add("ring-2", "ring-offset-2", "ring-brand");
+    }
+
+    // ============ GRÁFICO DE EVOLUCIÓN ============
+    const ctx = document.getElementById("chart-alerta").getContext("2d");
+
+    const horas = ["04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00","24:00"];
+    const valores = [6.1, 6.2, 6.1, 6.4, 6.6, 6.5, 6.3, 6.4, 6.5, 6.2, 6.3];
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: horas,
+            datasets: [{
+                data: valores,
+                borderColor: "#15803D",
+                backgroundColor: "rgba(21, 128, 61, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                pointBackgroundColor: "#15803D",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 1.5,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: "#0F3B26",
+                    padding: 8,
+                    cornerRadius: 6,
+                    displayColors: false,
+                    callbacks: { label: (ctx) => `pH: ${ctx.parsed.y}` },
+                },
+            },
+            scales: {
+                y: {
+                    min: 5.0, max: 7.0,
+                    ticks: { stepSize: 0.5, color: "#9CA3AF", font: { size: 9 }, callback: v => v.toFixed(1) },
+                    grid: { color: "#F3F4F6" },
+                },
+                x: {
+                    ticks: { color: "#9CA3AF", font: { size: 9 } },
+                    grid: { display: false },
+                },
+            },
+            plugins: [{
+                id: "rangoPermitido",
+                beforeDatasetsDraw: (chart) => {
+                    const { ctx, chartArea, scales } = chart;
+                    const yMin = scales.y.getPixelForValue(5.5);
+                    const yMax = scales.y.getPixelForValue(6.5);
+                    ctx.save();
+                    ctx.fillStyle = "rgba(34, 197, 94, 0.08)";
+                    ctx.fillRect(chartArea.left, yMin, chartArea.right - chartArea.left, yMax - yMin);
+                    ctx.restore();
+                },
+            }],
+        },
+    });
+
+    // ============ BOTÓN RESOLVER ============
+    document.getElementById("btn-resolver").addEventListener("click", () => {
+        alert("Acá después vamos a llamar a PATCH /api/alertas/{id}/ para marcar como resuelta.");
+    });
+</script>
+{% endblock %}
