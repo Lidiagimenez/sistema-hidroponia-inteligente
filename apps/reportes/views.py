@@ -9,23 +9,31 @@ from apps.reportes.services import generar_reporte
 
 
 class ReporteViewSet(viewsets.ModelViewSet):
+    """
+    RF-28: el Administrador genera informes.
+    RF-29: el Administrador descarga el informe. El Operador también puede verlos.
+    Los reportes no se editan: se regeneran.
+    """
     queryset = Reporte.objects.select_related("cultivo", "generado_por").all()
     serializer_class = ReporteSerializer
 
-    # Permisos según la acción: crear/borrar solo admin, el resto ambos roles
+    # GET + POST + DELETE. Bloquea PUT y PATCH (no se editan reportes).
+    http_method_names = ["get", "post", "delete", "head", "options"]
+
     def get_permissions(self):
-        if self.action in ["create", "destroy"]:
+        # Admin: crear, borrar, regenerar
+        if self.action in ["create", "destroy", "regenerar"]:
             return [EsAdministrador()]
+        # Ambos: ver y descargar
         return [EsAdministradorOOperador()]
 
-    # Al crear un reporte, se dispara la generación automáticamente
     def perform_create(self, serializer):
         reporte = serializer.save(generado_por=self.request.user)
         generar_reporte(reporte)
 
-    # Endpoint extra: POST /api/reportes/{id}/regenerar/
     @action(detail=True, methods=["post"], url_path="regenerar")
     def regenerar(self, request, pk=None):
+        """Regenera un reporte existente. Solo admin."""
         reporte = self.get_object()
         generar_reporte(reporte)
         return Response(self.get_serializer(reporte).data, status=status.HTTP_200_OK)

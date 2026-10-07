@@ -24,18 +24,16 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", include("apps.usuarios.urls")),
+    path("api/", include("apps.usuarios.urls")),
     path("api/", include("apps.cultivos.urls")),
     path("api/", include("apps.dispositivos.urls")),
     path("api/", include("apps.monitoreo.urls")),
     path("api/", include("apps.eventos.urls")),
     path("api/", include("apps.alertas.urls")),
     path("api/", include("apps.intervenciones.urls")),
-    # Módulos nuevos (A y B)
     path("api/", include("apps.inteligencia.urls")),
     path("api/", include("apps.reportes.urls")),
 ]
 
-# Servir media en desarrollo (solo si DEBUG=True)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

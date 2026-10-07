@@ -12,8 +12,16 @@ class DispositivoViewSet(viewsets.ModelViewSet):
     serializer_class = DispositivoSerializer
 
     def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy", "regenerar_api_key"]:
+        # Admin: crear, editar, borrar, regenerar API key
+        if self.action in [
+            "create",
+            "update",
+            "partial_update",
+            "destroy",
+            "regenerar_api_key",
+        ]:
             return [EsAdministrador()]
+        # Ambos: listar, ver detalle, accionar (encender/apagar)
         return [EsAdministradorOOperador()]
 
     @action(detail=True, methods=["post"], url_path="regenerar-api-key")
@@ -26,3 +34,23 @@ class DispositivoViewSet(viewsets.ModelViewSet):
             "api_key": clave,
             "aviso": "Guardala ahora: no se puede volver a ver.",
         })
+
+    @action(detail=True, methods=["post"], url_path="accionar")
+    def accionar(self, request, pk=None):
+        """
+        Enciende o apaga un dispositivo (bomba, iluminación, etc.).
+        Disponible para operador Y administrador (RF-32).
+        """
+        dispositivo = self.get_object()
+        accion = request.data.get("accion")
+
+        if accion not in ("encender", "apagar"):
+            return Response(
+                {"error": "accion debe ser 'encender' o 'apagar'"},
+                status=400,
+            )
+
+        dispositivo.estado = "activo" if accion == "encender" else "inactivo"
+        dispositivo.save()
+
+        return Response(DispositivoSerializer(dispositivo).data)

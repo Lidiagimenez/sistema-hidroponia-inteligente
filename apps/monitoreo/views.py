@@ -79,8 +79,13 @@ class IngestaMedicionView(APIView):
 
 class ImagenViewSet(viewsets.ModelViewSet):
     # RF-35: paginado y filtrable por fecha
+    # Operador solo ve la galería. Admin puede crear/editar/borrar.
     queryset = Imagen.objects.all().order_by("-fecha_hora")
     serializer_class = ImagenSerializer
-    permission_classes = [EsAdministradorOOperador]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["cultivo", "fecha_hora"]
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [EsAdministrador()]
+        return [EsAdministradorOOperador()]
