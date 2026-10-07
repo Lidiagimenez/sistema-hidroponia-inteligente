@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard — HidroSensor{% endblock %}
+
+{% block content %}
+
+    <div class="mb-6">
+        <h1 class="font-serif text-3xl font-bold text-gray-900 mb-1">
+            ¡Bienvenido/a, <span id="saludo-username">Usuario</span>!
+        </h1>
+        <p class="text-gray-600">Este es el layout base. Ahora vamos a meter el contenido real.</p>
+    </div>
+
+    <div class="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl">
+        <p class="font-semibold mb-1">✅ Layout funcionando</p>
+        <p class="text-sm">El sidebar y el topbar ya están puestos. Ahora armamos el dashboard de Figma.</p>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById("saludo-username").textContent = localStorage.getItem("username") || "Usuario";
+</script>
+{% endblock %}
