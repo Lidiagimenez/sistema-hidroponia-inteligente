@@ -7,19 +7,19 @@ from apps.cultivos.models import Cultivo, CicloProduccion
 from apps.dispositivos.models import Dispositivo
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 from apps.inteligencia.models import (
-    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion,
+    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion, Anomalia,
 )
 from apps.inteligencia.serializers import (
     ParametroImagenSerializer, AnalisisImagenSerializer,
     AvisoCrecimientoSerializer, RecomendacionSerializer,
-    SubirImagenSerializer,
+    AnomaliaSerializer, SubirImagenSerializer,
 )
 from apps.inteligencia.services import procesar_analisis, traer_captura
 from apps.inteligencia.recomendaciones import evaluar_recomendaciones
 
 
 class ParametroImagenViewSet(viewsets.ModelViewSet):
-    queryset = ParametroImagen.objects.select_related("cultivo").all()
+    queryset = ParametroImagen.objects.select_related("cultivo").order_by("pk")
     serializer_class = ParametroImagenSerializer
 
     def get_permissions(self):
@@ -32,14 +32,16 @@ class AnalisisImagenViewSet(viewsets.ModelViewSet):
     queryset = (
         AnalisisImagen.objects
         .select_related("cultivo", "ciclo", "dispositivo")
-        .all()
+        .order_by("pk")
     )
     serializer_class = AnalisisImagenSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_permissions(self):
-        if self.action in ["create", "destroy"]:
+        # Admin: crear, borrar, capturar manualmente, editar
+        if self.action in ["create", "update", "partial_update", "destroy", "capturar_ahora"]:
             return [EsAdministrador()]
+        # Ambos: ver galería e imágenes
         return [EsAdministradorOOperador()]
 
     def create(self, request, *args, **kwargs):
@@ -90,7 +92,7 @@ class AnalisisImagenViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="capturar-ahora")
     def capturar_ahora(self, request):
-        """Dispara una captura manual contra un dispositivo."""
+        """Dispara una captura manual contra un dispositivo. Solo admin."""
         dispositivo_id = request.data.get("dispositivo")
         if not dispositivo_id:
             return Response(
@@ -121,7 +123,7 @@ class AvisoCrecimientoViewSet(viewsets.ModelViewSet):
     queryset = (
         AvisoCrecimiento.objects
         .select_related("cultivo", "analisis_origen")
-        .all()
+        .order_by("pk")
     )
     serializer_class = AvisoCrecimientoSerializer
 
@@ -139,12 +141,14 @@ class AvisoCrecimientoViewSet(viewsets.ModelViewSet):
 
 
 class RecomendacionViewSet(viewsets.ModelViewSet):
-    queryset = Recomendacion.objects.select_related("cultivo").all()
+    queryset = Recomendacion.objects.select_related("cultivo").order_by("pk")
     serializer_class = RecomendacionSerializer
 
     def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy"]:
+        # Admin: crear/editar/borrar + correr el motor
+        if self.action in ["create", "update", "partial_update", "destroy", "evaluar"]:
             return [EsAdministrador()]
+        # Ambos: ver y resolver
         return [EsAdministradorOOperador()]
 
     @action(detail=True, methods=["post"])
@@ -157,7 +161,7 @@ class RecomendacionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="evaluar")
     def evaluar(self, request):
-        """Corre el motor de recomendaciones para un cultivo."""
+        """Corre el motor de recomendaciones para un cultivo. Solo admin."""
         cultivo_id = request.data.get("cultivo")
         if not cultivo_id:
             return Response(
@@ -172,7 +176,54 @@ class RecomendacionViewSet(viewsets.ModelViewSet):
             )
         generadas = evaluar_recomendaciones(cultivo)
         return Response({
-            "cultivo": cultivo.id,
+            "cultivo": cultivo.pk,
             "generadas": len(generadas),
             "recomendaciones": RecomendacionSerializer(generadas, many=True).data,
         })
+
+
+class AnomaliaViewSet(viewsets.ModelViewSet):
+    """
+    Anomalías detectadas por IA. Solo lectura + acciones de marcar estado.
+    Admin puede borrar. Ambos pueden revisar/descartar.
+    """
+    queryset = (
+        Anomalia.objects
+        .select_related("cultivo", "sensor", "sensor__tipo_sensor", "medicion")
+        .order_by("-fecha_deteccion")
+    )
+    serializer_class = AnomaliaSerializer
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [EsAdministrador()]
+        return [EsAdministradorOOperador()]
+
+    @action(detail=True, methods=["post"])
+    def revisar(self, request, pk=None):
+        anomalia = self.get_object()
+        anomalia.estado = Anomalia.Estado.REVISADA
+        anomalia.save(update_fields=["estado"])
+        return Response(self.get_serializer(anomalia).data)
+
+    @action(detail=True, methods=["post"])
+    def descartar(self, request, pk=None):
+        anomalia = self.get_object()
+        anomalia.estado = Anomalia.Estado.DESCARTADA
+        anomalia.save(update_fields=["estado"])
+        return Response(self.get_serializer(anomalia).data)
+
+    @action(detail=False, methods=["get"], url_path=r"cultivo/(?P<cultivo_id>\d+)")
+    def por_cultivo(self, request, cultivo_id=None):
+        qs = self.get_queryset().filter(cultivo_id=cultivo_id)
+
+        estado = request.query_params.get("estado")
+        if estado:
+            qs = qs.filter(estado=estado)
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            return self.get_paginated_response(
+                self.get_serializer(page, many=True).data
+            )
+        return Response(self.get_serializer(qs, many=True).data)

@@ -145,7 +145,7 @@ def traer_captura(dispositivo, origen="periodica"):
 def traer_capturas_de_todos():
     from apps.dispositivos.models import Dispositivo
 
-    dispositivos = Dispositivo.objects.filter(permite_polling=True, activo=True)
+    dispositivos = Dispositivo.objects.filter(permite_polling=True, estado="activo")
     resultado = {"ok": 0, "error": 0, "sin_url": 0}
     for d in dispositivos:
         if not _url_captura_de(d):
@@ -257,7 +257,7 @@ def sincronizar_desde_sd(dispositivo, dias_atras=1):
 def sincronizar_todos_desde_sd(dias_atras=1):
     from apps.dispositivos.models import Dispositivo
     total = 0
-    for d in Dispositivo.objects.filter(permite_polling=True, activo=True):
+    for d in Dispositivo.objects.filter(permite_polling=True, estado="activo"):
         total += sincronizar_desde_sd(d, dias_atras=dias_atras)
     return total
 

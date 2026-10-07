@@ -10,8 +10,12 @@ __pycache__/
 
 # Pero SÍ versionamos la carpeta para que exista tras el clone
 !data/.gitkeep
+
 # Media (archivos subidos por usuarios y reportes generados)
 media/
+
+# Modelos de IA entrenados (se regeneran con `entrenar_modelos`)
+ml_models/
 
 # Logs
 *.log

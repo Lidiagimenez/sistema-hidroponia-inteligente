@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión — HidroSensor</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark:    "#0F3B26",
+                            DEFAULT: "#15803D",
+                            light:   "#DCFCE7",
+                        },
+                    },
+                    fontFamily: {
+                        serif: ["'Playfair Display'", "Georgia", "serif"],
+                        sans:  ["Inter", "system-ui", "sans-serif"],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-green-50 via-green-100 to-emerald-50">
+
+    <!-- Fondo con la imagen de la maqueta hidropónica -->
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute inset-0 bg-[url('/static/img/fondo-login.jpeg')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px]"></div>
+    </div>
+
+    <!-- Card centrada -->
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl px-10 py-12">
+
+            <!-- Logo + nombre (agrandados) -->
+            <div class="flex items-center justify-center gap-3 mb-8">
+                <img
+                    src="/static/img/logo.png"
+                    alt="HidroSensor"
+                    class="h-20 w-auto"
+                >
+                <span class="font-serif text-3xl font-bold text-brand-dark tracking-wide">
+                    HIDRO<span class="text-brand">SENSOR</span>
+                </span>
+            </div>
+
+            <!-- Título (centrado) -->
+            <h1 class="font-serif text-4xl font-bold text-gray-900 mb-2 text-center">
+                Iniciar sesión
+            </h1>
+            <p class="text-sm text-gray-600 mb-8 text-center">
+                Accedé a tu sistema de gestión y monitoreo hidropónico
+            </p>
+
+            <!-- Formulario -->
+            <form id="login-form" class="space-y-5">
+
+                <div>
+                    <label for="username" class="block text-sm font-semibold text-gray-900 mb-2">
+                        Usuario
+                    </label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        required
+                        autocomplete="username"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand outline-none transition"
+                    >
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-gray-900 mb-2">
+                        Contraseña
+                    </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand outline-none transition"
+                    >
+                </div>
+
+                <!-- Mensaje de error -->
+                <div id="error-msg" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl"></div>
+
+                <!-- Botón -->
+                <button
+                    type="submit"
+                    id="submit-btn"
+                    class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Iniciar sesión
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+</body>
+</html>

@@ -1,6 +1,11 @@
 from django.contrib import admin
+
 from apps.inteligencia.models import (
-    ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion,
+    ParametroImagen,
+    AnalisisImagen,
+    AvisoCrecimiento,
+    Recomendacion,
+    Anomalia,
 )
 
 
@@ -39,3 +44,35 @@ class RecomendacionAdmin(admin.ModelAdmin):
     )
     list_filter = ("tipo", "prioridad", "vigente", "resuelta")
     search_fields = ("cultivo__nombre", "titulo", "regla_origen")
+
+
+@admin.register(Anomalia)
+class AnomaliaAdmin(admin.ModelAdmin):
+    list_display = (
+        "id", "cultivo", "sensor", "score", "origen",
+        "estado", "fecha_deteccion",
+    )
+    list_filter = ("estado", "origen", "modelo_version", "fecha_deteccion")
+    search_fields = ("cultivo__nombre", "sensor__tipo_sensor__nombre", "descripcion")
+    readonly_fields = (
+        "cultivo", "sensor", "medicion", "origen", "score",
+        "valor_observado", "valor_esperado_min", "valor_esperado_max",
+        "descripcion", "modelo_version", "fecha_deteccion",
+    )
+    date_hierarchy = "fecha_deteccion"
+
+    fieldsets = (
+        ("Contexto", {
+            "fields": ("cultivo", "sensor", "medicion", "origen")
+        }),
+        ("Detección", {
+            "fields": ("score", "valor_observado",
+                       "valor_esperado_min", "valor_esperado_max")
+        }),
+        ("Descripción", {
+            "fields": ("descripcion", "modelo_version")
+        }),
+        ("Estado", {
+            "fields": ("estado", "fecha_deteccion")
+        }),
+    )

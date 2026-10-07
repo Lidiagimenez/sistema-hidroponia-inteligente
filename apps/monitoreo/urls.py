@@ -1,6 +1,8 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from apps.monitoreo.views import (
     TipoSensorViewSet, SensorViewSet, RangoOperacionViewSet, MedicionViewSet, ImagenViewSet,
+    IngestaMedicionView,
 )
 
 router = DefaultRouter()
@@ -10,4 +12,6 @@ router.register("rangos-operacion", RangoOperacionViewSet, basename="rangooperac
 router.register("mediciones", MedicionViewSet, basename="medicion")
 router.register("imagenes", ImagenViewSet, basename="imagen")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("ingesta/mediciones/", IngestaMedicionView.as_view(), name="ingesta-mediciones"),
+] + router.urls

@@ -1,0 +1,187 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Rangos de operación — HidroSensor{% endblock %}
+
+{% block content %}
+
+<!-- ==================== HEADER ==================== -->
+<div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center">
+            <i data-lucide="sliders-horizontal" class="w-6 h-6 text-brand"></i>
+        </div>
+        <div>
+            <h1 class="font-serif text-3xl font-bold text-gray-900">Rangos de operación</h1>
+            <p class="text-sm text-gray-600">Define los umbrales válidos para cada tipo de sensor.</p>
+        </div>
+    </div>
+
+    <button class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nuevo rango
+    </button>
+</div>
+
+<!-- ==================== FILTROS ==================== -->
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
+    <div class="flex flex-wrap items-center gap-3">
+        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option>Todos los sensores</option>
+            <option>pH</option>
+            <option>Conductividad</option>
+            <option>Temperatura</option>
+            <option>Luz</option>
+        </select>
+        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option>Todos los cultivos</option>
+            <option>Lechuga</option>
+            <option>Albahaca</option>
+            <option>Tomate cherry</option>
+        </select>
+        <div class="flex-1 min-w-[200px] relative">
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" placeholder="Buscar rango..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TABLA ==================== -->
+<div class="bg-white rounded-2xl border border-gray-200 p-6">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sensor</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Unidad</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mínimo</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Máximo</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Vigente desde</th>
+                    <th class="w-20"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-900 font-medium">pH-01</td>
+                    <td class="py-3 px-3 text-gray-700">Lechuga</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">pH</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">5.5</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">6.5</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">12 ago 2025</td>
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-900 font-medium">EC-01</td>
+                    <td class="py-3 px-3 text-gray-700">Lechuga</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">mS/cm</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">1.3</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">2.0</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">12 ago 2025</td>
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-900 font-medium">T-01</td>
+                    <td class="py-3 px-3 text-gray-700">Tomate cherry</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">°C</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">18</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">26</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">10 ago 2025</td>
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-900 font-medium">L-01</td>
+                    <td class="py-3 px-3 text-gray-700">Albahaca</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">µmol/m²/s</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">200</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">500</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">08 ago 2025</td>
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-900 font-medium">OD-01</td>
+                    <td class="py-3 px-3 text-gray-700">Kale</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">mg/L</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">5.0</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">8.0</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">05 ago 2025</td>
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-900 font-medium">N-01</td>
+                    <td class="py-3 px-3 text-gray-700">Frutilla</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">%</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">60</td>
+                    <td class="py-3 px-3 text-gray-900 font-semibold">80</td>
+                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">01 ago 2025</td>
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1">
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <p class="text-xs text-gray-500 text-center mt-4">Mostrando 1 - 6 de 6 rangos configurados</p>
+
+</div>
+
+{% endblock %}

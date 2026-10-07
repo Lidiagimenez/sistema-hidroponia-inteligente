@@ -1,11 +1,12 @@
 from rest_framework import viewsets
+
 from apps.cultivos.models import Cultivo, CicloProduccion
 from apps.cultivos.serializers import CultivoSerializer, CicloProduccionSerializer
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 
 
 class CultivoViewSet(viewsets.ModelViewSet):
-    queryset = Cultivo.objects.all()
+    queryset = Cultivo.objects.all().order_by("pk")
     serializer_class = CultivoSerializer
 
     def get_permissions(self):
@@ -18,7 +19,7 @@ class CultivoViewSet(viewsets.ModelViewSet):
 
 
 class CicloProduccionViewSet(viewsets.ModelViewSet):
-    queryset = CicloProduccion.objects.all()
+    queryset = CicloProduccion.objects.all().order_by("pk")
     serializer_class = CicloProduccionSerializer
 
     def get_permissions(self):

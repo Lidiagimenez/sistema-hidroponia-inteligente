@@ -1,41 +1,49 @@
 """
 URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-"""
-URL configuration for config project.
 """
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", include("apps.usuarios.urls")),
+
+    # --- Páginas de autenticación ---
+    path("login/", TemplateView.as_view(template_name="auth/login.html"), name="login"),
+
+    # --- Landing pública ---
+    path("", TemplateView.as_view(template_name="landing/index.html"), name="landing"),
+
+    # --- App (requieren login) ---
+    path("dashboard/", TemplateView.as_view(template_name="dashboard/index.html"), name="dashboard"),
+    path("alertas/", TemplateView.as_view(template_name="alertas/index.html"), name="alertas"),
+    path("monitoreo/", TemplateView.as_view(template_name="monitoreo/index.html"), name="monitoreo"),
+    path("cultivos/", TemplateView.as_view(template_name="cultivos/index.html"), name="cultivos"),
+    path("intervenciones/", TemplateView.as_view(template_name="intervenciones/index.html"), name="intervenciones"),
+    path("imagenes/", TemplateView.as_view(template_name="imagenes/index.html"), name="imagenes"),
+    path("reportes/", TemplateView.as_view(template_name="reportes/index.html"), name="reportes"),
+    path("ia/", TemplateView.as_view(template_name="en-construccion.html"), name="ia"),
+
+    # --- Administración (solo admin) ---
+    path("usuarios/", TemplateView.as_view(template_name="usuarios/index.html"), name="usuarios"),
+    path("dispositivos/", TemplateView.as_view(template_name="dispositivos/index.html"), name="dispositivos"),
+    path("configuracion-sensores/", TemplateView.as_view(template_name="configuracion-sensores/index.html"), name="configuracion-sensores"),
+    path("rangos-operacion/", TemplateView.as_view(template_name="rangos-operacion/index.html"), name="rangos-operacion"),
+    path("auditoria/", TemplateView.as_view(template_name="auditoria/index.html"), name="auditoria"),
+
+    # --- API REST ---
+    path("api/", include("apps.usuarios.urls")),
     path("api/", include("apps.cultivos.urls")),
     path("api/", include("apps.dispositivos.urls")),
     path("api/", include("apps.monitoreo.urls")),
     path("api/", include("apps.eventos.urls")),
     path("api/", include("apps.alertas.urls")),
     path("api/", include("apps.intervenciones.urls")),
-    # Módulos nuevos (A y B)
     path("api/", include("apps.inteligencia.urls")),
     path("api/", include("apps.reportes.urls")),
 ]
 
-# Servir media en desarrollo (solo si DEBUG=True)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HidroSensor{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark:    "#0F3B26",
+                            DEFAULT: "#15803D",
+                            light:   "#DCFCE7",
+                        },
+                    },
+                    fontFamily: {
+                        serif: ["'Playfair Display'", "Georgia", "serif"],
+                        sans:  ["Inter", "system-ui", "sans-serif"],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+
+        /* Item del sidebar */
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            border-radius: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+        .sidebar-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 600;
+        }
+        .sidebar-item svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Item con badge (Alertas) */
+        .sidebar-item-badge {
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="w-64 bg-brand-dark fixed inset-y-0 left-0 z-30 flex flex-col">
+
+        <!-- Logo + Nombre -->
+        <div class="px-5 py-6 border-b border-white/10">
+            <a href="/dashboard/" class="flex items-center gap-3">
+                <img src="{% static 'img/logo.png' %}" alt="HidroSensor" class="h-10 w-auto">
+                <span class="font-serif text-lg font-bold text-white tracking-wide">
+                    HIDRO<span class="text-green-400">SENSOR</span>
+                </span>
+            </a>
+        </div>
+
+        <!-- Menú -->
+        <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-1">
+
+            <a href="/dashboard/" class="sidebar-item">
+                <i data-lucide="home"></i>
+                <span>Inicio</span>
+            </a>
+
+            <a href="/cultivos/" class="sidebar-item">
+                <i data-lucide="leaf"></i>
+                <span>Cultivos</span>
+            </a>
+
+            <a href="/monitoreo/" class="sidebar-item">
+                <i data-lucide="line-chart"></i>
+                <span>Monitoreo</span>
+            </a>
+
+            <a href="/alertas/" class="sidebar-item sidebar-item-badge">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="bell"></i>
+                    <span>Alertas</span>
+                </div>
+                <span class="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    3
+                </span>
+            </a>
+
+            <a href="/intervenciones/" class="sidebar-item">
+                <i data-lucide="wrench"></i>
+                <span>Intervenciones</span>
+            </a>
+
+            <a href="/ia/" class="sidebar-item">
+                <i data-lucide="brain-circuit"></i>
+                <span>IA</span>
+            </a>
+
+            <a href="/imagenes/" class="sidebar-item">
+                <i data-lucide="image"></i>
+                <span>Imágenes</span>
+            </a>
+
+            <a href="/reportes/" class="sidebar-item">
+                <i data-lucide="file-text"></i>
+                <span>Reportes</span>
+            </a>
+
+            <!-- Sección ADMINISTRACIÓN (solo admin) -->
+            <div data-role="admin" class="pt-6">
+                <p class="px-3 mb-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
+                    Administración
+                </p>
+
+                <a href="/usuarios/" class="sidebar-item">
+                    <i data-lucide="users"></i>
+                    <span>Usuarios</span>
+                </a>
+
+                <a href="/dispositivos/" class="sidebar-item">
+                    <i data-lucide="cpu"></i>
+                    <span>Dispositivos</span>
+                </a>
+
+                <a href="/configuracion-sensores/" class="sidebar-item">
+                    <i data-lucide="settings"></i>
+                    <span>Configuración de sensores</span>
+                </a>
+
+                <a href="/rangos-operacion/" class="sidebar-item">
+                    <i data-lucide="sliders-horizontal"></i>
+                    <span>Rangos de operación</span>
+                </a>
+
+                <a href="/auditoria/" class="sidebar-item">
+                    <i data-lucide="clipboard-list"></i>
+                    <span>Auditoría</span>
+                </a>
+            </div>
+
+        </nav>
+
+        <!-- Usuario abajo -->
+        <div class="px-4 py-4 border-t border-white/10">
+            <div class="flex items-center gap-3">
+                <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">
+                    A
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p id="sidebar-username" class="text-sm font-semibold text-white truncate">Usuario</p>
+                    <p id="sidebar-rol" class="text-xs text-white/60 truncate capitalize">rol</p>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ==================== MAIN ==================== -->
+    <div class="ml-64 min-h-screen flex flex-col">
+
+        <!-- TOPBAR -->
+        <header class="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-20">
+            <div class="flex items-center justify-between gap-4">
+
+                <!-- Fecha -->
+                <div class="flex items-center gap-2 text-sm text-gray-700">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span id="topbar-fecha">--</span>
+                </div>
+
+                <!-- Acciones derecha -->
+                <div class="flex items-center gap-4">
+
+                    <!-- Campanita -->
+                    <button class="relative p-1 hover:bg-gray-100 rounded-lg transition">
+                        <i data-lucide="bell" class="w-5 h-5 text-gray-700"></i>
+                        <span class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                            3
+                        </span>
+                    </button>
+
+                    <!-- Usuario + logout -->
+                    <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
+                        <div id="topbar-avatar" class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">
+                            A
+                        </div>
+                        <div class="hidden md:block">
+                            <p id="topbar-username" class="text-sm font-semibold text-gray-900 leading-tight">Usuario</p>
+                            <p id="topbar-rol" class="text-xs text-gray-500 capitalize leading-tight">rol</p>
+                        </div>
+                        <button
+                            id="logout-btn"
+                            title="Cerrar sesión"
+                            class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                        >
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENIDO -->
+        <main class="flex-1 p-6">
+            {% block content %}{% endblock %}
+        </main>
+
+    </div>
+
+    <!-- ==================== SCRIPTS ==================== -->
+    <script>
+        // --- 1. Verificar login ---
+        const token = localStorage.getItem("access_token");
+        const username = localStorage.getItem("username") || "Usuario";
+        const rol = localStorage.getItem("rol") || "operador";
+
+        if (!token) {
+            window.location.href = "/login/";
+        }
+
+        // --- 2. Mostrar datos del usuario ---
+        const inicial = username.charAt(0).toUpperCase();
+
+        ["sidebar-avatar", "topbar-avatar"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = inicial;
+        });
+
+        document.getElementById("sidebar-username").textContent = username;
+        document.getElementById("sidebar-rol").textContent = rol;
+        document.getElementById("topbar-username").textContent = username;
+        document.getElementById("topbar-rol").textContent = rol;
+
+        // --- 3. Mostrar/ocultar sección ADMINISTRACIÓN ---
+        if (rol !== "administrador") {
+            document.querySelectorAll('[data-role="admin"]').forEach(el => {
+                el.style.display = "none";
+            });
+        }
+
+        // --- 4. Marcar el item activo del menú ---
+        const path = window.location.pathname;
+        document.querySelectorAll(".sidebar-item").forEach(link => {
+            const href = link.getAttribute("href");
+            if (href === path) {
+                link.classList.add("active");
+            }
+        });
+
+        // --- 5. Fecha actual en español ---
+        const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+        const ahora = new Date();
+        const fechaStr = `${ahora.getDate()} ${meses[ahora.getMonth()]} ${ahora.getFullYear()} ${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`;
+        document.getElementById("topbar-fecha").textContent = fechaStr;
+
+        // --- 6. Cerrar sesión ---
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            localStorage.clear();
+            window.location.href = "/login/";
+        });
+
+        // --- 7. Renderizar iconos ---
+        lucide.createIcons();
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

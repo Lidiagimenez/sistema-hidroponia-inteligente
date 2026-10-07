@@ -252,3 +252,96 @@ class Recomendacion(models.Model):
 
     def __str__(self):
         return f"Recomendacion({self.get_tipo_display()} - {self.cultivo.nombre})"
+
+
+# =============================================================================
+# Anomalías detectadas por IA (Isolation Forest)
+# =============================================================================
+
+class Anomalia(models.Model):
+    """
+    Anomalía detectada por el modelo de IA (Isolation Forest).
+
+    El modelo se entrena por tipo de sensor con el histórico de mediciones
+    normales. Cuando una nueva medición obtiene un score de anomalía alto,
+    se registra acá para que el motor de reglas genere una recomendación.
+
+    Este modelo NO reemplaza a Alerta: la Alerta viene de reglas duras
+    (rango operativo, eventos, hardware). La Anomalia viene de IA y detecta
+    patrones que las reglas duras no ven.
+    """
+
+    class Estado(models.TextChoices):
+        NUEVA = "nueva", "Nueva"
+        REVISADA = "revisada", "Revisada"
+        DESCARTADA = "descartada", "Descartada"
+
+    class OrigenDeteccion(models.TextChoices):
+        MEDICION = "medicion", "Medición individual"
+        TENDENCIA = "tendencia", "Tendencia en ventana"
+        IMAGEN = "imagen", "Análisis de imagen"
+
+    cultivo = models.ForeignKey(
+        "cultivos.Cultivo",
+        on_delete=models.CASCADE,
+        related_name="anomalias",
+    )
+    sensor = models.ForeignKey(
+        "monitoreo.Sensor",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="anomalias",
+    )
+    medicion = models.ForeignKey(
+        "monitoreo.Medicion",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="anomalias",
+    )
+
+    origen = models.CharField(
+        max_length=15,
+        choices=OrigenDeteccion.choices,
+        default=OrigenDeteccion.MEDICION,
+    )
+
+    # Score de anomalía del modelo (0.0 = normal, 1.0 = muy anómalo)
+    score = models.FloatField(
+        help_text="Score del Isolation Forest. Mayor = más anómalo."
+    )
+
+    # Valores para dar contexto al usuario
+    valor_observado = models.FloatField()
+    valor_esperado_min = models.FloatField(null=True, blank=True)
+    valor_esperado_max = models.FloatField(null=True, blank=True)
+
+    # Descripción legible y trazabilidad del modelo
+    descripcion = models.TextField(blank=True)
+    modelo_version = models.CharField(
+        max_length=20, default="iforest-v1",
+        help_text="Versión del modelo que generó la detección."
+    )
+
+    estado = models.CharField(
+        max_length=15,
+        choices=Estado.choices,
+        default=Estado.NUEVA,
+    )
+    fecha_deteccion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha_deteccion"]
+        verbose_name = "Anomalía"
+        verbose_name_plural = "Anomalías"
+        indexes = [
+            models.Index(fields=["cultivo", "-fecha_deteccion"]),
+            models.Index(fields=["estado"]),
+            models.Index(fields=["sensor", "-fecha_deteccion"]),
+        ]
+
+    def __str__(self):
+        return (
+            f"Anomalia({self.cultivo.nombre}, "
+            f"score={self.score:.2f}, "
+            f"{self.fecha_deteccion:%Y-%m-%d %H:%M})"
+        )
