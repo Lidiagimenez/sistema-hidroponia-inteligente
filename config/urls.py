@@ -22,8 +22,8 @@ urlpatterns = [
     path("monitoreo/", TemplateView.as_view(template_name="monitoreo/index.html"), name="monitoreo"),
     path("cultivos/", TemplateView.as_view(template_name="cultivos/index.html"), name="cultivos"),
     path("intervenciones/", TemplateView.as_view(template_name="intervenciones/index.html"), name="intervenciones"),
+    path("imagenes/", TemplateView.as_view(template_name="imagenes/index.html"), name="imagenes"),
     path("ia/", TemplateView.as_view(template_name="en-construccion.html"), name="ia"),
-    path("imagenes/", TemplateView.as_view(template_name="en-construccion.html"), name="imagenes"),
     path("reportes/", TemplateView.as_view(template_name="en-construccion.html"), name="reportes"),
 
     # --- Administración (solo admin) ---
