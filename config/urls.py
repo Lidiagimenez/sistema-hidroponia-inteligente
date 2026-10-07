@@ -27,11 +27,11 @@ urlpatterns = [
     path("ia/", TemplateView.as_view(template_name="en-construccion.html"), name="ia"),
 
     # --- Administración (solo admin) ---
-    path("usuarios/", TemplateView.as_view(template_name="en-construccion.html"), name="usuarios"),
-    path("dispositivos/", TemplateView.as_view(template_name="en-construccion.html"), name="dispositivos"),
-    path("configuracion-sensores/", TemplateView.as_view(template_name="en-construccion.html"), name="configuracion-sensores"),
-    path("rangos-operacion/", TemplateView.as_view(template_name="en-construccion.html"), name="rangos-operacion"),
-    path("auditoria/", TemplateView.as_view(template_name="en-construccion.html"), name="auditoria"),
+    path("usuarios/", TemplateView.as_view(template_name="usuarios/index.html"), name="usuarios"),
+    path("dispositivos/", TemplateView.as_view(template_name="dispositivos/index.html"), name="dispositivos"),
+    path("configuracion-sensores/", TemplateView.as_view(template_name="configuracion-sensores/index.html"), name="configuracion-sensores"),
+    path("rangos-operacion/", TemplateView.as_view(template_name="rangos-operacion/index.html"), name="rangos-operacion"),
+    path("auditoria/", TemplateView.as_view(template_name="auditoria/index.html"), name="auditoria"),
 
     # --- API REST ---
     path("api/", include("apps.usuarios.urls")),

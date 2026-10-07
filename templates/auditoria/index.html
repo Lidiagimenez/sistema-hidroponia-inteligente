@@ -1,0 +1,214 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Auditoría — HidroSensor{% endblock %}
+
+{% block content %}
+
+<!-- ==================== HEADER ==================== -->
+<div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center">
+            <i data-lucide="clipboard-list" class="w-6 h-6 text-brand"></i>
+        </div>
+        <div>
+            <h1 class="font-serif text-3xl font-bold text-gray-900">Auditoría</h1>
+            <p class="text-sm text-gray-600">Registro completo de acciones realizadas en el sistema.</p>
+        </div>
+    </div>
+
+    <button class="flex items-center gap-2 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        Exportar
+    </button>
+</div>
+
+<!-- ==================== FILTROS ==================== -->
+<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
+    <div class="flex flex-wrap items-center gap-3">
+
+        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option>Todos los usuarios</option>
+            <option>María Gómez</option>
+            <option>Juan Pérez</option>
+            <option>Ana López</option>
+            <option>Carlos Ruiz</option>
+        </select>
+
+        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option>Todas las acciones</option>
+            <option>Login</option>
+            <option>Crear</option>
+            <option>Editar</option>
+            <option>Eliminar</option>
+            <option>Resolver alerta</option>
+        </select>
+
+        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option>Últimos 7 días</option>
+            <option>Últimos 30 días</option>
+            <option>Este mes</option>
+        </select>
+
+        <div class="flex-1 min-w-[200px] relative">
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" placeholder="Buscar en auditoría..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+        </div>
+
+    </div>
+</div>
+
+<!-- ==================== TABLA ==================== -->
+<div class="bg-white rounded-2xl border border-gray-200 p-6">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha y hora</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acción</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Recurso</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">IP</th>
+                    <th class="w-10"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">12 ago 2025, 10:24</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">María Gómez</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Login
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Sesión</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.42</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">12 ago 2025, 10:15</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">María Gómez</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Editar
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Rango pH-01</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.42</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">12 ago 2025, 09:12</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Juan Pérez</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Login
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Sesión</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.18</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">12 ago 2025, 09:05</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Juan Pérez</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Resolver alerta
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Alerta #ALT-2025-08-12-001</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.18</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">11 ago 2025, 16:30</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Ana López</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Crear
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Intervención #INT-042</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.27</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">11 ago 2025, 14:30</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Ana López</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Login
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Sesión</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.27</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">10 ago 2025, 11:20</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Carlos Ruiz</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Eliminar
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Reporte #REP-019</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.55</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">10 ago 2025, 09:45</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Carlos Ruiz</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Editar
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Cultivo Lechuga</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.55</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">09 ago 2025, 16:42</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">Juan Pérez</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Crear
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Dispositivo ESP32-05</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.18</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-3 text-gray-700 whitespace-nowrap">09 ago 2025, 08:30</td>
+                    <td class="py-3 px-3 text-gray-900 font-medium">María Gómez</td>
+                    <td class="py-3 px-3">
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                            Crear
+                        </span>
+                    </td>
+                    <td class="py-3 px-3 text-gray-600 text-xs">Usuario sofia.martin</td>
+                    <td class="py-3 px-3 text-gray-500 text-xs font-mono">192.168.1.42</td>
+                    <td class="py-3 px-3 text-gray-400 text-xs">→</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <p class="text-xs text-gray-500 text-center mt-4">Mostrando 1 - 10 de 156 registros</p>
+
+</div>
+
+{% endblock %}
