@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- ==================== HEADER ==================== -->
+<!-- HEADER -->
 <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
     <div class="flex items-center gap-4">
         <div class="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center">
@@ -16,48 +16,32 @@
         </div>
     </div>
 
-    <button
-        id="btn-nueva-intervencion"
-        class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20"
-    >
+    <button id="btn-nueva-intervencion" class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
         <i data-lucide="plus" class="w-4 h-4"></i>
         Registrar intervención
     </button>
 </div>
 
-<!-- ==================== TABS DE TIPOS ==================== -->
+<!-- TABS -->
 <div class="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
     <button class="tab-intervencion active px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap" data-tab="todas">
-        Todas (12)
+        Todas (<span id="tab-todas">0</span>)
     </button>
-    <button class="tab-intervencion px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="mantenimiento">
-        Mantenimiento (4)
+    <button class="tab-intervencion px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="resueltas">
+        Resueltas (<span id="tab-resueltas">0</span>)
     </button>
-    <button class="tab-intervencion px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="ajuste">
-        Ajuste de parámetros (3)
-    </button>
-    <button class="tab-intervencion px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="tratamiento">
-        Tratamiento (3)
-    </button>
-    <button class="tab-intervencion px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="siembra">
-        Siembra/Cosecha (2)
+    <button class="tab-intervencion px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="proceso">
+        En proceso (<span id="tab-en-proceso">0</span>)
     </button>
 </div>
 
-<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+<!-- CONTENIDO -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    <!-- ========== TABLA DE INTERVENCIONES ========== -->
+    <!-- TABLA -->
     <div class="lg:col-span-2">
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
-
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-serif text-xl font-bold text-gray-900">Historial de intervenciones</h2>
-                <button class="flex items-center gap-2 text-sm text-gray-600 hover:text-brand font-medium transition">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    Exportar
-                </button>
-            </div>
+            <h2 class="font-serif text-xl font-bold text-gray-900 mb-4">Historial de intervenciones</h2>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -65,216 +49,29 @@
                         <tr class="border-b border-gray-200">
                             <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha y hora</th>
                             <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
+                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alerta</th>
                             <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción</th>
                             <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Responsable</th>
                             <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
                             <th class="w-10"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-
-                        <!-- Fila 1 -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">12 ago 2025</p>
-                                <p class="text-xs text-gray-400">10:20</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="droplet" class="w-3.5 h-3.5 text-brand"></i>
-                                    Ajuste de pH
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Lechuga</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Ajuste de pH a 6.2</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Juan Pérez</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ✓ Resuelta
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila 2 -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">11 ago 2025</p>
-                                <p class="text-xs text-gray-400">14:30</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="leaf" class="w-3.5 h-3.5 text-green-600"></i>
-                                    Mantenimiento
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Tomate cherry</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Limpieza de filtros</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Ana López</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ✓ Resuelta
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila 3 -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">10 ago 2025</p>
-                                <p class="text-xs text-gray-400">11:00</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="beaker" class="w-3.5 h-3.5 text-teal-600"></i>
-                                    Tratamiento
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Frutilla</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Aplicación de nutrientes</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Carlos Ruiz</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ✓ Resuelta
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila 4 -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">09 ago 2025</p>
-                                <p class="text-xs text-gray-400">16:45</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="settings" class="w-3.5 h-3.5 text-gray-600"></i>
-                                    Cambio de componente
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Albahaca</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Reemplazo de bomba dosificadora</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Juan Pérez</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ✓ Resuelta
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila 5 -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">08 ago 2025</p>
-                                <p class="text-xs text-gray-400">09:10</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="sliders" class="w-3.5 h-3.5 text-blue-600"></i>
-                                    Calibración
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Lechuga</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Calibración de sensor EC</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">María Gómez</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ✓ Resuelta
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila 6 (en proceso) -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">07 ago 2025</p>
-                                <p class="text-xs text-gray-400">13:25</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="beaker" class="w-3.5 h-3.5 text-teal-600"></i>
-                                    Tratamiento
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Kale</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Aplicación preventiva</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Ana López</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ● En proceso
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Fila 7 -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">
-                                <p class="font-medium">06 ago 2025</p>
-                                <p class="text-xs text-gray-400">10:15</p>
-                            </td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 whitespace-nowrap">
-                                    <i data-lucide="leaf" class="w-3.5 h-3.5 text-green-600"></i>
-                                    Siembra
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Lechuga</td>
-                            <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate">Siembra de nuevo ciclo</td>
-                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">Juan Pérez</td>
-                            <td class="py-3 px-3">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                    ✓ Resuelta
-                                </span>
-                            </td>
-                            <td class="py-3 px-3">
-                                <button class="p-1 hover:bg-gray-100 rounded transition">
-                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-400"></i>
-                                </button>
-                            </td>
-                        </tr>
-
+                    <tbody id="tbody-intervenciones" class="divide-y divide-gray-100">
+                        <tr><td colspan="7" class="py-8 text-center text-gray-400 text-sm">
+                            <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
+                            Cargando...
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <p class="text-xs text-gray-500 text-center mt-4">Mostrando 1 - 10 de 12 intervenciones</p>
-
+            <p id="contador-intervenciones" class="text-xs text-gray-500 text-center mt-4"></p>
         </div>
     </div>
 
-    <!-- ========== PANEL FORMULARIO REGISTRAR ========== -->
+    <!-- FORMULARIO -->
     <div class="lg:col-span-1">
-        <div id="panel-form" class="bg-white rounded-2xl border border-gray-200 p-5 sticky top-24 hidden">
+        <div id="panel-form-intervencion" class="hidden bg-white rounded-2xl border border-gray-200 p-5 sticky top-24">
             <div class="flex items-center justify-between mb-5">
                 <h2 class="font-serif text-xl font-bold text-gray-900">Registrar intervención</h2>
                 <button id="btn-cerrar-form" class="p-1 hover:bg-gray-100 rounded transition">
@@ -284,117 +81,60 @@
 
             <form id="form-intervencion" class="space-y-4">
 
-                <!-- Tipo -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Tipo de intervención</label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
-                        <option>Selecciona un tipo</option>
-                        <option>Mantenimiento</option>
-                        <option>Ajuste de pH</option>
-                        <option>Tratamiento</option>
-                        <option>Cambio de componente</option>
-                        <option>Calibración</option>
-                        <option>Siembra/Cosecha</option>
-                    </select>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                        Alerta asociada <span class="text-red-500">*</span>
+                    </label>
+                    <select id="select-alerta" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"></select>
                 </div>
 
-                <!-- Cultivo -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Cultivo</label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
-                        <option>Selecciona un cultivo</option>
-                        <option>Lechuga</option>
-                        <option>Albahaca</option>
-                        <option>Tomate cherry</option>
-                        <option>Frutilla</option>
-                        <option>Kale</option>
-                    </select>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                        Fecha y hora
+                    </label>
+                    <input type="text" id="input-fecha" readonly class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none">
                 </div>
 
-                <!-- Dispositivo (opcional) -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Dispositivo <span class="text-gray-400 font-normal">(opcional)</span></label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
-                        <option>Selecciona un dispositivo</option>
-                        <option>EPS01</option>
-                        <option>EPS02</option>
-                        <option>EPS03</option>
-                    </select>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                        Responsable
+                    </label>
+                    <input type="text" id="input-responsable" readonly class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none">
                 </div>
 
-                <!-- Fecha y hora -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Fecha y hora</label>
-                    <input
-                        type="text"
-                        value="12/08/2025 10:24"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                    >
-                </div>
-
-                <!-- Responsable -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Responsable</label>
-                    <input
-                        type="text"
-                        value="Juan Pérez"
-                        readonly
-                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
-                    >
-                </div>
-
-                <!-- Descripción -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Descripción</label>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                        Descripción <span class="text-red-500">*</span>
+                    </label>
                     <textarea
-                        rows="3"
-                        placeholder="Describe la intervención..."
+                        id="input-observaciones"
+                        rows="4"
+                        required
+                        placeholder="Describe la intervención realizada..."
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none resize-none"
                     ></textarea>
                 </div>
 
-                <!-- Evidencias -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Evidencias <span class="text-gray-400 font-normal">(opcional)</span></label>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-brand transition cursor-pointer">
-                        <i data-lucide="upload-cloud" class="w-6 h-6 text-gray-400 mx-auto mb-1"></i>
-                        <p class="text-xs text-gray-600">Arrastrá imágenes acá</p>
-                        <p class="text-[10px] text-gray-400">o seleccioná archivos</p>
-                    </div>
-                </div>
-
-                <!-- Botones -->
                 <div class="flex gap-2 pt-2">
-                    <button
-                        type="button"
-                        id="btn-cancelar"
-                        class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition"
-                    >
+                    <button type="button" id="btn-cancelar-form" class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition">
                         Cancelar
                     </button>
-                    <button
-                        type="submit"
-                        class="flex-1 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition"
-                    >
-                        Guardar intervención
+                    <button type="submit" id="btn-guardar-intervencion" class="flex-1 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                        <i data-lucide="wrench" class="w-4 h-4"></i>
+                        Guardar
                     </button>
                 </div>
 
             </form>
-
         </div>
 
-        <!-- Placeholder cuando el form está cerrado -->
-        <div id="panel-cerrado" class="bg-gradient-to-br from-green-50 to-white rounded-2xl border border-green-100 p-8 text-center sticky top-24">
+        <div id="panel-cerrado-intervencion" class="bg-gradient-to-br from-green-50 to-white rounded-2xl border border-green-100 p-8 text-center sticky top-24">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-sm">
                 <i data-lucide="clipboard-list" class="w-8 h-8 text-brand"></i>
             </div>
             <h3 class="font-serif text-lg font-bold text-gray-900 mb-2">Registrá tus intervenciones</h3>
-            <p class="text-sm text-gray-600 mb-4">Documentá cada acción que realizás en los cultivos para tener un historial completo.</p>
-            <button
-                id="btn-abrir-form"
-                class="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
-            >
+            <p class="text-sm text-gray-600 mb-4">Documentá cada acción que realizás en los cultivos.</p>
+            <button id="btn-abrir-form" class="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Registrar nueva
             </button>
@@ -407,52 +147,6 @@
 
 
 {% block extra_js %}
-<script>
-    // ============ TABS ============
-    document.querySelectorAll(".tab-intervencion").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-intervencion").forEach(b => {
-                b.classList.remove("active", "bg-brand", "text-white", "font-semibold");
-                b.classList.add("text-gray-600", "font-medium", "hover:bg-gray-100");
-            });
-            btn.classList.add("active", "bg-brand", "text-white", "font-semibold");
-            btn.classList.remove("text-gray-600", "font-medium", "hover:bg-gray-100");
-        });
-    });
-
-    // Aplicar estilos al tab activo al inicio
-    const activeTab = document.querySelector(".tab-intervencion.active");
-    if (activeTab) {
-        activeTab.classList.add("bg-brand", "text-white", "font-semibold");
-    }
-    document.querySelectorAll(".tab-intervencion:not(.active)").forEach(b => {
-        b.classList.add("text-gray-600", "font-medium", "hover:bg-gray-100");
-    });
-
-    // ============ ABRIR / CERRAR FORMULARIO ============
-    const panelForm = document.getElementById("panel-form");
-    const panelCerrado = document.getElementById("panel-cerrado");
-
-    function abrirForm() {
-        panelForm.classList.remove("hidden");
-        panelCerrado.classList.add("hidden");
-    }
-
-    function cerrarForm() {
-        panelForm.classList.add("hidden");
-        panelCerrado.classList.remove("hidden");
-    }
-
-    document.getElementById("btn-nueva-intervencion").addEventListener("click", abrirForm);
-    document.getElementById("btn-abrir-form").addEventListener("click", abrirForm);
-    document.getElementById("btn-cerrar-form").addEventListener("click", cerrarForm);
-    document.getElementById("btn-cancelar").addEventListener("click", cerrarForm);
-
-    // ============ SUBMIT FORM ============
-    document.getElementById("form-intervencion").addEventListener("submit", (e) => {
-        e.preventDefault();
-        alert("Acá después vamos a llamar a POST /api/intervenciones/");
-        cerrarForm();
-    });
-</script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/intervenciones.js"></script>
 {% endblock %}
