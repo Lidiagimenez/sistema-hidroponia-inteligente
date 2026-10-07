@@ -23,8 +23,8 @@ urlpatterns = [
     path("cultivos/", TemplateView.as_view(template_name="cultivos/index.html"), name="cultivos"),
     path("intervenciones/", TemplateView.as_view(template_name="intervenciones/index.html"), name="intervenciones"),
     path("imagenes/", TemplateView.as_view(template_name="imagenes/index.html"), name="imagenes"),
+    path("reportes/", TemplateView.as_view(template_name="reportes/index.html"), name="reportes"),
     path("ia/", TemplateView.as_view(template_name="en-construccion.html"), name="ia"),
-    path("reportes/", TemplateView.as_view(template_name="en-construccion.html"), name="reportes"),
 
     # --- Administración (solo admin) ---
     path("usuarios/", TemplateView.as_view(template_name="en-construccion.html"), name="usuarios"),

@@ -1,0 +1,504 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Reportes e IA — HidroSensor{% endblock %}
+
+{% block content %}
+
+<!-- ==================== HEADER ==================== -->
+<div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+    <div>
+        <h1 class="font-serif text-4xl font-bold text-gray-900 mb-1">Reportes e IA</h1>
+        <p class="text-sm text-gray-600">Convierte datos en decisiones para un cultivo más productivo.</p>
+    </div>
+    <div class="hidden md:flex items-center gap-2 text-brand">
+        <i data-lucide="sprout" class="w-6 h-6"></i>
+        <p class="text-xs text-gray-600 max-w-[180px] leading-tight">Cultivos más inteligentes para un futuro sostenible.</p>
+    </div>
+</div>
+
+<!-- ==================== TABS PRINCIPALES ==================== -->
+<div class="flex items-center gap-1 mb-6 border-b border-gray-200">
+    <button class="tab-principal active px-6 py-3 text-sm font-semibold whitespace-nowrap border-b-2 border-brand text-brand" data-tab="reportes">
+        Reportes
+    </button>
+    <button class="tab-principal px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap border-b-2 border-transparent" data-tab="ia">
+        IA
+    </button>
+</div>
+
+<!-- ==================== CONTENIDO: REPORTES ==================== -->
+<div id="contenido-reportes" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- ========== TABLA DE REPORTES ========== -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl border border-gray-200 p-6">
+
+            <!-- Header de la tarjeta -->
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center">
+                        <i data-lucide="file-text" class="w-5 h-5 text-brand"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-serif text-xl font-bold text-gray-900">Reportes</h2>
+                        <p class="text-xs text-gray-500">Genera y descarga informes del sistema.</p>
+                    </div>
+                </div>
+
+                <button class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Nuevo reporte
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="flex flex-wrap items-center gap-3 mb-5">
+                <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+                    <option>Todas las fechas</option>
+                    <option>Últimos 7 días</option>
+                    <option>Últimos 30 días</option>
+                    <option>Este mes</option>
+                </select>
+
+                <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+                    <option>Todos los cultivos</option>
+                    <option>Lechuga</option>
+                    <option>Albahaca</option>
+                    <option>Tomate cherry</option>
+                </select>
+
+                <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+                    <option>Todos los estados</option>
+                    <option>Completado</option>
+                    <option>En proceso</option>
+                    <option>Con alertas</option>
+                </select>
+            </div>
+
+            <!-- Tabla -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
+                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Período</th>
+                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alertas</th>
+                            <th class="w-20"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+
+                        <!-- Reporte 1 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">12 ago 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Lechuga</td>
+                            <td class="py-3 px-3 text-gray-600">7 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Completado
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 text-red-600 text-xs font-semibold">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                                    2
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition" title="Ver">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition" title="Descargar">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition" title="Más">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 2 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">05 ago 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Albahaca</td>
+                            <td class="py-3 px-3 text-gray-600">7 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Completado
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-gray-400 text-xs">0</td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 3 (con alertas) -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">28 jul 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Tomate cherry</td>
+                            <td class="py-3 px-3 text-gray-600">30 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Con alertas
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 text-red-600 text-xs font-semibold">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                                    5
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 4 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">21 jul 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Frutilla</td>
+                            <td class="py-3 px-3 text-gray-600">7 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Completado
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 text-red-600 text-xs font-semibold">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                                    1
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 5 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">14 jul 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Kale</td>
+                            <td class="py-3 px-3 text-gray-600">30 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Completado
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-gray-400 text-xs">0</td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 6 (en proceso) -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">07 jul 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Lechuga</td>
+                            <td class="py-3 px-3 text-gray-600">30 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● En proceso
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 text-red-600 text-xs font-semibold">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                                    3
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 7 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">30 jun 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Albahaca</td>
+                            <td class="py-3 px-3 text-gray-600">7 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Completado
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-gray-400 text-xs">0</td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Reporte 8 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-3 text-gray-700 whitespace-nowrap">23 jun 2025</td>
+                            <td class="py-3 px-3 text-gray-900 font-medium">Tomate cherry</td>
+                            <td class="py-3 px-3 text-gray-600">7 días</td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    ● Completado
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center gap-1 text-red-600 text-xs font-semibold">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                                    1
+                                </span>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1">
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                    <button class="p-1.5 hover:bg-gray-100 rounded transition">
+                                        <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                <p class="text-xs text-gray-500">Mostrando 1 - 8 de 24 reportes</p>
+                <div class="flex items-center gap-1">
+                    <button class="p-1.5 rounded border border-gray-200 hover:bg-gray-50 transition">
+                        <i data-lucide="chevron-left" class="w-4 h-4 text-gray-600"></i>
+                    </button>
+                    <button class="w-8 h-8 rounded bg-brand text-white font-semibold text-xs">1</button>
+                    <button class="w-8 h-8 rounded hover:bg-gray-100 text-gray-600 font-medium text-xs">2</button>
+                    <button class="w-8 h-8 rounded hover:bg-gray-100 text-gray-600 font-medium text-xs">3</button>
+                    <button class="p-1.5 rounded border border-gray-200 hover:bg-gray-50 transition">
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========== PANEL IA (derecha) ========== -->
+    <div class="lg:col-span-1 space-y-4">
+
+        <!-- Card IA - Recomendaciones -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+
+            <div class="flex items-start gap-3 mb-4">
+                <div class="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-brand"></i>
+                </div>
+                <div>
+                    <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight">IA - Recomendaciones</h3>
+                    <p class="text-xs text-gray-500">Análisis inteligente para mejorar tus cultivos.</p>
+                </div>
+            </div>
+
+            <!-- Análisis de cultivo -->
+            <div class="bg-green-50 border border-green-100 rounded-xl p-4 mb-4">
+                <div class="flex items-start gap-3 mb-3">
+                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="sprout" class="w-4 h-4 text-brand"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-900">Análisis de cultivo</p>
+                        <p class="text-xs text-gray-600 mt-0.5">La IA ha detectado patrones en los datos de tus cultivos y generó recomendaciones personalizadas para optimizar el rendimiento.</p>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <p class="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5 text-brand"></i>
+                        Tendencias detectadas:
+                    </p>
+                    <ul class="text-xs text-gray-700 space-y-1 ml-5 list-disc">
+                        <li>Crecimiento estable en lechuga.</li>
+                        <li>Leve disminución de pH en sector 2.</li>
+                        <li>Oportunidad de mejorar la ventilación en cultivos de tomate cherry.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Botón Ver recomendación -->
+            <button class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                Ver recomendación
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+
+        </div>
+
+        <!-- Card Anomalías detectadas -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-serif text-lg font-bold text-gray-900 leading-tight">Anomalías detectadas</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Se identificaron condiciones fuera de rango que requieren atención.</p>
+                    </div>
+                </div>
+            </div>
+
+            <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-1 rounded-full mb-4">
+                2 eventos
+            </span>
+
+            <!-- Lista de anomalías -->
+            <div class="space-y-2 mb-4">
+
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-red-50 hover:bg-red-100 transition cursor-pointer">
+                    <span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">pH fuera de rango</p>
+                    </div>
+                    <span class="text-[10px] text-gray-500 whitespace-nowrap">Hace 6 h</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-orange-50 hover:bg-orange-100 transition cursor-pointer">
+                    <span class="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">Temperatura elevada</p>
+                    </div>
+                    <span class="text-[10px] text-gray-500 whitespace-nowrap">Hace 12 h</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+
+            </div>
+
+            <!-- Botón ver todas -->
+            <button class="w-full border border-gray-300 hover:border-brand text-gray-700 hover:text-brand font-semibold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                Ver todas las anomalías
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==================== CONTENIDO: IA (oculto por defecto) ==================== -->
+<div id="contenido-ia" class="hidden">
+    <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-brand-light rounded-full mb-6">
+            <i data-lucide="sparkles" class="w-10 h-10 text-brand"></i>
+        </div>
+        <h2 class="font-serif text-2xl font-bold text-gray-900 mb-2">Panel de IA</h2>
+        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            Acá va el listado completo de recomendaciones generadas por el motor de reglas. Próximamente.
+        </p>
+        <button
+            class="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white font-semibold px-5 py-2.5 rounded-xl transition"
+            onclick="document.querySelector('[data-tab=reportes]').click()"
+        >
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Volver a Reportes
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // ============ TABS PRINCIPALES ============
+    document.querySelectorAll(".tab-principal").forEach(tab => {
+        tab.addEventListener("click", () => {
+            const target = tab.dataset.tab;
+
+            // Actualizar estilos de tabs
+            document.querySelectorAll(".tab-principal").forEach(t => {
+                t.classList.remove("active", "border-brand", "text-brand", "font-semibold");
+                t.classList.add("border-transparent", "text-gray-500", "font-medium");
+            });
+            tab.classList.add("active", "border-brand", "text-brand", "font-semibold");
+            tab.classList.remove("border-transparent", "text-gray-500", "font-medium");
+
+            // Mostrar/ocultar contenido
+            const contReportes = document.getElementById("contenido-reportes");
+            const contIA = document.getElementById("contenido-ia");
+
+            if (target === "reportes") {
+                contReportes.classList.remove("hidden");
+                contIA.classList.add("hidden");
+            } else {
+                contReportes.classList.add("hidden");
+                contIA.classList.remove("hidden");
+            }
+        });
+    });
+</script>
+{% endblock %}
