@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- ==================== HEADER ==================== -->
+<!-- HEADER -->
 <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
     <div class="flex items-center gap-4">
         <div class="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center">
@@ -22,45 +22,23 @@
     </button>
 </div>
 
-<!-- ==================== FILTROS ==================== -->
+<!-- FILTROS -->
 <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
     <div class="flex flex-wrap items-center gap-3">
-
         <div class="flex-1 min-w-[200px] relative">
             <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input
-                type="text"
-                placeholder="Buscar dispositivo..."
-                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-            >
+            <input type="text" placeholder="Buscar dispositivo..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
         </div>
-
         <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
             <option>Todos los tipos</option>
-            <option>ESP32</option>
-            <option>ESP8266</option>
-            <option>Arduino</option>
         </select>
-
         <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
             <option>Todos los estados</option>
-            <option>Online</option>
-            <option>Offline</option>
-            <option>Mantenimiento</option>
         </select>
-
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option>Todas las ubicaciones</option>
-            <option>Sala de cultivo 1</option>
-            <option>Sala de cultivo 2</option>
-            <option>Invernadero 1</option>
-            <option>Invernadero 2</option>
-        </select>
-
     </div>
 </div>
 
-<!-- ==================== TABLA DE DISPOSITIVOS ==================== -->
+<!-- TABLA -->
 <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-6">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -75,268 +53,19 @@
                     <th class="w-32"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
-
-                <!-- Dispositivo 1 (online) -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">EPS01-01</p>
-                        <p class="text-xs text-gray-500">Principal</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP32</td>
-                    <td class="py-3 px-3 text-gray-700">Lechuga</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                            Online
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 2 min</td>
-                    <td class="py-3 px-3 text-gray-700 text-xs font-medium">4 / 5</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition" title="Ver">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition" title="Configurar">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition" title="Más">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 2 (online) -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">ESP32-02</p>
-                        <p class="text-xs text-gray-500">Invernadero 1</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP32</td>
-                    <td class="py-3 px-3 text-gray-700">Albahaca</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                            Online
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 4 min</td>
-                    <td class="py-3 px-3 text-gray-700 text-xs font-medium">6 / 6</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 3 (offline) -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">EPS03-01</p>
-                        <p class="text-xs text-gray-500">Sala de cultivo 1</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP32</td>
-                    <td class="py-3 px-3 text-gray-700">Tomate cherry</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-red-600 rounded-full"></span>
-                            Offline
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 5 h</td>
-                    <td class="py-3 px-3 text-red-600 text-xs font-medium">0 / 4</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 4 (online) -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">ESP32-04</p>
-                        <p class="text-xs text-gray-500">Invernadero 2</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP32</td>
-                    <td class="py-3 px-3 text-gray-700">Frutilla</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                            Online
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 2 h</td>
-                    <td class="py-3 px-3 text-gray-700 text-xs font-medium">2 / 4</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 5 (mantenimiento) -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">T-01</p>
-                        <p class="text-xs text-gray-500">Tanque principal</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">Arduino</td>
-                    <td class="py-3 px-3 text-gray-700">Sistema general</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-orange-600 rounded-full"></span>
-                            Mantenimiento
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 1 día</td>
-                    <td class="py-3 px-3 text-gray-700 text-xs font-medium">3 / 4</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 6 -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">N-01</p>
-                        <p class="text-xs text-gray-500">Nodo nutrientes</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP32</td>
-                    <td class="py-3 px-3 text-gray-700">Kale</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                            Online
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 3 min</td>
-                    <td class="py-3 px-3 text-gray-700 text-xs font-medium">5 / 5</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 7 -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">EC-01</p>
-                        <p class="text-xs text-gray-500">Sala de mezcla</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP8266</td>
-                    <td class="py-3 px-3 text-gray-700">Lechuga</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                            Online
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 6 min</td>
-                    <td class="py-3 px-3 text-gray-700 text-xs font-medium">4 / 4</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
-                <!-- Dispositivo 8 (offline) -->
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-3">
-                        <p class="text-gray-900 font-medium">PH-01</p>
-                        <p class="text-xs text-gray-500">Reserva de agua</p>
-                    </td>
-                    <td class="py-3 px-3 text-gray-700">ESP32</td>
-                    <td class="py-3 px-3 text-gray-700">Sistema general</td>
-                    <td class="py-3 px-3">
-                        <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <span class="w-1 h-1 bg-red-600 rounded-full"></span>
-                            Offline
-                        </span>
-                    </td>
-                    <td class="py-3 px-3 text-gray-600 text-xs whitespace-nowrap">Hace 8 h</td>
-                    <td class="py-3 px-3 text-red-600 text-xs font-medium">0 / 3</td>
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1">
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="settings" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                            <button class="p-1.5 hover:bg-gray-100 rounded transition">
-                                <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-
+            <tbody id="tbody-dispositivos" class="divide-y divide-gray-100">
+                <tr><td colspan="7" class="py-8 text-center text-gray-400 text-sm">
+                    <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
+                    Cargando...
+                </td></tr>
             </tbody>
         </table>
     </div>
-
-    <p class="text-xs text-gray-500 text-center mt-4">Mostrando 1 - 8 de 8 dispositivos</p>
-
+    <p id="contador-dispositivos" class="text-xs text-gray-500 text-center mt-4"></p>
 </div>
 
-<!-- ==================== STATS INFERIORES ==================== -->
+<!-- STATS -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-    <!-- Total -->
     <div class="bg-white rounded-2xl border border-gray-200 p-5">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -344,12 +73,11 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 mb-0.5">Total de dispositivos</p>
-                <p class="text-2xl font-bold text-gray-900">8</p>
+                <p id="stat-total" class="text-2xl font-bold text-gray-900">0</p>
             </div>
         </div>
     </div>
 
-    <!-- Online -->
     <div class="bg-white rounded-2xl border border-gray-200 p-5">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -357,13 +85,12 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 mb-0.5">Dispositivos online</p>
-                <p class="text-2xl font-bold text-gray-900">6</p>
-                <p class="text-[10px] text-green-600 font-medium mt-0.5">↑ +1 este mes</p>
+                <p id="stat-online" class="text-2xl font-bold text-gray-900">0</p>
+                <p id="stat-online-pct" class="text-[10px] text-green-600 font-medium mt-0.5"></p>
             </div>
         </div>
     </div>
 
-    <!-- Offline -->
     <div class="bg-white rounded-2xl border border-gray-200 p-5">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -371,13 +98,12 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 mb-0.5">Dispositivos offline</p>
-                <p class="text-2xl font-bold text-gray-900">2</p>
-                <p class="text-[10px] text-gray-500 mt-0.5">25% del total</p>
+                <p id="stat-offline" class="text-2xl font-bold text-gray-900">0</p>
+                <p id="stat-offline-pct" class="text-[10px] text-gray-500 mt-0.5"></p>
             </div>
         </div>
     </div>
 
-    <!-- Mantenimiento -->
     <div class="bg-white rounded-2xl border border-gray-200 p-5">
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -385,12 +111,17 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 mb-0.5">En mantenimiento</p>
-                <p class="text-2xl font-bold text-gray-900">1</p>
-                <p class="text-[10px] text-gray-500 mt-0.5">12% del total</p>
+                <p id="stat-mantenimiento" class="text-2xl font-bold text-gray-900">0</p>
+                <p id="stat-mant-pct" class="text-[10px] text-gray-500 mt-0.5"></p>
             </div>
         </div>
     </div>
-
 </div>
 
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="/static/js/api.js"></script>
+<script src="/static/js/dispositivos.js"></script>
 {% endblock %}
