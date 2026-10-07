@@ -11,6 +11,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -41,7 +42,9 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
         .font-serif { font-family: 'Playfair Display', Georgia, serif; }
 
-        /* Item del sidebar */
+        /* ============================================
+           SIDEBAR
+           ============================================ */
         .sidebar-item {
             display: flex;
             align-items: center;
@@ -66,19 +69,142 @@
             height: 1.25rem;
             flex-shrink: 0;
         }
+        .sidebar-item-badge { justify-content: space-between; }
 
-        /* Item con badge (Alertas) */
-        .sidebar-item-badge {
-            justify-content: space-between;
+        /* ============================================
+           MODO OSCURO — Override global
+           ============================================ */
+        body.dark {
+            background-color: #0F172A !important;
+            color: #E2E8F0;
         }
+
+        /* Fondos blancos → gris oscuro */
+        body.dark .bg-white { background-color: #1E293B !important; }
+        body.dark .bg-gray-50 { background-color: #0F172A !important; }
+        body.dark .bg-gray-100 { background-color: #1E293B !important; }
+        body.dark .bg-cream { background-color: #0F172A !important; }
+
+        /* Fondos de colores en modo oscuro (más apagados) */
+        body.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; }
+        body.dark .bg-orange-50 { background-color: rgba(249, 115, 22, 0.1) !important; }
+        body.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.1) !important; }
+        body.dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1) !important; }
+        body.dark .bg-yellow-50 { background-color: rgba(234, 179, 8, 0.1) !important; }
+        body.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.1) !important; }
+        body.dark .bg-cyan-50 { background-color: rgba(6, 182, 212, 0.1) !important; }
+
+        /* Textos */
+        body.dark .text-gray-900 { color: #F1F5F9 !important; }
+        body.dark .text-gray-800 { color: #E2E8F0 !important; }
+        body.dark .text-gray-700 { color: #CBD5E1 !important; }
+        body.dark .text-gray-600 { color: #94A3B8 !important; }
+        body.dark .text-gray-500 { color: #94A3B8 !important; }
+        body.dark .text-gray-400 { color: #64748B !important; }
+
+        /* Mantener colores de marca en textos */
+        body.dark .text-brand { color: #22C55E !important; }
+        body.dark .text-brand-dark { color: #DCFCE7 !important; }
+
+        /* Bordes */
+        body.dark .border-gray-200 { border-color: #334155 !important; }
+        body.dark .border-gray-300 { border-color: #334155 !important; }
+        body.dark .border-gray-100 { border-color: #1E293B !important; }
+        body.dark .divide-gray-100 > * + * { border-color: #1E293B !important; }
+        body.dark .divide-gray-200 > * + * { border-color: #334155 !important; }
+
+        /* Header del layout */
+        body.dark header.bg-white { background-color: #1E293B !important; border-color: #334155 !important; }
+
+        /* Inputs, selects, textareas */
+        body.dark input,
+        body.dark select,
+        body.dark textarea {
+            background-color: #0F172A !important;
+            color: #F1F5F9 !important;
+            border-color: #334155 !important;
+        }
+        body.dark input::placeholder,
+        body.dark textarea::placeholder {
+            color: #64748B !important;
+        }
+        body.dark input:focus,
+        body.dark select:focus,
+        body.dark textarea:focus {
+            border-color: #22C55E !important;
+            outline: none;
+        }
+
+        /* Hover states */
+        body.dark .hover\:bg-gray-50:hover { background-color: #334155 !important; }
+        body.dark .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+
+        /* Tablas */
+        body.dark thead tr { border-color: #334155 !important; }
+        body.dark tbody tr { border-color: #1E293B !important; }
+        body.dark tbody tr:hover { background-color: rgba(51, 65, 85, 0.4) !important; }
+
+        /* Scrollbar */
+        body.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+        body.dark ::-webkit-scrollbar-track { background: #0F172A; }
+        body.dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+        body.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* ============================================
+           FIX MODO OSCURO — Gradientes y detalles
+           ============================================ */
+
+        /* Todos los gradientes → fondo oscuro plano */
+        body.dark .bg-gradient-to-r,
+        body.dark .bg-gradient-to-l,
+        body.dark .bg-gradient-to-b,
+        body.dark .bg-gradient-to-t,
+        body.dark .bg-gradient-to-br,
+        body.dark .bg-gradient-to-bl,
+        body.dark .bg-gradient-to-tr,
+        body.dark .bg-gradient-to-tl {
+            background-image: none !important;
+            background-color: rgba(34, 197, 94, 0.08) !important;
+        }
+
+        /* Banner del dashboard: borde verde suave */
+        body.dark .border-green-100 { border-color: rgba(34, 197, 94, 0.2) !important; }
+        body.dark .border-green-300 { border-color: rgba(34, 197, 94, 0.4) !important; }
+
+        /* Color de marca claro (fondo del ícono sprout) */
+        body.dark .bg-brand-light { background-color: rgba(34, 197, 94, 0.15) !important; }
+
+        /* Decoración verde del banner (overlay del gradient) */
+        body.dark .from-green-100\/50 {
+            background-image: none !important;
+            background-color: transparent !important;
+        }
+
+        /* Hover de los badges rojos y verdes */
+        body.dark .hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.15) !important; }
+        body.dark .hover\:bg-red-100:hover { background-color: rgba(239, 68, 68, 0.2) !important; }
+
+        /* Tarjetas de alertas en modo oscuro */
+        body.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.12) !important; }
+        body.dark .bg-orange-50 { background-color: rgba(249, 115, 22, 0.12) !important; }
+        body.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.12) !important; }
     </style>
+
+    <!-- Aplicar modo oscuro ANTES de que se pinte la página (evita flash) -->
+    <script>
+        (function() {
+            const tema = localStorage.getItem("tema");
+            if (tema === "dark") {
+                document.documentElement.classList.add("dark");
+            }
+        })();
+    </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
     <!-- ==================== SIDEBAR ==================== -->
     <aside class="w-64 bg-brand-dark fixed inset-y-0 left-0 z-30 flex flex-col">
 
-        <!-- Logo + Nombre -->
         <div class="px-5 py-6 border-b border-white/10">
             <a href="/dashboard/" class="flex items-center gap-3">
                 <img src="{% static 'img/logo.png' %}" alt="HidroSensor" class="h-10 w-auto">
@@ -88,7 +214,6 @@
             </a>
         </div>
 
-        <!-- Menú -->
         <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-1">
 
             <a href="/dashboard/" class="sidebar-item">
@@ -111,7 +236,7 @@
                     <i data-lucide="bell"></i>
                     <span>Alertas</span>
                 </div>
-                <span class="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span id="alerta-badge" class="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                     3
                 </span>
             </a>
@@ -136,7 +261,6 @@
                 <span>Reportes</span>
             </a>
 
-            <!-- Sección ADMINISTRACIÓN (solo admin) -->
             <div data-role="admin" class="pt-6">
                 <p class="px-3 mb-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
                     Administración
@@ -170,7 +294,6 @@
 
         </nav>
 
-        <!-- Usuario abajo -->
         <div class="px-4 py-4 border-t border-white/10">
             <div class="flex items-center gap-3">
                 <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">
@@ -188,20 +311,25 @@
     <!-- ==================== MAIN ==================== -->
     <div class="ml-64 min-h-screen flex flex-col">
 
-        <!-- TOPBAR -->
         <header class="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-20">
             <div class="flex items-center justify-between gap-4">
 
-                <!-- Fecha -->
                 <div class="flex items-center gap-2 text-sm text-gray-700">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     <span id="topbar-fecha">--</span>
                 </div>
 
-                <!-- Acciones derecha -->
                 <div class="flex items-center gap-4">
 
-                    <!-- Campanita -->
+                    <!-- Botón modo oscuro -->
+                    <button
+                        id="btn-tema"
+                        title="Cambiar tema"
+                        class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                    >
+                        <i id="icono-tema" data-lucide="moon" class="w-5 h-5"></i>
+                    </button>
+
                     <button class="relative p-1 hover:bg-gray-100 rounded-lg transition">
                         <i data-lucide="bell" class="w-5 h-5 text-gray-700"></i>
                         <span class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
@@ -209,7 +337,6 @@
                         </span>
                     </button>
 
-                    <!-- Usuario + logout -->
                     <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
                         <div id="topbar-avatar" class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">
                             A
@@ -231,14 +358,12 @@
             </div>
         </header>
 
-        <!-- CONTENIDO -->
         <main class="flex-1 p-6">
             {% block content %}{% endblock %}
         </main>
 
     </div>
 
-    <!-- ==================== SCRIPTS ==================== -->
     <script>
         // --- 1. Verificar login ---
         const token = localStorage.getItem("access_token");
@@ -249,14 +374,12 @@
             window.location.href = "/login/";
         }
 
-        // --- 2. Mostrar datos del usuario ---
+        // --- 2. Datos del usuario ---
         const inicial = username.charAt(0).toUpperCase();
-
         ["sidebar-avatar", "topbar-avatar"].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.textContent = inicial;
         });
-
         document.getElementById("sidebar-username").textContent = username;
         document.getElementById("sidebar-rol").textContent = rol;
         document.getElementById("topbar-username").textContent = username;
@@ -269,7 +392,7 @@
             });
         }
 
-        // --- 4. Marcar el item activo del menú ---
+        // --- 4. Marcar item activo ---
         const path = window.location.pathname;
         document.querySelectorAll(".sidebar-item").forEach(link => {
             const href = link.getAttribute("href");
@@ -278,7 +401,7 @@
             }
         });
 
-        // --- 5. Fecha actual en español ---
+        // --- 5. Fecha ---
         const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
         const ahora = new Date();
         const fechaStr = `${ahora.getDate()} ${meses[ahora.getMonth()]} ${ahora.getFullYear()} ${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`;
@@ -290,7 +413,36 @@
             window.location.href = "/login/";
         });
 
-        // --- 7. Renderizar iconos ---
+        // --- 7. MODO OSCURO ---
+        const btnTema = document.getElementById("btn-tema");
+        const iconoTema = document.getElementById("icono-tema");
+
+        function aplicarTema(tema) {
+            if (tema === "dark") {
+                document.body.classList.add("dark");
+            } else {
+                document.body.classList.remove("dark");
+            }
+            // Re-renderizar iconos
+            setTimeout(() => {
+                iconoTema.setAttribute("data-lucide", tema === "dark" ? "sun" : "moon");
+                lucide.createIcons();
+            }, 50);
+        }
+
+        // Aplicar tema inicial
+        const temaGuardado = localStorage.getItem("tema") || "light";
+        aplicarTema(temaGuardado);
+
+        // Toggle al hacer click
+        btnTema.addEventListener("click", () => {
+            const temaActual = document.body.classList.contains("dark") ? "dark" : "light";
+            const nuevoTema = temaActual === "dark" ? "light" : "dark";
+            localStorage.setItem("tema", nuevoTema);
+            aplicarTema(nuevoTema);
+        });
+
+        // --- 8. Renderizar iconos ---
         lucide.createIcons();
     </script>
 
