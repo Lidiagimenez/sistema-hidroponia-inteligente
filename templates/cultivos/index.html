@@ -1,0 +1,497 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Cultivos — HidroSensor{% endblock %}
+
+{% block content %}
+
+<!-- ==================== HEADER ==================== -->
+<div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <i data-lucide="leaf" class="w-6 h-6 text-brand"></i>
+        </div>
+        <div>
+            <h1 class="font-serif text-3xl font-bold text-gray-900">Cultivos</h1>
+            <p class="text-sm text-gray-600">Gestiona y supervisa todos tus cultivos</p>
+        </div>
+    </div>
+
+    <button class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nuevo cultivo
+    </button>
+</div>
+
+<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+    <!-- ========== LISTA DE CULTIVOS (izquierda) ========== -->
+    <div class="lg:col-span-2">
+
+        <!-- Filtros -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+            <div class="relative mb-3">
+                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input
+                    type="text"
+                    placeholder="Buscar cultivo..."
+                    class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                >
+            </div>
+            <div class="flex gap-2">
+                <select class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+                    <option>Todos los estados</option>
+                    <option>Normal</option>
+                    <option>Advertencia</option>
+                    <option>Crítico</option>
+                </select>
+                <select class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+                    <option>Todos los tipos</option>
+                    <option>Hortalizas</option>
+                    <option>Hierbas</option>
+                    <option>Frutales</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Lista de cultivos -->
+        <div class="space-y-3">
+
+            <!-- Lechuga (seleccionada) -->
+            <div class="cultivo-card bg-green-50 rounded-2xl border-2 border-green-300 p-4 cursor-pointer hover:shadow-md transition ring-2 ring-offset-2 ring-brand" data-cultivo-id="1">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-green-200">
+                        <img src="https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=200&h=200&fit=crop" alt="Lechuga" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 mb-1">
+                            <h3 class="font-semibold text-gray-900 truncate">Lechuga</h3>
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <span class="w-1 h-1 bg-green-600 rounded-full"></span>
+                                Normal
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Hojas verdes</p>
+                        <p class="text-xs text-gray-600">
+                            <span class="font-semibold">Día 12</span> / 28
+                        </p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+            </div>
+
+            <!-- Albahaca -->
+            <div class="cultivo-card bg-white rounded-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition" data-cultivo-id="2">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-green-200">
+                        <img src="https://images.unsplash.com/photo-1618375569909-3c8616cf7733?w=200&h=200&fit=crop" alt="Albahaca" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 mb-1">
+                            <h3 class="font-semibold text-gray-900 truncate">Albahaca</h3>
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <span class="w-1 h-1 bg-green-600 rounded-full"></span>
+                                Normal
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Hierbas</p>
+                        <p class="text-xs text-gray-600">
+                            <span class="font-semibold">Día 5</span> / 35
+                        </p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+            </div>
+
+            <!-- Tomate cherry -->
+            <div class="cultivo-card bg-white rounded-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition" data-cultivo-id="3">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-red-200">
+                        <img src="https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=200&h=200&fit=crop" alt="Tomate cherry" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 mb-1">
+                            <h3 class="font-semibold text-gray-900 truncate">Tomate cherry</h3>
+                            <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                ▲ Advertencia
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Frutales</p>
+                        <p class="text-xs text-gray-600">
+                            <span class="font-semibold">Día 26</span> / 60
+                        </p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+            </div>
+
+            <!-- Frutilla -->
+            <div class="cultivo-card bg-white rounded-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition" data-cultivo-id="4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-red-200">
+                        <img src="https://images.unsplash.com/photo-1518635017498-87f514b751ba?w=200&h=200&fit=crop" alt="Frutilla" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 mb-1">
+                            <h3 class="font-semibold text-gray-900 truncate">Frutilla</h3>
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <span class="w-1 h-1 bg-green-600 rounded-full"></span>
+                                Normal
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Frutales</p>
+                        <p class="text-xs text-gray-600">
+                            <span class="font-semibold">Día 17</span> / 35
+                        </p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+            </div>
+
+            <!-- Kale -->
+            <div class="cultivo-card bg-white rounded-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition" data-cultivo-id="5">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-green-200">
+                        <img src="https://images.unsplash.com/photo-1524179091875-bf99a9a6af57?w=200&h=200&fit=crop" alt="Kale" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2 mb-1">
+                            <h3 class="font-semibold text-gray-900 truncate">Kale</h3>
+                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <span class="w-1 h-1 bg-green-600 rounded-full"></span>
+                                Normal
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Hojas verdes</p>
+                        <p class="text-xs text-gray-600">
+                            <span class="font-semibold">Día 4</span> / 28
+                        </p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 flex-shrink-0"></i>
+                </div>
+            </div>
+
+        </div>
+
+        <p class="text-xs text-gray-500 text-center mt-4">Mostrando 1 - 5 de 5 cultivos</p>
+
+    </div>
+
+    <!-- ========== DETALLE DEL CULTIVO (derecha) ========== -->
+    <div class="lg:col-span-3">
+
+        <!-- Header del detalle -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
+
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <h2 class="font-serif text-2xl font-bold text-gray-900">Detalle de cultivo</h2>
+                <button class="p-1 hover:bg-gray-100 rounded-lg transition">
+                    <i data-lucide="more-horizontal" class="w-5 h-5 text-gray-500"></i>
+                </button>
+            </div>
+
+            <!-- Info del cultivo -->
+            <div class="flex items-start gap-5">
+                <div class="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-green-200">
+                    <img src="https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=300&h=300&fit=crop" alt="Lechuga" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                            <h3 class="font-serif text-3xl font-bold text-gray-900">Lechuga</h3>
+                            <p class="text-sm italic text-gray-500">Lactuca sativa</p>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            <span class="w-2 h-2 bg-green-600 rounded-full"></span>
+                            Normal
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-gray-600 mt-3">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            Inicio: 01 ago 2025
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span>Día <span class="font-semibold">12</span> de <span class="font-semibold">28</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex items-center gap-1 mt-6 border-b border-gray-200 -mx-6 px-6 overflow-x-auto">
+                <button class="tab-cultivo active px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 border-brand text-brand" data-tab="resumen">
+                    Resumen
+                </button>
+                <button class="tab-cultivo px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap border-b-2 border-transparent" data-tab="ciclo">
+                    Ciclo
+                </button>
+                <button class="tab-cultivo px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap border-b-2 border-transparent" data-tab="sensores">
+                    Sensores
+                </button>
+                <button class="tab-cultivo px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap border-b-2 border-transparent" data-tab="alertas">
+                    Alertas
+                </button>
+                <button class="tab-cultivo px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap border-b-2 border-transparent" data-tab="imagenes">
+                    Imágenes
+                </button>
+                <button class="tab-cultivo px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap border-b-2 border-transparent" data-tab="material">
+                    Material
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Grid: Info general + Sensores -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+            <!-- Info general -->
+            <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                <h3 class="font-serif text-lg font-bold text-gray-900 mb-4">Información general</h3>
+
+                <div class="space-y-3 text-sm">
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Tipo de planta</span>
+                        <span class="font-medium text-gray-900">Lechuga</span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Etapa actual</span>
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                            Crecimiento
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Duración del ciclo</span>
+                        <span class="font-medium text-gray-900">12 / 28 días</span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Dispositivos asociados</span>
+                        <span class="font-medium text-gray-900">EPS03-01</span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Variedad</span>
+                        <span class="font-medium text-gray-900">Lactuca sativa</span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Fecha de siembra</span>
+                        <span class="font-medium text-gray-900 flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-gray-400"></i>
+                            01 ago 2025
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5 border-b border-gray-100">
+                        <span class="text-gray-500">Cosecha estimada</span>
+                        <span class="font-medium text-gray-900 flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-gray-400"></i>
+                            28 ago 2025
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1.5">
+                        <span class="text-gray-500">Estado</span>
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                            <span class="w-1.5 h-1.5 bg-green-600 rounded-full"></span>
+                            Normal
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sensores principales -->
+            <div class="bg-white rounded-2xl border border-gray-200 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-serif text-lg font-bold text-gray-900">Sensores principales</h3>
+                    <a href="/monitoreo/" class="text-xs text-brand hover:underline font-medium flex items-center gap-1">
+                        Ver todos
+                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+
+                    <!-- pH -->
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="droplet" class="w-4 h-4 text-brand"></i>
+                            </div>
+                            <span class="text-xs text-gray-500">pH</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900 mb-1">6.2</p>
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                            Normal
+                        </span>
+                        <p class="text-[10px] text-gray-400 mt-1">Rango: 5.5 - 6.5</p>
+                    </div>
+
+                    <!-- Temperatura -->
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="thermometer" class="w-4 h-4 text-orange-600"></i>
+                            </div>
+                            <span class="text-xs text-gray-500">Temperatura</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900 mb-1">21.4 °C</p>
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                            Normal
+                        </span>
+                        <p class="text-[10px] text-gray-400 mt-1">Rango: 18 - 26</p>
+                    </div>
+
+                    <!-- Conductividad -->
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="activity" class="w-4 h-4 text-teal-600"></i>
+                            </div>
+                            <span class="text-xs text-gray-500">Conductividad</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900 mb-1">1.8 <span class="text-sm font-medium text-gray-500">mS/cm</span></p>
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                            Normal
+                        </span>
+                        <p class="text-[10px] text-gray-400 mt-1">Rango: 1.3 - 2.0</p>
+                    </div>
+
+                    <!-- Luz -->
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="sun" class="w-4 h-4 text-yellow-600"></i>
+                            </div>
+                            <span class="text-xs text-gray-500">Luz</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-900 mb-1">320 <span class="text-sm font-medium text-gray-500">µmol/m²/s</span></p>
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                            Normal
+                        </span>
+                        <p class="text-[10px] text-gray-400 mt-1">Rango: 200 - 500</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Línea de tiempo del cultivo -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
+            <h3 class="font-serif text-lg font-bold text-gray-900 mb-6">Línea de tiempo del cultivo</h3>
+
+            <div class="relative px-2">
+
+                <!-- Línea horizontal de fondo -->
+                <div class="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 z-0"></div>
+
+                <!-- Línea verde (progreso hasta Crecimiento) -->
+                <div class="absolute top-4 left-0 h-0.5 bg-brand z-0" style="width: 50%;"></div>
+
+                <!-- Etapas -->
+                <div class="relative grid grid-cols-5 gap-2">
+
+                    <!-- Siembra (completado) -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center z-10 mb-2">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-900">Siembra</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">01 ago 2025</p>
+                    </div>
+
+                    <!-- Germinación (completado) -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center z-10 mb-2">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-900">Germinación</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">06 ago 2025</p>
+                    </div>
+
+                    <!-- Crecimiento (actual) -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-10 h-10 rounded-full bg-brand ring-4 ring-green-100 flex items-center justify-center z-10 mb-2">
+                            <i data-lucide="sprout" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <p class="text-xs font-bold text-brand">Crecimiento</p>
+                        <p class="text-[10px] text-gray-500 mt-0.5">12 ago 2025</p>
+                    </div>
+
+                    <!-- Floración (pendiente) -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center z-10 mb-2">
+                            <i data-lucide="flower" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <p class="text-xs font-medium text-gray-500">Floración</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">20 ago 2025</p>
+                    </div>
+
+                    <!-- Cosecha (pendiente) -->
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center z-10 mb-2">
+                            <i data-lucide="package" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <p class="text-xs font-medium text-gray-500">Cosecha</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">28 ago 2025</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button class="bg-white border border-gray-300 hover:border-brand text-gray-700 hover:text-brand font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                Generar reporte
+            </button>
+            <button class="bg-white border border-gray-300 hover:border-brand text-gray-700 hover:text-brand font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                Configurar alertas
+            </button>
+            <button class="bg-brand hover:bg-brand-dark text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-brand/20">
+                <i data-lucide="wrench" class="w-4 h-4"></i>
+                Registrar intervención
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // ============ SELECCIÓN DE CULTIVO ============
+    document.querySelectorAll(".cultivo-card").forEach(card => {
+        card.addEventListener("click", () => {
+            document.querySelectorAll(".cultivo-card").forEach(c => {
+                c.classList.remove("ring-2", "ring-offset-2", "ring-brand", "bg-green-50", "border-green-300", "border-2");
+                c.classList.add("bg-white", "border", "border-gray-200");
+            });
+            card.classList.remove("bg-white", "border", "border-gray-200");
+            card.classList.add("ring-2", "ring-offset-2", "ring-brand", "bg-green-50", "border-2", "border-green-300");
+        });
+    });
+
+    // ============ TABS DEL DETALLE ============
+    document.querySelectorAll(".tab-cultivo").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab-cultivo").forEach(t => {
+                t.classList.remove("active", "border-brand", "text-brand", "font-semibold");
+                t.classList.add("border-transparent", "text-gray-500", "font-medium");
+            });
+            tab.classList.add("active", "border-brand", "text-brand", "font-semibold");
+            tab.classList.remove("border-transparent", "text-gray-500", "font-medium");
+        });
+    });
+</script>
+{% endblock %}
