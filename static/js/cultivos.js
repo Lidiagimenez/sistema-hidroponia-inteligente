@@ -1,11 +1,11 @@
 // ============================================================
-// cultivos.js — Carga dinámica de la pantalla de Cultivos
+// cultivos.js — Carga dinámica + crear/editar/eliminar
 // ============================================================
 
 let cultivosCargados = [];
 let cultivoSeleccionado = null;
 
-// ---------- Cargar la lista de cultivos ----------
+// ---------- Cargar la lista ----------
 async function cargarCultivos() {
     const contenedor = document.getElementById("lista-cultivos");
 
@@ -19,14 +19,17 @@ async function cargarCultivos() {
         lucide.createIcons();
 
         const respuesta = await apiGet("/cultivos/");
-        // Si la API devuelve paginación, tomar 'results'. Si no, usar la respuesta directa.
         cultivosCargados = Array.isArray(respuesta) ? respuesta : (respuesta.results || []);
 
         if (!cultivosCargados || cultivosCargados.length === 0) {
             contenedor.innerHTML = `
                 <div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                     <i data-lucide="leaf" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
-                    <p class="text-sm text-gray-500">No hay cultivos registrados.</p>
+                    <p class="text-sm text-gray-500 mb-3">No hay cultivos registrados.</p>
+                    <button onclick="abrirModalCultivo()" class="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        Crear el primero
+                    </button>
                 </div>
             `;
             lucide.createIcons();
@@ -35,7 +38,6 @@ async function cargarCultivos() {
 
         renderListaCultivos(cultivosCargados);
 
-        // Seleccionar el primero automáticamente
         if (cultivosCargados.length > 0) {
             seleccionarCultivo(cultivosCargados[0]);
         }
@@ -50,17 +52,15 @@ async function cargarCultivos() {
     }
 }
 
-// ---------- Renderizar lista ----------
+// ---------- Render lista ----------
 function renderListaCultivos(cultivos) {
     const contenedor = document.getElementById("lista-cultivos");
 
-    // Contador
     const contador = document.getElementById("contador-cultivos");
     if (contador) {
         contador.textContent = `Mostrando 1 - ${cultivos.length} de ${cultivos.length} cultivos`;
     }
 
-    // Estado de la lista
     contenedor.innerHTML = cultivos.map(c => {
         const esSeleccionado = cultivoSeleccionado && cultivoSeleccionado.id_cultivo === c.id_cultivo;
         const clases = esSeleccionado
@@ -95,7 +95,6 @@ function renderListaCultivos(cultivos) {
         `;
     }).join("");
 
-    // Event listeners
     document.querySelectorAll(".cultivo-card").forEach(card => {
         card.addEventListener("click", () => {
             const id = parseInt(card.dataset.cultivoId);
@@ -107,14 +106,14 @@ function renderListaCultivos(cultivos) {
     lucide.createIcons();
 }
 
-// ---------- Seleccionar un cultivo ----------
+// ---------- Seleccionar ----------
 async function seleccionarCultivo(cultivo) {
     cultivoSeleccionado = cultivo;
     renderListaCultivos(cultivosCargados);
     await renderDetalle(cultivo);
 }
 
-// ---------- Renderizar detalle ----------
+// ---------- Detalle ----------
 async function renderDetalle(cultivo) {
     const contenedor = document.getElementById("detalle-contenido");
 
@@ -126,9 +125,37 @@ async function renderDetalle(cultivo) {
         <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
             <div class="flex items-start justify-between gap-3 mb-4">
                 <h2 class="font-serif text-2xl font-bold text-gray-900">Detalle de cultivo</h2>
-                <button class="p-1 hover:bg-gray-100 rounded-lg transition">
-                    <i data-lucide="more-horizontal" class="w-5 h-5 text-gray-500"></i>
-                </button>
+
+                <!-- MENÚ DE ACCIONES -->
+                <div class="relative">
+                    <button
+                        id="btn-menu-cultivo"
+                        class="p-1.5 hover:bg-gray-100 rounded-lg transition"
+                        title="Opciones"
+                    >
+                        <i data-lucide="more-horizontal" class="w-5 h-5 text-gray-500"></i>
+                    </button>
+
+                    <div
+                        id="menu-cultivo"
+                        class="hidden absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[180px] z-20"
+                    >
+                        <button
+                            id="menu-editar-cultivo"
+                            class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+                        >
+                            <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
+                            Editar cultivo
+                        </button>
+                        <button
+                            id="menu-eliminar-cultivo"
+                            class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition text-left"
+                        >
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            Eliminar cultivo
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-start gap-5">
@@ -194,7 +221,213 @@ async function renderDetalle(cultivo) {
     `;
 
     lucide.createIcons();
+    configurarMenuCultivo();
+}
+
+// ---------- Configurar menú de 3 puntitos ----------
+function configurarMenuCultivo() {
+    const btn = document.getElementById("btn-menu-cultivo");
+    const menu = document.getElementById("menu-cultivo");
+    const btnEditar = document.getElementById("menu-editar-cultivo");
+    const btnEliminar = document.getElementById("menu-eliminar-cultivo");
+
+    if (!btn || !menu) return;
+
+    // Toggle del menú
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.toggle("hidden");
+    });
+
+    // Cerrar al hacer click afuera
+    document.addEventListener("click", () => {
+        menu.classList.add("hidden");
+    });
+
+    // Cerrar al hacer click dentro del menú (excepto en los botones que manejan su propio close)
+    menu.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
+
+    // Editar
+    btnEditar?.addEventListener("click", () => {
+        menu.classList.add("hidden");
+        abrirModalEditar(cultivoSeleccionado);
+    });
+
+    // Eliminar
+    btnEliminar?.addEventListener("click", () => {
+        menu.classList.add("hidden");
+        eliminarCultivo(cultivoSeleccionado);
+    });
+}
+
+// ============================================================
+// MODAL CREAR
+// ============================================================
+
+function abrirModalCultivo() {
+    const modal = document.getElementById("modal-nuevo-cultivo");
+    if (!modal) return;
+
+    document.getElementById("modal-titulo-cultivo").textContent = "Nuevo cultivo";
+    document.getElementById("form-nuevo-cultivo").reset();
+    document.getElementById("cultivo-id-editar").value = "";
+
+    const hoy = new Date();
+    document.getElementById("input-fecha-cultivo").value =
+        `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,"0")}-${String(hoy.getDate()).padStart(2,"0")}`;
+
+    document.getElementById("error-cultivo").classList.add("hidden");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function abrirModalEditar(cultivo) {
+    if (!cultivo) return;
+
+    const modal = document.getElementById("modal-nuevo-cultivo");
+    if (!modal) return;
+
+    document.getElementById("modal-titulo-cultivo").textContent = "Editar cultivo";
+    document.getElementById("input-nombre-cultivo").value = cultivo.nombre || "";
+    document.getElementById("input-tipo-cultivo").value = cultivo.tipo_cultivo || "";
+    document.getElementById("input-fecha-cultivo").value = cultivo.fecha_creacion || "";
+    document.getElementById("cultivo-id-editar").value = cultivo.id_cultivo;
+    document.getElementById("error-cultivo").classList.add("hidden");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function cerrarModalCultivo() {
+    const modal = document.getElementById("modal-nuevo-cultivo");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+}
+
+// ---------- Guardar (POST o PATCH) ----------
+async function guardarCultivo(event) {
+    event.preventDefault();
+
+    const btn = document.getElementById("btn-crear-cultivo");
+    const errorBox = document.getElementById("error-cultivo");
+    const idEditar = document.getElementById("cultivo-id-editar").value;
+    const nombre = document.getElementById("input-nombre-cultivo").value.trim();
+    const tipo = document.getElementById("input-tipo-cultivo").value.trim() || "No especificado";
+    const fecha = document.getElementById("input-fecha-cultivo").value;
+
+    if (!nombre) {
+        mostrarErrorCultivo("El nombre es obligatorio");
+        return;
+    }
+    if (!fecha) {
+        mostrarErrorCultivo("La fecha es obligatoria");
+        return;
+    }
+
+    const esEdicion = !!idEditar;
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> ${esEdicion ? "Guardando..." : "Creando..."}`;
+    lucide.createIcons();
+    errorBox.classList.add("hidden");
+
+    try {
+        const datos = {
+            nombre: nombre,
+            tipo_cultivo: tipo,
+            fecha_creacion: fecha,
+        };
+
+        let resultado;
+        if (esEdicion) {
+            resultado = await apiPatch(`/cultivos/${idEditar}/`, datos);
+        } else {
+            resultado = await apiPost("/cultivos/", datos);
+        }
+
+        await cargarCultivos();
+
+        const creado = cultivosCargados.find(c => c.id_cultivo === resultado.id_cultivo);
+        if (creado) seleccionarCultivo(creado);
+
+        cerrarModalCultivo();
+
+    } catch (err) {
+        console.error(err);
+        let msg = esEdicion ? "Error al guardar los cambios" : "Error al crear el cultivo";
+        try {
+            const partes = err.message.split(": ");
+            const json = JSON.parse(partes.slice(1).join(": "));
+            if (typeof json === "object") {
+                msg = Object.entries(json).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" · ");
+            }
+        } catch (e) {}
+        mostrarErrorCultivo(msg);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="plus" class="w-4 h-4"></i> ${esEdicion ? "Guardar cambios" : "Crear cultivo"}`;
+        lucide.createIcons();
+    }
+}
+
+// ---------- Eliminar ----------
+async function eliminarCultivo(cultivo) {
+    if (!cultivo) return;
+
+    const confirmado = confirm(`¿Eliminar el cultivo "${cultivo.nombre}"?\n\nEsta acción no se puede deshacer.`);
+    if (!confirmado) return;
+
+    try {
+        // DELETE
+        const res = await fetch(`/api/cultivos/${cultivo.id_cultivo}/`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` },
+        });
+
+        if (!res.ok) {
+            throw new Error(`DELETE → ${res.status}`);
+        }
+
+        // Recargar la lista
+        cultivoSeleccionado = null;
+        await cargarCultivos();
+
+    } catch (err) {
+        alert(`Error al eliminar: ${err.message}`);
+    }
+}
+
+function mostrarErrorCultivo(msg) {
+    const box = document.getElementById("error-cultivo");
+    box.textContent = msg;
+    box.classList.remove("hidden");
 }
 
 // ---------- Iniciar ----------
-document.addEventListener("DOMContentLoaded", cargarCultivos);
+function initCultivos() {
+    cargarCultivos();
+
+    document.getElementById("btn-nuevo-cultivo")?.addEventListener("click", abrirModalCultivo);
+    document.getElementById("form-nuevo-cultivo")?.addEventListener("submit", guardarCultivo);
+    document.getElementById("btn-cerrar-modal-cultivo")?.addEventListener("click", cerrarModalCultivo);
+
+    const modal = document.getElementById("modal-nuevo-cultivo");
+    modal?.addEventListener("click", (e) => {
+        if (e.target === modal) cerrarModalCultivo();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+            cerrarModalCultivo();
+        }
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCultivos);
+} else {
+    initCultivos();
+}

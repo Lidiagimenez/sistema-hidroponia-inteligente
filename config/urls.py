@@ -8,8 +8,6 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-
     # --- Páginas de autenticación ---
     path("login/", TemplateView.as_view(template_name="auth/login.html"), name="login"),
 
@@ -24,7 +22,7 @@ urlpatterns = [
     path("intervenciones/", TemplateView.as_view(template_name="intervenciones/index.html"), name="intervenciones"),
     path("imagenes/", TemplateView.as_view(template_name="imagenes/index.html"), name="imagenes"),
     path("reportes/", TemplateView.as_view(template_name="reportes/index.html"), name="reportes"),
-    path("ia/", TemplateView.as_view(template_name="en-construccion.html"), name="ia"),
+    path("ia/", TemplateView.as_view(template_name="ia/index.html"), name="ia"),
 
     # --- Administración (solo admin) ---
     path("usuarios/", TemplateView.as_view(template_name="usuarios/index.html"), name="usuarios"),
@@ -45,5 +43,16 @@ urlpatterns = [
     path("api/", include("apps.reportes.urls")),
 ]
 
+# ============================================================
+# ADMIN DE DJANGO (SOLO EN DESARROLLO)
+# URL custom para que no sea fácil de adivinar.
+# En producción (DEBUG=False) esta ruta NO existe.
+# ============================================================
+if settings.DEBUG:
+    urlpatterns += [
+        path("panel-interno/", admin.site.urls),
+    ]
+
+# Servir archivos media en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

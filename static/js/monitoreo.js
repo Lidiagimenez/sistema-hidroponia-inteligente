@@ -2,9 +2,9 @@
 // monitoreo.js — Carga dinámica de la pantalla de Monitoreo
 // ============================================================
 
-let sensoresMap = {};      // { sensor_id: { nombre_tipo, unidad, dispositivo } }
-let medicionesTodas = [];  // todas las mediciones traídas
-let agrupadas = {};        // { tipo: [mediciones ordenadas por fecha] }
+let sensoresMap = {};
+let medicionesTodas = [];
+let agrupadas = {};
 
 const TIPOS_CONFIG = {
     "ph":           { unidad: "pH",          icono: "droplet",     color: "text-brand",       bg: "bg-green-100",  min: 5.5, max: 6.5 },
@@ -24,11 +24,14 @@ async function cargarMonitoreo() {
         renderTodo();
     } catch (err) {
         console.error(err);
-        document.getElementById("chart-monitoreo").parentElement.innerHTML = `
-            <div class="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl">
-                Error al cargar monitoreo: ${err.message}
-            </div>
-        `;
+        const canvas = document.getElementById("chart-monitoreo");
+        if (canvas) {
+            canvas.parentElement.innerHTML = `
+                <div class="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl">
+                    Error al cargar monitoreo: ${err.message}
+                </div>
+            `;
+        }
     }
 }
 
@@ -37,21 +40,18 @@ async function cargarSensores() {
     const respuesta = await apiGet("/sensores/");
     const listaSensores = Array.isArray(respuesta) ? respuesta : (respuesta.results || []);
 
-    // Cargar también los tipos de sensor
     const respTipos = await apiGet("/tipos-sensor/");
     const tiposSensor = Array.isArray(respTipos) ? respTipos : (respTipos.results || []);
 
-    // Mapa de tipos por ID
     const mapaTipos = {};
     tiposSensor.forEach(t => { mapaTipos[t.id] = t; });
 
-    // Armar sensoresMap
     sensoresMap = {};
     listaSensores.forEach(s => {
         const tipo = mapaTipos[s.tipo_sensor];
         if (tipo) {
             sensoresMap[s.id] = {
-                tipo_nombre: tipo.nombre,      // "ph", "conductividad", etc.
+                tipo_nombre: tipo.nombre,
                 unidad: tipo.unidad_medida,
                 tipo_id: tipo.id,
             };
@@ -68,7 +68,7 @@ async function cargarMediciones() {
     console.log(`Mediciones cargadas: ${medicionesTodas.length}`);
 }
 
-// ---------- Agrupar por tipo de sensor ----------
+// ---------- Agrupar por tipo ----------
 function agruparMediciones() {
     agrupadas = {};
     medicionesTodas.forEach(m => {
@@ -79,23 +79,22 @@ function agruparMediciones() {
         agrupadas[tipo].push(m);
     });
 
-    // Ordenar cada grupo por fecha (más reciente primero)
     Object.keys(agrupadas).forEach(tipo => {
         agrupadas[tipo].sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
     });
 }
 
-// ---------- Renderizar todo ----------
+// ---------- Render todo ----------
 function renderTodo() {
     renderTarjetasSensores();
     renderLecturasActuales();
     renderTablaMediciones();
-    renderGrafico("ph"); // gráfico por defecto
+    renderGrafico("ph");
     renderDonaEstado();
     configurarSelectorGrafico();
 }
 
-// ---------- Tarjetas superiores (pH, EC, Temp, Luz) ----------
+// ---------- Tarjetas superiores ----------
 function renderTarjetasSensores() {
     const contenedor = document.getElementById("tarjetas-sensores");
     const tiposAMostrar = ["ph", "conductividad", "temperatura", "luz"];
@@ -103,7 +102,7 @@ function renderTarjetasSensores() {
     contenedor.innerHTML = tiposAMostrar.map(tipo => {
         const config = TIPOS_CONFIG[tipo];
         const mediciones = agrupadas[tipo] || [];
-        const ultima = mediciones[0]; // más reciente
+        const ultima = mediciones[0];
 
         if (!ultima) {
             return `
@@ -120,14 +119,12 @@ function renderTarjetasSensores() {
             ? `<span class="inline-flex items-center gap-1.5 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full"><span class="w-1.5 h-1.5 bg-green-600 rounded-full"></span>Normal</span>`
             : `<span class="inline-flex items-center gap-1.5 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full"><span class="w-1.5 h-1.5 bg-red-600 rounded-full"></span>Alerta</span>`;
 
-        // Formatear valor según tipo
         let valorStr = valor;
         if (tipo === "ph") valorStr = valor.toFixed(2);
-        else if (tipo === "conductividad") valorStr = (valor / 1000).toFixed(2); // µS→mS
+        else if (tipo === "conductividad") valorStr = (valor / 1000).toFixed(2);
         else if (tipo === "temperatura") valorStr = valor.toFixed(1);
         else if (tipo === "luz") valorStr = Math.round(valor);
 
-        // Rango visible formateado
         let rangoStr = "";
         if (tipo === "conductividad") {
             rangoStr = `Rango: ${(config.min/1000).toFixed(1)} - ${(config.max/1000).toFixed(1)}`;
@@ -155,7 +152,7 @@ function renderTarjetasSensores() {
     lucide.createIcons();
 }
 
-// ---------- Lecturas actuales (columna derecha) ----------
+// ---------- Lecturas actuales ----------
 function renderLecturasActuales() {
     const contenedor = document.getElementById("lecturas-actuales");
 
@@ -198,16 +195,14 @@ function renderLecturasActuales() {
     lucide.createIcons();
 }
 
-// ---------- Tabla de últimas mediciones ----------
+// ---------- Tabla ----------
 function renderTablaMediciones() {
     const tbody = document.getElementById("tbody-mediciones");
 
-    // Tomar las 10 más recientes de todos los tipos
     const ultimas = [...medicionesTodas]
         .sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora))
         .slice(0, 10);
 
-    // Agrupar por fecha_hora para armar filas (varias mediciones de la misma toma)
     const porFecha = {};
     ultimas.forEach(m => {
         const f = m.fecha_hora;
@@ -218,7 +213,7 @@ function renderTablaMediciones() {
         }
     });
 
-    const filas = Object.entries(porFecha).slice(0, 5); // 5 tomas
+    const filas = Object.entries(porFecha).slice(0, 5);
 
     tbody.innerHTML = filas.map(([fecha, valores]) => {
         const fechaFormato = formatearFechaHora(fecha).replace(",", "");
@@ -242,22 +237,18 @@ function renderTablaMediciones() {
         `;
     }).join("");
 
-    // Actualizar contador
     const contador = document.getElementById("contador-mediciones");
     if (contador) contador.textContent = `Mostrando últimas ${filas.length} tomas de ${medicionesTodas.length} mediciones`;
 }
 
-// ---------- Gráfico principal ----------
+// ---------- Gráfico ----------
 function renderGrafico(tipo) {
     const mediciones = agrupadas[tipo] || [];
     const config = TIPOS_CONFIG[tipo] || { min: 0, max: 10 };
 
-    // Tomar las últimas 24h, ordenadas de viejo a nuevo
-    const ahora = new Date();
-    const hace24h = new Date(ahora.getTime() - 24 * 60 * 60 * 1000);
-
+    // ✅ FIX: tomar las últimas 50 sin filtrar por fecha
     const filtradas = mediciones
-        .filter(m => new Date(m.fecha_hora) >= hace24h)
+        .slice(0, 50)
         .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
 
     const labels = filtradas.map(m => {
@@ -266,7 +257,6 @@ function renderGrafico(tipo) {
     });
     const valores = filtradas.map(m => m.valor);
 
-    // Destruir gráfico previo si existe
     const canvas = document.getElementById("chart-monitoreo");
     const ctx = canvas.getContext("2d");
 
@@ -274,7 +264,6 @@ function renderGrafico(tipo) {
         window.graficoMonitoreo.destroy();
     }
 
-    // Configurar min/max del eje Y según tipo
     let yMin = config.min * 0.9;
     let yMax = config.max * 1.1;
     let stepSize = 0.5;
@@ -358,7 +347,6 @@ function renderGrafico(tipo) {
         }],
     });
 
-    // Actualizar leyenda
     const rangoLabel = document.getElementById("leyenda-rango");
     if (rangoLabel) {
         if (tipo === "conductividad") {
@@ -368,14 +356,13 @@ function renderGrafico(tipo) {
         }
     }
 
-    // Actualizar título
     const titulo = document.getElementById("titulo-grafico");
     if (titulo) {
         titulo.textContent = `Evolución de ${nombreBonito(tipo)} (Últimas 24 horas)`;
     }
 }
 
-// ---------- Selector del gráfico ----------
+// ---------- Selector ----------
 function configurarSelectorGrafico() {
     const selector = document.getElementById("selector-sensor");
     if (!selector) return;
@@ -385,12 +372,11 @@ function configurarSelectorGrafico() {
     });
 }
 
-// ---------- Dona de estado ----------
+// ---------- Dona ----------
 function renderDonaEstado() {
     const ctxDona = document.getElementById("chart-dona");
     if (!ctxDona) return;
 
-    // Contar sensores por estado (estimado: asumimos online si tienen mediciones)
     const totalSensores = Object.keys(sensoresMap).length;
     const conDatos = Object.keys(agrupadas).length;
     const online = conDatos;
@@ -417,11 +403,9 @@ function renderDonaEstado() {
         },
     });
 
-    // Actualizar texto de la dona
     const textoDona = document.getElementById("dona-texto");
     if (textoDona) textoDona.textContent = `${online}/${totalSensores}`;
 
-    // Actualizar leyenda
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set("dona-online", online);
     set("dona-offline", offline);
@@ -442,4 +426,8 @@ function nombreBonito(tipo) {
 }
 
 // ---------- Iniciar ----------
-document.addEventListener("DOMContentLoaded", cargarMonitoreo);
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cargarMonitoreo);
+} else {
+    cargarMonitoreo();
+}

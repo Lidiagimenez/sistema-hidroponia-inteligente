@@ -1,7 +1,8 @@
 // ============================================================
-// dashboard.js — Carga dinámica del Dashboard
+// dashboard.js — Carga dinámica del Dashboard con selector
 // ============================================================
 
+let todosLosCultivos = [];
 let cultivoActivo = null;
 let alertasActivas = [];
 let mediciones = [];
@@ -19,25 +20,25 @@ const TIPOS_CONFIG = {
 async function cargarDashboard() {
     try {
         await Promise.all([
-            cargarCultivoActivo(),
+            cargarCultivos(),
             cargarSensoresYMediciones(),
             cargarAlertas(),
         ]);
 
-        renderBanner();
-        renderTarjetas();
-        renderGrafico();
-        renderAlertas();
+        if (todosLosCultivos.length > 0) {
+            cultivoActivo = todosLosCultivos[0];
+        }
+
+        renderTodo();
     } catch (err) {
         console.error(err);
     }
 }
 
-// ---------- Cultivo activo (el primero) ----------
-async function cargarCultivoActivo() {
+// ---------- Cultivos ----------
+async function cargarCultivos() {
     const resp = await apiGet("/cultivos/");
-    const lista = Array.isArray(resp) ? resp : (resp.results || []);
-    cultivoActivo = lista[0] || null;
+    todosLosCultivos = Array.isArray(resp) ? resp : (resp.results || []);
 }
 
 // ---------- Sensores y mediciones ----------
@@ -61,7 +62,6 @@ async function cargarSensoresYMediciones() {
     const respMed = await apiGet("/mediciones/");
     mediciones = Array.isArray(respMed) ? respMed : (respMed.results || []);
 
-    // Agrupar por tipo
     agrupadas = {};
     mediciones.forEach(m => {
         const s = sensoresMap[m.sensor];
@@ -81,76 +81,132 @@ async function cargarAlertas() {
     alertasActivas = todas.filter(a => a.estado === "activa");
 }
 
-// ---------- Banner del cultivo ----------
+// ---------- Render de todo ----------
+function renderTodo() {
+    renderBanner();
+    renderTarjetas();
+    renderGrafico();
+    renderAlertas();
+}
+
+// ---------- Banner con selector debajo ----------
 function renderBanner() {
     const cont = document.getElementById("banner-cultivo");
     if (!cont) return;
 
-    if (!cultivoActivo) {
+    if (!todosLosCultivos || todosLosCultivos.length === 0) {
         cont.innerHTML = `
             <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center">
-                <p class="text-sm text-gray-500">No hay cultivos activos</p>
+                <i data-lucide="leaf" class="w-8 h-8 text-gray-300 mx-auto mb-2"></i>
+                <p class="text-sm text-gray-500 mb-3">No hay cultivos activos</p>
+                <a href="/cultivos/" class="inline-flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Crear el primero
+                </a>
             </div>
         `;
+        lucide.createIcons();
         return;
     }
 
     const fechaInicio = new Date(cultivoActivo.fecha_creacion);
     const hoy = new Date();
     const dias = Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24));
-    const totalDias = 28; // asumido
+    const totalDias = 28;
     const etapa = dias < 7 ? "Germinación" : dias < 21 ? "Crecimiento" : "Cosecha";
+
+    const opciones = todosLosCultivos.map(c => `
+        <option value="${c.id_cultivo}" ${c.id_cultivo === cultivoActivo.id_cultivo ? "selected" : ""}>
+            ${c.nombre}
+        </option>
+    `).join("");
 
     cont.innerHTML = `
         <div class="relative bg-gradient-to-r from-green-50 via-white to-green-50/30 rounded-2xl overflow-hidden border border-green-100">
-            <div class="flex items-center justify-between p-6">
-                <div class="flex items-center gap-5">
-                    <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="sprout" class="w-7 h-7 text-brand"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 font-medium mb-0.5">Cultivo activo</p>
-                        <h2 class="font-serif text-3xl font-bold text-gray-900 leading-tight">${cultivoActivo.nombre}</h2>
-                        <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
-                            <span>Etapa: <span class="font-semibold text-gray-800">${etapa}</span></span>
-                            <span class="text-gray-300">|</span>
-                            <span class="flex items-center gap-1">
-                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-                                Día <span class="font-semibold">${dias}</span> de <span class="font-semibold">${totalDias}</span>
-                            </span>
+            <div class="p-6">
+
+                <!-- Fila 1: Ícono + datos + badge -->
+                <div class="flex items-center justify-between gap-5 flex-wrap">
+
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="sprout" class="w-7 h-7 text-brand"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium mb-0.5">Cultivo activo</p>
+                            <h2 class="font-serif text-3xl font-bold text-gray-900 leading-tight">${cultivoActivo.nombre}</h2>
+                            <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                                <span>Etapa: <span class="font-semibold text-gray-800">${etapa}</span></span>
+                                <span class="text-gray-300">|</span>
+                                <span class="flex items-center gap-1">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                    Día <span class="font-semibold">${dias}</span> de <span class="font-semibold">${totalDias}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
+
+                    <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-sm font-semibold px-4 py-1.5 rounded-full">
+                        <span class="w-2 h-2 bg-green-600 rounded-full"></span>
+                        Normal
+                    </span>
+
                 </div>
-                <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 text-sm font-semibold px-4 py-1.5 rounded-full">
-                    <span class="w-2 h-2 bg-green-600 rounded-full"></span>
-                    Normal
-                </span>
+
+                <!-- Fila 2: Selector de cultivo (si hay más de 1) -->
+                ${todosLosCultivos.length > 1 ? `
+                    <div class="mt-5 pt-5 border-t border-green-100 flex items-center gap-3">
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Cambiar cultivo
+                        </label>
+                        <div class="relative">
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            <select
+                                id="selector-cultivo"
+                                class="appearance-none bg-white border border-gray-300 hover:border-brand rounded-xl text-sm font-medium text-gray-700 pl-4 pr-10 py-2 focus:ring-2 focus:ring-brand focus:border-brand outline-none cursor-pointer transition"
+                            >
+                                ${opciones}
+                            </select>
+                        </div>
+                    </div>
+                ` : ""}
+
             </div>
+            <div class="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-green-100/50 to-transparent pointer-events-none"></div>
         </div>
     `;
+
     lucide.createIcons();
+
+    const selector = document.getElementById("selector-cultivo");
+    if (selector) {
+        selector.addEventListener("change", (e) => {
+            const id = parseInt(e.target.value);
+            const cultivo = todosLosCultivos.find(c => c.id_cultivo === id);
+            if (cultivo) {
+                cultivoActivo = cultivo;
+                renderTodo();
+            }
+        });
+    }
 }
 
-// ---------- 4 Tarjetas de estado ----------
+// ---------- 4 Tarjetas ----------
 function renderTarjetas() {
     const cont = document.getElementById("tarjetas-estado");
     if (!cont) return;
 
-    // Sensores online (los que tienen mediciones)
     const totalSensores = Object.keys(sensoresMap).length;
     const online = Object.keys(agrupadas).length;
 
-    // Última medición de pH
     const ultPh = agrupadas["ph"]?.[0];
     const valorPh = ultPh ? ultPh.valor.toFixed(2) : "—";
 
-    // Cultivo activo
     const diasCultivo = cultivoActivo
         ? Math.floor((new Date() - new Date(cultivoActivo.fecha_creacion)) / (1000 * 60 * 60 * 24))
         : 0;
 
     cont.innerHTML = `
-        <!-- Sensores -->
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -166,7 +222,6 @@ function renderTarjetas() {
             </div>
         </div>
 
-        <!-- Alertas -->
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -179,7 +234,6 @@ function renderTarjetas() {
             </div>
         </div>
 
-        <!-- Última medición -->
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -192,7 +246,6 @@ function renderTarjetas() {
             </div>
         </div>
 
-        <!-- Días del ciclo -->
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -210,16 +263,16 @@ function renderTarjetas() {
     lucide.createIcons();
 }
 
-// ---------- Gráfico de pH ----------
+// ---------- Gráfico ----------
 function renderGrafico() {
     const canvas = document.getElementById("chart-ph");
     if (!canvas) return;
 
     const medicionesPh = agrupadas["ph"] || [];
-    const hace24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+    // Tomar las últimas 50 mediciones sin importar la fecha
     const filtradas = medicionesPh
-        .filter(m => new Date(m.fecha_hora) >= hace24h)
+        .slice(0, 50)
         .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
 
     const labels = filtradas.map(m => {
@@ -287,7 +340,7 @@ function renderGrafico() {
     });
 }
 
-// ---------- Alertas que requieren atención ----------
+// ---------- Alertas ----------
 function renderAlertas() {
     const cont = document.getElementById("alertas-recientes");
     if (!cont) return;
@@ -334,4 +387,8 @@ function renderAlertas() {
 }
 
 // ---------- Iniciar ----------
-document.addEventListener("DOMContentLoaded", cargarDashboard);
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cargarDashboard);
+} else {
+    cargarDashboard();
+}

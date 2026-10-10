@@ -1,0 +1,103 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}IA — HidroSensor{% endblock %}
+
+{% block content %}
+
+<!-- HEADER -->
+<div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-6 h-6 text-brand"></i>
+        </div>
+        <div>
+            <h1 class="font-serif text-3xl font-bold text-gray-900">Inteligencia</h1>
+            <p class="text-sm text-gray-600">Recomendaciones, avisos y anomalías generadas por el motor de reglas.</p>
+        </div>
+    </div>
+
+    <button id="btn-ejecutar-motor" class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
+        <i data-lucide="play" class="w-4 h-4"></i>
+        Ejecutar motor
+    </button>
+</div>
+
+<!-- STATS -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="lightbulb" class="w-6 h-6 text-blue-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Recomendaciones vigentes</p>
+                <p id="stat-recomendaciones" class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="trending-up" class="w-6 h-6 text-orange-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Avisos de crecimiento</p>
+                <p id="stat-avisos" class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="activity" class="w-6 h-6 text-purple-600"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Anomalías nuevas</p>
+                <p id="stat-anomalias" class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="check-circle" class="w-6 h-6 text-brand"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Recomendaciones resueltas</p>
+                <p id="stat-resueltas" class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="flex items-center gap-2 mb-6 overflow-x-auto">
+    <button class="tab-ia active px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap" data-tab="recomendaciones">
+        Recomendaciones (<span id="count-recomendaciones">0</span>)
+    </button>
+    <button class="tab-ia px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="avisos">
+        Avisos de crecimiento (<span id="count-avisos">0</span>)
+    </button>
+    <button class="tab-ia px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="anomalias">
+        Anomalías (<span id="count-anomalias">0</span>)
+    </button>
+</div>
+
+<!-- LISTA -->
+<div id="lista-ia" class="space-y-3">
+    <div class="text-center py-12 text-gray-400 text-sm">
+        <i data-lucide="loader" class="w-6 h-6 mx-auto mb-2 animate-spin"></i>
+        Cargando...
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="/static/js/api.js"></script>
+<script src="/static/js/ia.js"></script>
+{% endblock %}
