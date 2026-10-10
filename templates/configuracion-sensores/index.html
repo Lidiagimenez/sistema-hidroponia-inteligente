@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- ==================== HEADER ==================== -->
+<!-- HEADER -->
 <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
     <div class="flex items-center gap-4">
         <div class="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center">
@@ -12,64 +12,15 @@
         </div>
         <div>
             <h1 class="font-serif text-3xl font-bold text-gray-900">Configuración de sensores</h1>
-            <p class="text-sm text-gray-600">Define la configuración de sensores para cada sistema.</p>
+            <p class="text-sm text-gray-600">Define la configuración y los umbrales de cada sensor.</p>
         </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-        <button class="flex items-center gap-2 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold text-sm px-4 py-2.5 rounded-xl transition">
-            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-            Restablecer valores
-        </button>
-        <button class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            Crear configuración
-        </button>
     </div>
 </div>
 
-<!-- ==================== FILTROS ==================== -->
-<div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
-    <div class="flex flex-wrap items-center gap-3">
-
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option>Todos los cultivos</option>
-            <option>Lechuga</option>
-            <option>Albahaca</option>
-            <option>Tomate cherry</option>
-            <option>Frutilla</option>
-            <option>Kale</option>
-        </select>
-
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option>Todos los dispositivos</option>
-            <option>ESP32</option>
-            <option>Arduino</option>
-        </select>
-
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option>Todos los estados</option>
-            <option>Normal</option>
-            <option>Advertencia</option>
-            <option>Crítico</option>
-        </select>
-
-        <div class="flex-1 min-w-[200px] relative">
-            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input
-                type="text"
-                placeholder="Buscar sensor..."
-                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-            >
-        </div>
-
-    </div>
-</div>
-
-<!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+<!-- CONTENIDO: 3 COLUMNAS -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    <!-- ========== TABLA DE SENSORES ========== -->
+    <!-- ========== IZQUIERDA: TABLA DE SENSORES ========== -->
     <div class="lg:col-span-1">
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
 
@@ -80,297 +31,59 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-200">
-                            <th class="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sensor</th>
-                            <th class="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                            <th class="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
-                            <th class="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th class="w-8"></th>
+                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Sensor</th>
+                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
+                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-
-                        <tr class="hover:bg-gray-50 cursor-pointer bg-green-50">
-                            <td class="py-2 px-2 text-gray-900 font-medium">pH-01</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">pH</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Lechuga</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                                    Normal
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">EC-01</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Conductividad</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Lechuga</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                                    Normal
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">T-01</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Temperatura</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Tomate cherry</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                                    Normal
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">N-01</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Nutrientes</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Frutilla</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-orange-600 rounded-full"></span>
-                                    Advertencia
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">L-01</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Luz</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Albahaca</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                                    Normal
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">OD-01</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Oxígeno dis.</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Kale</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                                    Normal
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">PH-02</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">pH</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Tomate cherry</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                                    Normal
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
-                        <tr class="hover:bg-gray-50 cursor-pointer">
-                            <td class="py-2 px-2 text-gray-900 font-medium">T-02</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Temperatura</td>
-                            <td class="py-2 px-2 text-gray-700 text-xs">Lechuga</td>
-                            <td class="py-2 px-2">
-                                <span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                    <span class="w-1 h-1 bg-red-600 rounded-full"></span>
-                                    Crítico
-                                </span>
-                            </td>
-                            <td class="py-2 px-2 text-gray-400 text-xs">⋯</td>
-                        </tr>
-
+                    <tbody id="tbody-sensores" class="divide-y divide-gray-100">
+                        <tr><td colspan="4" class="py-8 text-center text-gray-400 text-sm">
+                            <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
+                            Cargando...
+                        </td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <p class="text-xs text-gray-500 text-center mt-3">Mostrando 1 - 8 de 8 sensores</p>
+            <p id="contador-sensores" class="text-xs text-gray-500 text-center mt-3"></p>
 
         </div>
     </div>
 
-    <!-- ========== FORMULARIO CONFIGURAR SENSOR ========== -->
+    <!-- ========== CENTRO: FORMULARIO CONFIGURAR ========== -->
     <div class="lg:col-span-1">
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
-
             <h2 class="font-serif text-lg font-bold text-gray-900 mb-1">Configurar sensor</h2>
-            <p class="text-xs text-gray-500 mb-5">Ajusta los parámetros y umbrales del sensor.</p>
+            <p class="text-xs text-gray-500 mb-5">Ajusta los parámetros y umbrales del sensor seleccionado.</p>
 
-            <form class="space-y-4">
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Sensor</label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-                        <option>pH-01 (pH)</option>
-                        <option>EC-01 (Conductividad)</option>
-                        <option>T-01 (Temperatura)</option>
-                        <option>N-01 (Nutrientes)</option>
-                    </select>
+            <div id="form-sensor-contenido">
+                <div class="text-center py-8 text-gray-400 text-sm">
+                    <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
+                    Cargando...
                 </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Cultivo</label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-                        <option>Lechuga</option>
-                        <option>Albahaca</option>
-                        <option>Tomate cherry</option>
-                        <option>Frutilla</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">Tipo de sensor</label>
-                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-                            <option>pH</option>
-                            <option>EC</option>
-                            <option>Temperatura</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">Unidad</label>
-                        <input
-                            type="text"
-                            value="pH"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-600 outline-none"
-                            readonly
-                        >
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Rango de operación</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input
-                            type="text"
-                            value="5.5"
-                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                        >
-                        <input
-                            type="text"
-                            value="6.5"
-                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                        >
-                    </div>
-                    <div class="flex justify-between mt-1">
-                        <span class="text-[10px] text-gray-500">Mínimo</span>
-                        <span class="text-[10px] text-gray-500">Máximo</span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-2">Alertas</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <input
-                                type="text"
-                                value="5.5"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                            >
-                            <span class="text-[10px] text-gray-500 block mt-1">Alerta baja</span>
-                        </div>
-                        <div>
-                            <input
-                                type="text"
-                                value="6.5"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                            >
-                            <span class="text-[10px] text-gray-500 block mt-1">Alerta alta</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Frecuencia de medición</label>
-                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-                        <option>Cada 5 minutos</option>
-                        <option>Cada 10 minutos</option>
-                        <option>Cada 30 minutos</option>
-                        <option>Cada hora</option>
-                    </select>
-                </div>
-
-                <!-- Toggle sensor activo -->
-                <div class="flex items-center gap-3 pt-1">
-                    <button type="button" class="w-11 h-6 bg-brand rounded-full relative transition">
-                        <span class="absolute top-0.5 right-0.5 w-5 h-5 bg-white rounded-full shadow transition"></span>
-                    </button>
-                    <span class="text-sm font-medium text-gray-700">Sensor activo</span>
-                </div>
-
-                <!-- Botón guardar -->
-                <button
-                    type="submit"
-                    class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-brand/20 mt-2"
-                >
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    Guardar cambios
-                </button>
-
-            </form>
-
+            </div>
         </div>
     </div>
 
-    <!-- ========== HISTORIAL + GRÁFICO ========== -->
+    <!-- ========== DERECHA: HISTORIAL + GRÁFICO ========== -->
     <div class="lg:col-span-1 space-y-4">
 
-        <!-- Historial de cambios -->
+        <!-- Historial -->
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <h2 class="font-serif text-lg font-bold text-gray-900 mb-1">Historial de cambios</h2>
-            <p class="text-xs text-gray-500 mb-4">Registro de modificaciones en la configuración.</p>
+            <p class="text-xs text-gray-500 mb-4">Registro de modificaciones en la configuración (sesión actual).</p>
 
-            <div class="space-y-3">
+            <div class="grid grid-cols-3 gap-2 pb-2 border-b border-gray-100 text-[10px] font-semibold text-gray-500 uppercase">
+                <span>Fecha</span>
+                <span>Usuario</span>
+                <span>Cambio</span>
+            </div>
 
-                <div class="grid grid-cols-3 gap-2 pb-3 border-b border-gray-100 text-xs">
-                    <span class="font-semibold text-gray-500 uppercase text-[10px]">Fecha y hora</span>
-                    <span class="font-semibold text-gray-500 uppercase text-[10px]">Usuario</span>
-                    <span class="font-semibold text-gray-500 uppercase text-[10px]">Cambio</span>
+            <div id="historial-config">
+                <div class="text-center py-4 text-gray-400 text-xs">
+                    Sin cambios registrados todavía.
                 </div>
-
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <span class="text-gray-700">12 ago 2025 10:15</span>
-                    <span class="text-gray-700">María Gómez</span>
-                    <span class="text-gray-700">Rango: 5.5 - 6.5</span>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <span class="text-gray-700">09 ago 2025 16:42</span>
-                    <span class="text-gray-700">Juan Pérez</span>
-                    <span class="text-gray-700">Alerta alta: 6.5</span>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <span class="text-gray-700">05 ago 2025 11:20</span>
-                    <span class="text-gray-700">Ana López</span>
-                    <span class="text-gray-700">Frecuencia: 10 min</span>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <span class="text-gray-700">28 jul 2025 09:14</span>
-                    <span class="text-gray-700">María Gómez</span>
-                    <span class="text-gray-700">Alerta baja: 5.5</span>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <span class="text-gray-700">20 jul 2025 14:30</span>
-                    <span class="text-gray-700">Carlos Ruiz</span>
-                    <span class="text-gray-700">Sensor activado</span>
-                </div>
-
             </div>
 
             <!-- Info azul -->
@@ -383,21 +96,16 @@
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Gráfico de evolución -->
+        <!-- Gráfico -->
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="font-serif text-lg font-bold text-gray-900">Evolución del sensor</h2>
-                <select class="px-3 py-1 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-                    <option>Últimas 24 horas</option>
-                    <option>Últimos 7 días</option>
-                </select>
+                <h2 id="titulo-grafico-sensor" class="font-serif text-lg font-bold text-gray-900">Evolución del sensor</h2>
             </div>
 
             <div class="h-40">
-                <canvas id="chart-sensor"></canvas>
+                <canvas id="chart-sensor-config"></canvas>
             </div>
 
             <div class="flex items-center justify-center gap-4 mt-3 text-[10px] text-gray-600">
@@ -407,11 +115,7 @@
                 </span>
                 <span class="flex items-center gap-1">
                     <span class="w-4 border-t border-dashed border-gray-400"></span>
-                    Rango (5.5 - 6.5)
-                </span>
-                <span class="flex items-center gap-1">
-                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                    Fuera de rango
+                    <span id="leyenda-rango-sensor">Rango</span>
                 </span>
             </div>
         </div>
@@ -425,66 +129,6 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-    const ctx = document.getElementById("chart-sensor").getContext("2d");
-
-    const horas = ["00:00","04:00","08:00","12:00","16:00","20:00","24:00"];
-    const valores = [6.2, 6.1, 6.3, 6.5, 6.4, 6.2, 6.3];
-
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: horas,
-            datasets: [{
-                data: valores,
-                borderColor: "#15803D",
-                backgroundColor: "rgba(21, 128, 61, 0.1)",
-                fill: true,
-                tension: 0.4,
-                pointRadius: 2,
-                pointHoverRadius: 5,
-                pointBackgroundColor: "#15803D",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 1.5,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: "#0F3B26",
-                    padding: 8,
-                    cornerRadius: 6,
-                    displayColors: false,
-                    callbacks: { label: (ctx) => `pH: ${ctx.parsed.y}` },
-                },
-            },
-            scales: {
-                y: {
-                    min: 5.0, max: 7.0,
-                    ticks: { stepSize: 0.5, color: "#9CA3AF", font: { size: 9 }, callback: v => v.toFixed(1) },
-                    grid: { color: "#F3F4F6" },
-                },
-                x: {
-                    ticks: { color: "#9CA3AF", font: { size: 9 } },
-                    grid: { display: false },
-                },
-            },
-        },
-        plugins: [{
-            id: "rangoPermitido",
-            beforeDatasetsDraw: (chart) => {
-                const { ctx, chartArea, scales } = chart;
-                const yMin = scales.y.getPixelForValue(5.5);
-                const yMax = scales.y.getPixelForValue(6.5);
-                ctx.save();
-                ctx.fillStyle = "rgba(34, 197, 94, 0.08)";
-                ctx.fillRect(chartArea.left, yMin, chartArea.right - chartArea.left, yMax - yMin);
-                ctx.restore();
-            },
-        }],
-    });
-</script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/configuracion-sensores.js"></script>
 {% endblock %}
