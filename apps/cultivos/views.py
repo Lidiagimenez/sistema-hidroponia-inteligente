@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.cultivos.models import Cultivo, CicloProduccion
 from apps.cultivos.serializers import CultivoSerializer, CicloProduccionSerializer
@@ -21,8 +22,12 @@ class CultivoViewSet(viewsets.ModelViewSet):
 class CicloProduccionViewSet(viewsets.ModelViewSet):
     queryset = CicloProduccion.objects.all().order_by("pk")
     serializer_class = CicloProduccionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["cultivo", "estado"]
 
     def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy"]:
+        # Admin: todo. Operador: ver + editar (cambiar estado, fecha, finalizar).
+        # Solo Admin puede crear o eliminar ciclos.
+        if self.action in ["create", "destroy"]:
             return [EsAdministrador()]
         return [EsAdministradorOOperador()]

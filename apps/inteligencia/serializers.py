@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from apps.common.validators import validate_uploaded_image
 from apps.inteligencia.models import (
     ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion, Anomalia,
 )
@@ -113,3 +114,6 @@ class SubirImagenSerializer(serializers.Serializer):
         choices=["periodica", "evento", "manual", "sync_sd"],
         default="manual",
     )
+
+    def validate_imagen(self, value):
+        return validate_uploaded_image(value)

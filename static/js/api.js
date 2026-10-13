@@ -1,89 +1,87 @@
 // ============================================================
-// api.js — Helpers para llamar a la API con JWT
-// Uso: const data = await apiGet("/cultivos/");
+// api.js — Helpers para llamar a la API con JWT en cookies HttpOnly
 // ============================================================
 
 const API_BASE = "/api";
 
-function getToken() {
-    return localStorage.getItem("access_token");
-}
-
 function getRol() {
-    return localStorage.getItem("rol") || "operador";
+    return sessionStorage.getItem("rol") || "operador";
 }
 
 function getUsername() {
-    return localStorage.getItem("username") || "Usuario";
+    return sessionStorage.getItem("username") || "Usuario";
 }
 
-// --- GET ---
-async function apiGet(url) {
-    const res = await fetch(`${API_BASE}${url}`, {
-        headers: {
-            "Authorization": `Bearer ${getToken()}`,
-        },
-    });
-
-    if (res.status === 401) {
-        localStorage.clear();
-        window.location.href = "/login/";
-        return null;
-    }
-
-    if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`GET ${url} → ${res.status}: ${txt}`);
-    }
-
-    return res.json();
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-// --- POST ---
-async function apiPost(url, body) {
-    const res = await fetch(`${API_BASE}${url}`, {
+async function refreshSession() {
+    const res = await fetch(`${API_BASE}/refresh/`, {
         method: "POST",
-        headers: {
-            "Authorization": `Bearer ${getToken()}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+    });
+    return res.ok;
+}
+
+async function apiRequest(url, options = {}, retry = true) {
+    const res = await fetch(`${API_BASE}${url}`, {
+        credentials: "same-origin",
+        ...options,
+        headers: options.headers || {},
     });
 
+    if (res.status === 401 && retry && await refreshSession()) {
+        return apiRequest(url, options, false);
+    }
+
     if (res.status === 401) {
-        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = "/login/";
         return null;
     }
 
     if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`POST ${url} → ${res.status}: ${txt}`);
+        const message = res.status === 403
+            ? "No tenés permisos para realizar esta acción."
+            : "No se pudo completar la operación. Intentá de nuevo.";
+        throw new Error(message);
     }
 
+    if (res.status === 204 || res.status === 205) return null;
     return res.json();
 }
 
-// --- PATCH ---
-async function apiPatch(url, body) {
-    const res = await fetch(`${API_BASE}${url}`, {
-        method: "PATCH",
-        headers: {
-            "Authorization": `Bearer ${getToken()}`,
-            "Content-Type": "application/json",
-        },
+async function apiGet(url) {
+    return apiRequest(url);
+}
+
+async function apiPost(url, body) {
+    return apiRequest(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
     });
-
-    if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`PATCH ${url} → ${res.status}: ${txt}`);
-    }
-
-    return res.json();
 }
 
-// --- Helpers de formato ---
+async function apiPatch(url, body) {
+    return apiRequest(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+}
+
+async function apiDelete(url) {
+    return apiRequest(url, { method: "DELETE" });
+}
 
 function formatearFecha(fechaISO) {
     if (!fechaISO) return "—";
@@ -105,7 +103,7 @@ function tiempoRelativo(fechaISO) {
     if (!fechaISO) return "—";
     const ahora = new Date();
     const d = new Date(fechaISO);
-    const dif = Math.floor((ahora - d) / 1000); // segundos
+    const dif = Math.floor((ahora - d) / 1000);
 
     if (dif < 60) return "Hace unos segundos";
     if (dif < 3600) return `Hace ${Math.floor(dif / 60)} min`;

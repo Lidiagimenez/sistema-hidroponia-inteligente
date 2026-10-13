@@ -45,6 +45,25 @@ python manage.py migrate
 
 # 6. Cargar los datos de prueba compartidos del equipo
 python manage.py loaddata seed_demo.json
+
+## Datos de demo
+
+Para tener el sistema con datos:
+
+    python manage.py migrate
+    python manage.py loaddata seed_demo.json
+# simulacion de datos de sensores
+    python manage.py generar_datos_demo
+
+Con Docker:
+
+    docker compose up -d
+    docker compose exec web python manage.py loaddata seed_demo.json
+    docker compose exec web python manage.py generar_datos_demo
+
+### Credenciales
+- Admin: `admin` / `admin1234`
+- Operador: `operador1` / `operador1234` (o el que corresponda)
 ```
 
 Con el paso 6 ya tenés cargados estos usuarios (mismas contraseñas que usa el equipo — pedíselas a quien las creó si no las tenés):
@@ -268,3 +287,68 @@ Ver `.env.example`. Si no están definidas, se usan valores de desarrollo.
 | `DJANGO_ALLOWED_HOSTS` | Hosts permitidos, separados por coma | vacío |
 
 **En producción** hay que poner `DJANGO_DEBUG=0`, una `DJANGO_SECRET_KEY` propia y los hosts reales.
+
+**creacion de datos de prueba **
+
+python manage.py generar_datos_demo
+
+Salida esperada:
+
+🌱 Generando datos de prueba...
+   Admin: admin
+   · Cultivo existente: Lechuga
+   ✓ Ciclo: crecimiento
+
+📟 Creando dispositivos...
+   ✓ EPS01
+   ✓ Bomba-01
+   ✓ Camara-01
+
+🌡️  Creando sensores...
+   ✓ 4 sensores creados
+
+📈 Generando mediciones...
+   ✓ 192 mediciones generadas
+
+⚠️  Configurando alertas...
+   ✓ 2 alertas generadas
+
+==================================================
+✅ Datos de prueba generados
+==================================================
+  Usuarios:       4
+  Cultivos:       1
+  Dispositivos:   3
+  Sensores:       4
+  Mediciones:     192
+  Alertas:        2
+==================================================
+
+Verificar en el shell
+
+bash
+python manage.py shell
+
+from apps.monitoreo.models import Medicion; print(f"Mediciones: {Medicion.objects.count()}")
+
+from apps.alertas.models import Alerta; print(f"Alertas: {Alerta.objects.count()}")
+
+exit()
+
+Esperado: 192 mediciones, 2 alertas.
+
+
+inyeccion de anomalias
+
+python manage.py shell
+
+
+from apps.monitoreo.models import Sensor, Medicion; [Medicion.objects.create(sensor=Sensor.objects.filter(tipo_sensor__nombre='ph').first(), valor=v) for v in [4.2, 4.5, 8.5, 8.9, 4.0]]; print("5 anomalías inyectadas")
+
+Esperado: 5 anomalías inyectadas
+
+from apps.inteligencia.models import Anomalia; print(f"Anomalías detectadas por IA: {Anomalia.objects.count()}")
+exit()
+
+
+Esperado: un número > 0. Si detecta las 5, la IA está funcionando.

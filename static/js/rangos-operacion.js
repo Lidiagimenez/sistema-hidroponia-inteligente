@@ -117,10 +117,10 @@ function renderTabla() {
         return `
             <tr class="hover:bg-gray-50">
                 <td class="py-3 px-3 text-gray-900 font-medium">
-                    ${sensor.tipo_nombre}
+                    ${escapeHtml(sensor.tipo_nombre)}
                     <span class="text-xs text-gray-400 ml-1">#${r.sensor}</span>
                 </td>
-                <td class="py-3 px-3 text-gray-700 text-xs">${sensor.cultivo_nombre}</td>
+                <td class="py-3 px-3 text-gray-700 text-xs">${escapeHtml(sensor.cultivo_nombre)}</td>
                 <td class="py-3 px-3 text-gray-600 text-xs">${sensor.unidad || "—"}</td>
                 <td class="py-3 px-3 text-gray-900 font-semibold">${r.valor_min}</td>
                 <td class="py-3 px-3 text-gray-900 font-semibold">${r.valor_max}</td>
@@ -197,7 +197,7 @@ function abrirModalRango(rangoExistente = null) {
     select.innerHTML = `<option value="">Selecciona un sensor</option>` +
         sensoresDisponibles.map(s => {
             const info = sensoresMap[s.id] || {};
-            return `<option value="${s.id}">${info.tipo_nombre || "Sensor"} — ${info.cultivo_nombre || "—"} (ID ${s.id})</option>`;
+            return `<option value="${s.id}">${escapeHtml(info.tipo_nombre || "Sensor")} — ${escapeHtml(info.cultivo_nombre || "—")} (ID ${s.id})</option>`;
         }).join("");
 
     if (rangoExistente) {
@@ -297,12 +297,7 @@ async function eliminarRango(id) {
     if (!confirm(`¿Eliminar el rango ${rango.valor_min} - ${rango.valor_max} de ${sensor.tipo_nombre || "sensor"}?`)) return;
 
     try {
-        const res = await fetch(`/api/rangos-operacion/${id}/`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` },
-        });
-
-        if (!res.ok) throw new Error(`DELETE → ${res.status}`);
+        await apiDelete(`/rangos-operacion/${id}/`);
 
         // Recargar
         const resp = await apiGet("/rangos-operacion/");

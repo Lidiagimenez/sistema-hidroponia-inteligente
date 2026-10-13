@@ -17,6 +17,7 @@ from apps.inteligencia.serializers import (
 from apps.inteligencia.services import procesar_analisis, traer_captura
 from apps.inteligencia.recomendaciones import evaluar_recomendaciones
 
+from django_filters.rest_framework import DjangoFilterBackend
 
 class ParametroImagenViewSet(viewsets.ModelViewSet):
     queryset = ParametroImagen.objects.select_related("cultivo").order_by("pk")
@@ -36,6 +37,8 @@ class AnalisisImagenViewSet(viewsets.ModelViewSet):
     )
     serializer_class = AnalisisImagenSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["cultivo", "origen_captura", "etapa_fenologica"]
 
     def get_permissions(self):
         # Admin: crear, borrar, capturar manualmente, editar

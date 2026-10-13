@@ -68,17 +68,17 @@ function renderTabla() {
         } else if (d.estado === "inactivo") {
             estadoBadge = `<span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"><span class="w-1 h-1 bg-red-600 rounded-full"></span>Offline</span>`;
         } else {
-            estadoBadge = `<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"><span class="w-1 h-1 bg-orange-600 rounded-full"></span>${d.estado}</span>`;
+            estadoBadge = `<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"><span class="w-1 h-1 bg-orange-600 rounded-full"></span>${escapeHtml(d.estado)}</span>`;
         }
 
-        const cultivoNombre = cultivosMap[d.cultivo] || "—";
-        const tipoStr = d.tipo_dispositivo || "—";
-        const hardwareId = d.identificador_hardware || "—";
+        const cultivoNombre = escapeHtml(cultivosMap[d.cultivo] || "—");
+        const tipoStr = escapeHtml(d.tipo_dispositivo || "—");
+        const hardwareId = escapeHtml(d.identificador_hardware || "—");
 
         return `
             <tr class="hover:bg-gray-50">
                 <td class="py-3 px-3">
-                    <p class="text-gray-900 font-medium">${d.nombre}</p>
+                    <p class="text-gray-900 font-medium">${escapeHtml(d.nombre)}</p>
                     <p class="text-xs text-gray-500">${hardwareId}</p>
                 </td>
                 <td class="py-3 px-3 text-gray-700 text-xs">${tipoStr}</td>
@@ -88,7 +88,7 @@ function renderTabla() {
                     ${d.fecha_alta ? tiempoRelativo(d.fecha_alta) : "—"}
                 </td>
                 <td class="py-3 px-3 text-gray-700 text-xs font-medium">
-                    ${d.ip_local || "—"}
+                    ${escapeHtml(d.ip_local || "—")}
                 </td>
                 <td class="py-3 px-3">
                     <div class="flex items-center gap-1">

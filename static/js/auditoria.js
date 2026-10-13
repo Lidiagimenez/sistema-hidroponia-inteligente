@@ -190,10 +190,11 @@ function renderTabla() {
             icono: "info",
         };
 
-        const cultivoNombre = cultivosMap[e.cultivo] || `Cultivo #${e.cultivo}`;
+        const cultivoNombre = escapeHtml(cultivosMap[e.cultivo] || `Cultivo #${e.cultivo}`);
         const dispositivoNombre = e.dispositivo
-            ? (dispositivosMap[e.dispositivo] || `Disp #${e.dispositivo}`)
+            ? escapeHtml(dispositivosMap[e.dispositivo] || `Disp #${e.dispositivo}`)
             : "—";
+        const descripcion = escapeHtml(e.descripcion || "Sin descripción");
 
         const fechaStr = formatearFechaHora(e.fecha_hora);
 
@@ -212,8 +213,8 @@ function renderTabla() {
                 </td>
                 <td class="py-3 px-3 text-gray-700 text-xs">${cultivoNombre}</td>
                 <td class="py-3 px-3 text-gray-600 text-xs">${dispositivoNombre}</td>
-                <td class="py-3 px-3 text-gray-600 text-xs max-w-md truncate" title="${e.descripcion || ''}">
-                    ${e.descripcion || "Sin descripción"}
+                <td class="py-3 px-3 text-gray-600 text-xs max-w-md truncate" title="${descripcion}">
+                    ${descripcion}
                 </td>
                 <td class="py-3 px-3">
                     <button class="btn-ver-evento p-1.5 hover:bg-gray-100 rounded transition" data-id="${e.id}" title="Ver detalle">
@@ -389,7 +390,7 @@ function abrirModalEvento(evento) {
 
             <div class="pt-3 border-t border-gray-100">
                 <p class="text-xs text-gray-500 mb-1">Descripción</p>
-                <p class="text-gray-700 leading-relaxed">${evento.descripcion || "Sin descripción"}</p>
+                <p class="text-gray-700 leading-relaxed">${escapeHtml(evento.descripcion || "Sin descripción")}</p>
             </div>
 
         </div>

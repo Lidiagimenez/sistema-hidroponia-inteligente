@@ -27,6 +27,7 @@ Persistencia:
 import logging
 from datetime import timedelta
 from pathlib import Path
+from typing import Set
 
 import joblib
 import numpy as np
@@ -56,6 +57,10 @@ VENTANA_ENTRENAMIENTO_DIAS = 30
 
 # Umbral de score a partir del cual consideramos "anomalía"
 UMBRAL_SCORE_ANOMALIA = 0.5
+
+# Cache de tipos de sensor sin datos suficientes (evita spam de logs).
+# Se vacía al reiniciar el proceso de Django.
+_tipos_sin_datos_warning: Set[int] = set()
 
 
 # =============================================================================
@@ -121,10 +126,13 @@ def entrenar_modelo(tipo_sensor_id, ventana_dias=VENTANA_ENTRENAMIENTO_DIAS):
     )
 
     if len(valores) < MIN_MUESTRAS_ENTRENAMIENTO:
-        logger.warning(
-            "Tipo sensor %s: solo %d mediciones (mínimo %d). No se entrena.",
-            tipo_sensor_id, len(valores), MIN_MUESTRAS_ENTRENAMIENTO,
-        )
+        # Loguear solo una vez por tipo de sensor para evitar spam
+        if tipo_sensor_id not in _tipos_sin_datos_warning:
+            logger.warning(
+                "Tipo sensor %s: solo %d mediciones (mínimo %d). No se entrena.",
+                tipo_sensor_id, len(valores), MIN_MUESTRAS_ENTRENAMIENTO,
+            )
+            _tipos_sin_datos_warning.add(tipo_sensor_id)
         return None
 
     X = np.array(valores).reshape(-1, 1)
@@ -209,6 +217,7 @@ def evaluar_medicion(medicion):
         return None, False
 
     return score, es_anomalia
+
 
 def detectar_y_registrar(medicion, umbral_score=UMBRAL_SCORE_ANOMALIA):
     """

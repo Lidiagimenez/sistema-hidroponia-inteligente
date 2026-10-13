@@ -94,12 +94,12 @@ function renderTabla() {
         const tipoConf = TIPO_REPORTE_CONFIG[r.tipo] || { label: r.tipo_display, icono: "file-text" };
 
         const fechaStr = formatearFecha(r.fecha_solicitud);
-        const cultivoNombre = r.cultivo_nombre || "General";
-        const formatoStr = (r.formato_display || r.formato || "").toUpperCase();
+        const cultivoNombre = escapeHtml(r.cultivo_nombre || "General");
+        const formatoStr = escapeHtml((r.formato_display || r.formato || "").toUpperCase());
 
         // Botón descarga: solo si está listo y tiene URL
         const botonDescargar = (r.estado === "listo" && r.url_descarga)
-            ? `<a href="${r.url_descarga}" download class="p-1.5 hover:bg-gray-100 rounded transition" title="Descargar">
+            ? `<a href="${escapeHtml(r.url_descarga)}" download class="p-1.5 hover:bg-gray-100 rounded transition" title="Descargar">
                     <i data-lucide="download" class="w-4 h-4 text-gray-500"></i>
                </a>`
             : `<button class="p-1.5 opacity-40 cursor-not-allowed" title="No disponible" disabled>
@@ -112,7 +112,7 @@ function renderTabla() {
                 <td class="py-3 px-3">
                     <div class="flex items-center gap-2">
                         <i data-lucide="${tipoConf.icono}" class="w-4 h-4 text-brand"></i>
-                        <span class="text-sm text-gray-900 font-medium">${r.tipo_display || tipoConf.label}</span>
+                        <span class="text-sm text-gray-900 font-medium">${escapeHtml(r.tipo_display || tipoConf.label)}</span>
                     </div>
                 </td>
                 <td class="py-3 px-3 text-gray-700 text-xs">${cultivoNombre}</td>
@@ -192,7 +192,7 @@ function configurarFiltros() {
     // Poblar select de cultivos
     if (filtroCultivo) {
         filtroCultivo.innerHTML = `<option value="">Todos los cultivos</option>` +
-            cultivosDisponibles.map(c => `<option value="${c.id_cultivo}">${c.nombre}</option>`).join("");
+            cultivosDisponibles.map(c => `<option value="${c.id_cultivo}">${escapeHtml(c.nombre)}</option>`).join("");
     }
 
     function aplicarFiltros() {
@@ -253,7 +253,7 @@ function abrirModalReporte() {
     const selectCultivo = document.getElementById("select-cultivo-reporte");
     if (selectCultivo) {
         selectCultivo.innerHTML = `<option value="">Todos los cultivos (general)</option>` +
-            cultivosDisponibles.map(c => `<option value="${c.id_cultivo}">${c.nombre}</option>`).join("");
+            cultivosDisponibles.map(c => `<option value="${c.id_cultivo}">${escapeHtml(c.nombre)}</option>`).join("");
     }
 
     // Fechas por defecto: últimos 7 días
@@ -366,7 +366,7 @@ function abrirModalDetalle(reporte) {
                 <i data-lucide="${tipoConf.icono}" class="w-6 h-6 text-brand"></i>
             </div>
             <div>
-                <h3 class="font-serif text-xl font-bold text-gray-900">${reporte.tipo_display || tipoConf.label}</h3>
+                <h3 class="font-serif text-xl font-bold text-gray-900">${escapeHtml(reporte.tipo_display || tipoConf.label)}</h3>
                 <p class="text-xs text-gray-500 mt-0.5">Reporte #${reporte.id}</p>
             </div>
         </div>
@@ -424,7 +424,7 @@ function abrirModalDetalle(reporte) {
             ` : ""}
 
             ${reporte.url_descarga ? `
-                <a href="${reporte.url_descarga}" download class="mt-4 flex items-center justify-center gap-2 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition">
+                <a href="${escapeHtml(reporte.url_descarga)}" download class="mt-4 flex items-center justify-center gap-2 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     Descargar reporte
                 </a>
@@ -446,12 +446,7 @@ async function eliminarReporte(id) {
     if (!confirm(`¿Eliminar el reporte "${reporte.tipo_display}"?\n\nEsta acción no se puede deshacer.`)) return;
 
     try {
-        const res = await fetch(`/api/reportes/${id}/`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` },
-        });
-
-        if (!res.ok) throw new Error(`DELETE → ${res.status}`);
+        await apiDelete(`/reportes/${id}/`);
 
         // Recargar
         reportes = reportes.filter(r => r.id !== id);

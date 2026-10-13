@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from apps.common.validators import validate_uploaded_image
 from apps.monitoreo.models import TipoSensor, Sensor, RangoOperacion, Medicion, Imagen
 
 
@@ -32,3 +33,6 @@ class ImagenSerializer(serializers.ModelSerializer):
         model = Imagen
         fields = "__all__"
         read_only_fields = ["fecha_hora"]
+
+    def validate_archivo(self, value):
+        return validate_uploaded_image(value)

@@ -16,6 +16,10 @@ const TIPOS_CONFIG = {
     "luz":          { unidad: "µmol/m²/s",  icono: "sun",         color: "text-yellow-600", bg: "bg-yellow-100", min: 200, max: 500 },
 };
 
+// Duración por defecto si el ciclo no tiene fecha_fin_estimada
+const DURACION_DEFAULT_DIAS = 28;
+
+
 // ---------- Cargar todo ----------
 async function cargarDashboard() {
     try {
@@ -81,6 +85,45 @@ async function cargarAlertas() {
     alertasActivas = todas.filter(a => a.estado === "activa");
 }
 
+// ---------- Helpers del ciclo ----------
+/**
+ * Devuelve la fecha de inicio del ciclo activo, o la fecha de creación
+ * del cultivo si no hay ciclo activo.
+ */
+function obtenerFechaInicio(cultivo) {
+    if (cultivo?.ciclo_activo?.fecha_inicio) {
+        return new Date(cultivo.ciclo_activo.fecha_inicio);
+    }
+    return new Date(cultivo?.fecha_creacion || new Date());
+}
+
+/**
+ * Devuelve la duración del ciclo en días (fecha_fin_estimada - fecha_inicio).
+ * Si no hay fecha_fin_estimada, devuelve el default.
+ */
+function obtenerDuracionCiclo(cultivo) {
+    const ciclo = cultivo?.ciclo_activo;
+    if (!ciclo?.fecha_fin_estimada || !ciclo?.fecha_inicio) {
+        return DURACION_DEFAULT_DIAS;
+    }
+    const dias = Math.floor(
+        (new Date(ciclo.fecha_fin_estimada) - new Date(ciclo.fecha_inicio))
+        / (1000 * 60 * 60 * 24)
+    );
+    return Math.max(1, dias);
+}
+
+/**
+ * Devuelve los días transcurridos desde el inicio del ciclo activo.
+ */
+function obtenerDiasTranscurridos(cultivo) {
+    if (!cultivo) return 0;
+    const inicio = obtenerFechaInicio(cultivo);
+    const hoy = new Date();
+    return Math.max(0, Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24)));
+}
+
+
 // ---------- Render de todo ----------
 function renderTodo() {
     renderBanner();
@@ -109,15 +152,22 @@ function renderBanner() {
         return;
     }
 
-    const fechaInicio = new Date(cultivoActivo.fecha_creacion);
-    const hoy = new Date();
-    const dias = Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24));
-    const totalDias = 28;
-    const etapa = dias < 7 ? "Germinación" : dias < 21 ? "Crecimiento" : "Cosecha";
+    const dias = obtenerDiasTranscurridos(cultivoActivo);
+    const totalDias = obtenerDuracionCiclo(cultivoActivo);
+
+    // Etapa: viene del ciclo activo si existe. Fallback: calculada por días.
+    const etapa = cultivoActivo.ciclo_activo?.estado
+        ? capitalizar(cultivoActivo.ciclo_activo.estado)
+        : (dias < 7 ? "Germinación" : dias < 21 ? "Crecimiento" : "Cosecha");
+
+    // Estado del ciclo respecto a la duración esperada
+    const atraso = dias - totalDias;
+    const esUltimoDia = dias === totalDias;
+    const estaAtrasado = dias > totalDias;
 
     const opciones = todosLosCultivos.map(c => `
         <option value="${c.id_cultivo}" ${c.id_cultivo === cultivoActivo.id_cultivo ? "selected" : ""}>
-            ${c.nombre}
+            ${escapeHtml(c.nombre)}
         </option>
     `).join("");
 
@@ -134,13 +184,15 @@ function renderBanner() {
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 font-medium mb-0.5">Cultivo activo</p>
-                            <h2 class="font-serif text-3xl font-bold text-gray-900 leading-tight">${cultivoActivo.nombre}</h2>
-                            <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                            <h2 class="font-serif text-3xl font-bold text-gray-900 leading-tight">${escapeHtml(cultivoActivo.nombre)}</h2>
+                            <div class="flex items-center gap-3 mt-1 text-sm text-gray-600 flex-wrap">
                                 <span>Etapa: <span class="font-semibold text-gray-800">${etapa}</span></span>
                                 <span class="text-gray-300">|</span>
                                 <span class="flex items-center gap-1">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                     Día <span class="font-semibold">${dias}</span> de <span class="font-semibold">${totalDias}</span>
+                                    ${estaAtrasado ? `<span class="ml-1.5 text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">+${atraso} días de atraso</span>` : ""}
+                                    ${esUltimoDia ? `<span class="ml-1.5 text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">Último día</span>` : ""}
                                 </span>
                             </div>
                         </div>
@@ -202,9 +254,10 @@ function renderTarjetas() {
     const ultPh = agrupadas["ph"]?.[0];
     const valorPh = ultPh ? ultPh.valor.toFixed(2) : "—";
 
-    const diasCultivo = cultivoActivo
-        ? Math.floor((new Date() - new Date(cultivoActivo.fecha_creacion)) / (1000 * 60 * 60 * 24))
-        : 0;
+    const diasCultivo = obtenerDiasTranscurridos(cultivoActivo);
+    const totalDiasCiclo = obtenerDuracionCiclo(cultivoActivo);
+    const estaAtrasadoTarjeta = diasCultivo > totalDiasCiclo;
+    const diasAtraso = diasCultivo - totalDiasCiclo;
 
     cont.innerHTML = `
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
@@ -248,14 +301,15 @@ function renderTarjetas() {
 
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="calendar-days" class="w-6 h-6 text-cyan-600"></i>
+                <div class="w-12 h-12 ${estaAtrasadoTarjeta ? "bg-amber-100" : "bg-cyan-100"} rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="calendar-days" class="w-6 h-6 ${estaAtrasadoTarjeta ? "text-amber-600" : "text-cyan-600"}"></i>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-0.5">Días del ciclo</p>
                     <p class="text-2xl font-bold text-gray-900">
-                        ${diasCultivo} <span class="text-gray-300 text-lg font-normal">/ 28</span>
+                        ${diasCultivo} <span class="text-gray-300 text-lg font-normal">/ ${totalDiasCiclo}</span>
                     </p>
+                    ${estaAtrasadoTarjeta ? `<p class="text-[11px] font-semibold text-amber-600 mt-0.5">+${diasAtraso} días de atraso</p>` : ""}
                 </div>
             </div>
         </div>
@@ -373,7 +427,7 @@ function renderAlertas() {
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-gray-900 truncate">${titulo}</p>
-                    <p class="text-xs text-gray-600 mt-0.5">${cultivoActivo?.nombre || "—"}</p>
+                    <p class="text-xs text-gray-600 mt-0.5">${escapeHtml(cultivoActivo?.nombre || "—")}</p>
                     <p class="text-xs text-gray-400 mt-0.5">${tiempoRelativo(a.fecha_hora_inicio)}</p>
                 </div>
                 <span class="text-[10px] font-bold ${est.badgeText} ${est.badgeBg} px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -384,6 +438,15 @@ function renderAlertas() {
     }).join("");
 
     lucide.createIcons();
+}
+
+// ---------- Utilidades ----------
+/**
+ * Capitaliza un string: "crecimiento" → "Crecimiento"
+ */
+function capitalizar(str) {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 // ---------- Iniciar ----------

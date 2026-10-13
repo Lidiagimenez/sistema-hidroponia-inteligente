@@ -10,6 +10,7 @@ from apps.monitoreo.serializers import (
 from apps.dispositivos.authentication import DispositivoAPIKeyAuthentication, EsDispositivo
 from apps.monitoreo.services import registrar_medicion
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
+from apps.common.throttles import ApiKeyScopedRateThrottle
 
 
 class TipoSensorViewSet(viewsets.ModelViewSet):
@@ -25,6 +26,8 @@ class TipoSensorViewSet(viewsets.ModelViewSet):
 class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all().order_by("pk")
     serializer_class = SensorSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["dispositivo", "tipo_sensor", "dispositivo__cultivo"]
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
@@ -57,6 +60,8 @@ class IngestaMedicionView(APIView):
     """El ESP32 envía lecturas acá. Header: X-API-Key. Body: {"sensor": <id>, "valor": <float>}"""
     authentication_classes = [DispositivoAPIKeyAuthentication]
     permission_classes = [EsDispositivo]
+    throttle_classes = [ApiKeyScopedRateThrottle]
+    throttle_scope = "iot_ingesta"
 
     def post(self, request):
         dispositivo = request.auth

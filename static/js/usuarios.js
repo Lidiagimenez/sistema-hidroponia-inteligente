@@ -66,7 +66,7 @@ function renderTabla() {
                </span>`;
 
         // Avatar (inicial)
-        const inicial = (u.username || "?").charAt(0).toUpperCase();
+        const inicial = escapeHtml((u.username || "?").charAt(0).toUpperCase());
         const avatarBg = u.rol === "administrador" ? "bg-blue-600" : "bg-brand";
 
         // Fila con opacidad reducida si está inactivo
@@ -80,13 +80,13 @@ function renderTabla() {
                             ${inicial}
                         </div>
                         <div>
-                            <p class="text-gray-900 font-medium">${u.username}</p>
-                            <p class="text-xs text-gray-500">${u.email || "Sin email"}</p>
+                            <p class="text-gray-900 font-medium">${escapeHtml(u.username)}</p>
+                            <p class="text-xs text-gray-500">${escapeHtml(u.email || "Sin email")}</p>
                         </div>
                     </div>
                 </td>
                 <td class="py-3 px-3">
-                    <p class="text-gray-700 text-sm">${u.username}</p>
+                    <p class="text-gray-700 text-sm">${escapeHtml(u.username)}</p>
                 </td>
                 <td class="py-3 px-3">${rolBadge}</td>
                 <td class="py-3 px-3">${estadoBadge}</td>

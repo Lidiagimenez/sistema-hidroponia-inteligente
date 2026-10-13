@@ -66,6 +66,23 @@ class CamarasTest(TestCase):
             self.assertIsNone(services.traer_captura(sin_url))
             mock_get.assert_not_called()
 
+    def test_ssrf_rechaza_loopback(self):
+        self.camara.ip_local = "127.0.0.1"
+        self.camara.url_captura = "http://127.0.0.1/capture"
+        self.camara.save(update_fields=["ip_local", "url_captura"])
+
+        with patch("apps.inteligencia.services.requests.get") as mock_get:
+            self.assertIsNone(services.traer_captura(self.camara))
+            mock_get.assert_not_called()
+
+    def test_ssrf_rechaza_url_que_no_coincide_con_ip_local(self):
+        self.camara.url_captura = "http://192.168.1.51/capture"
+        self.camara.save(update_fields=["url_captura"])
+
+        with patch("apps.inteligencia.services.requests.get") as mock_get:
+            self.assertIsNone(services.traer_captura(self.camara))
+            mock_get.assert_not_called()
+
     @patch("apps.inteligencia.services.requests.get")
     def test_traer_capturas_de_todos_cuenta_resultados(self, mock_get):
         mock_get.return_value = _respuesta()

@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 from apps.reportes.models import Reporte
@@ -19,6 +20,12 @@ class ReporteViewSet(viewsets.ModelViewSet):
 
     # GET + POST + DELETE. Bloquea PUT y PATCH (no se editan reportes).
     http_method_names = ["get", "post", "delete", "head", "options"]
+
+    def get_throttles(self):
+        if self.action == "create":
+            self.throttle_scope = "reportes_create"
+            return [ScopedRateThrottle()]
+        return super().get_throttles()
 
     def get_permissions(self):
         # Admin: crear, borrar, regenerar

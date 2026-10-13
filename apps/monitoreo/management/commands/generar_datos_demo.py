@@ -185,8 +185,8 @@ class Command(BaseCommand):
                 base = 50
                 var = 5
 
-            # Generar 48 mediciones (cada 30 min)
-            for i in range(48):
+            #  Generar 72 mediciones (cada 20 min, últimas 24 h)
+            for i in range(72):
                 valor = base + random.uniform(-var, var)
                 Medicion.objects.create(
                     sensor=sensor,
@@ -196,7 +196,7 @@ class Command(BaseCommand):
                 # Ajustar fecha (Django auto_now_add no se puede setear al crear)
                 m = Medicion.objects.latest("pk")
                 Medicion.objects.filter(pk=m.pk).update(
-                    fecha_hora=ahora - timedelta(minutes=30 * i)
+                    fecha_hora=ahora - timedelta(minutes=20 * i)
                 )
 
         total_mediciones = Medicion.objects.filter(sensor__in=sensores).count()

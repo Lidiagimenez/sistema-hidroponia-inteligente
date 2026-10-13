@@ -166,16 +166,16 @@ function renderRecomendaciones(contenedor) {
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-3 mb-1">
-                            <h3 class="font-semibold text-gray-900">${r.titulo}</h3>
+                            <h3 class="font-semibold text-gray-900">${escapeHtml(r.titulo)}</h3>
                             <span class="inline-flex items-center ${prio.badgeBg} ${prio.badgeText} text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                                 ${prio.label}
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 mb-2">
-                            ${r.tipo_display} · ${r.cultivo_nombre || cultivosMap[r.cultivo] || "—"}
+                            ${escapeHtml(r.tipo_display)} · ${escapeHtml(r.cultivo_nombre || cultivosMap[r.cultivo] || "—")}
                         </p>
                         <p class="text-sm text-gray-600 mb-3 leading-relaxed">
-                            ${r.detalle || "Sin detalle"}
+                            ${escapeHtml(r.detalle || "Sin detalle")}
                         </p>
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-xs text-gray-400 flex items-center gap-1">
@@ -232,16 +232,16 @@ function renderAvisos(contenedor) {
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-3 mb-1">
-                            <h3 class="font-semibold text-gray-900">${a.tipo_display}</h3>
+                            <h3 class="font-semibold text-gray-900">${escapeHtml(a.tipo_display)}</h3>
                             <span class="inline-flex items-center ${sevBg} ${sevText} text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                ${a.severidad_display}
+                                ${escapeHtml(a.severidad_display)}
                             </span>
                         </div>
                         <p class="text-xs text-gray-500 mb-2">
-                            ${a.cultivo_nombre || cultivosMap[a.cultivo] || "—"}
+                            ${escapeHtml(a.cultivo_nombre || cultivosMap[a.cultivo] || "—")}
                         </p>
                         <p class="text-sm text-gray-600 mb-3 leading-relaxed">
-                            ${a.descripcion || "Sin descripción"}
+                            ${escapeHtml(a.descripcion || "Sin descripción")}
                         </p>
                         <div class="flex items-center justify-between gap-3">
                             <span class="text-xs text-gray-400 flex items-center gap-1">
@@ -303,12 +303,12 @@ function renderAnomalias(contenedor) {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-3 mb-1">
                             <h3 class="font-semibold text-gray-900">
-                                ${a.sensor_nombre || "Anomalía"} — Score ${a.score.toFixed(2)}
+                                ${escapeHtml(a.sensor_nombre || "Anomalía")} — Score ${a.score.toFixed(2)}
                             </h3>
                             ${estadoBadge}
                         </div>
                         <p class="text-xs text-gray-500 mb-2">
-                            ${a.cultivo_nombre || "—"} · ${a.origen_display}
+                            ${escapeHtml(a.cultivo_nombre || "—")} · ${escapeHtml(a.origen_display)}
                         </p>
                         <div class="grid grid-cols-3 gap-2 my-3 text-xs">
                             <div class="bg-gray-50 rounded-lg p-2">

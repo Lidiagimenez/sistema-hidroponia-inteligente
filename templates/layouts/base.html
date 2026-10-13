@@ -41,6 +41,19 @@
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
         .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+        html, body { max-width: 100%; overflow-x: hidden; }
+        img, canvas, video { max-width: 100%; }
+        main { min-width: 0; overflow-x: hidden; }
+        main > *, main .grid > *, main .overflow-x-auto { min-width: 0; }
+        main input, main select, main textarea { max-width: 100%; }
+
+        @media (max-width: 639px) {
+            main h1 { font-size: clamp(1.5rem, 6vw, 1.875rem); line-height: 1.2; }
+            main .overflow-x-auto { overscroll-behavior-inline: contain; }
+        }
+        @media (max-width: 767px) {
+            body.sidebar-open { overflow: hidden; }
+        }
 
         /* ============================================
            SIDEBAR
@@ -54,6 +67,7 @@
             color: rgba(255, 255, 255, 0.7);
             transition: all 0.15s ease;
             text-decoration: none;
+            position: relative;
         }
         .sidebar-item:hover {
             background-color: rgba(255, 255, 255, 0.05);
@@ -70,6 +84,135 @@
             flex-shrink: 0;
         }
         .sidebar-item-badge { justify-content: space-between; }
+
+        /* --- Scrollbar personalizada del sidebar --- */
+        /* Firefox */
+        #sidebar-navigation {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+        }
+        /* WebKit (Chrome, Edge, Safari) */
+        #sidebar-navigation::-webkit-scrollbar {
+            width: 6px;
+        }
+        #sidebar-navigation::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #sidebar-navigation::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        #sidebar-navigation::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* --- Botón de colapsar sidebar --- */
+        .sidebar-collapse-btn {
+            position: fixed;
+            top: 50%;
+            left: 256px; /* ancho del sidebar expandido */
+            transform: translateY(-50%);
+            width: 24px;
+            height: 48px;
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 40;
+            transition: left 0.2s ease, background 0.15s;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
+            color: #4B5563;
+            padding: 0;
+        }
+        .sidebar-collapse-btn:hover {
+            background: #F9FAFB;
+            color: #111827;
+        }
+        .sidebar-collapse-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s ease;
+        }
+        body.dark .sidebar-collapse-btn {
+            background: #1E293B;
+            border-color: #334155;
+            color: #CBD5E1;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.3);
+        }
+        body.dark .sidebar-collapse-btn:hover {
+            background: #334155;
+            color: #F1F5F9;
+        }
+
+        /* --- Estado colapsado (solo desktop) --- */
+        @media (min-width: 768px) {
+            #sidebar.collapsed {
+                width: 5rem; /* 80px */
+            }
+            /* Ocultar textos de items (excepto el badge de alertas) */
+            #sidebar.collapsed .sidebar-item span:not(#alerta-badge) {
+                display: none;
+            }
+            #sidebar.collapsed .sidebar-item {
+                justify-content: center;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+            /* Sección de administración: ocultar label y ajustar padding */
+            #sidebar.collapsed nav > div[data-role="admin"] > p {
+                display: none;
+            }
+            #sidebar.collapsed nav > div[data-role="admin"] {
+                padding-top: 1rem;
+            }
+            /* Logo: solo ícono */
+            #sidebar.collapsed .sidebar-brand-text {
+                display: none;
+            }
+            #sidebar.collapsed .sidebar-brand {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            /* Footer del usuario: solo avatar */
+            #sidebar.collapsed .sidebar-user-info {
+                display: none;
+            }
+            #sidebar.collapsed .sidebar-user-footer > div {
+                justify-content: center;
+            }
+            /* Badge de alertas: posicionado como notificación flotante */
+            #sidebar.collapsed .sidebar-item-badge #alerta-badge {
+                position: absolute;
+                top: 4px;
+                right: 4px;
+                width: 16px;
+                height: 16px;
+                font-size: 9px;
+                border: 2px solid #0F3B26;
+                padding: 0;
+            }
+            /* Main content ajustado */
+            body.sidebar-collapsed .main-wrapper {
+                margin-left: 5rem;
+            }
+            /* Botón de colapsar movido */
+            body.sidebar-collapsed .sidebar-collapse-btn {
+                left: 80px;
+            }
+            body.sidebar-collapsed .sidebar-collapse-btn svg {
+                transform: rotate(180deg);
+            }
+        }
+        /* En mobile, ocultar el botón de colapsar */
+        @media (max-width: 767px) {
+            .sidebar-collapse-btn { display: none; }
+        }
 
         /* ============================================
            MODO OSCURO — Override global
@@ -144,7 +287,7 @@
         body.dark tbody tr { border-color: #1E293B !important; }
         body.dark tbody tr:hover { background-color: rgba(51, 65, 85, 0.4) !important; }
 
-        /* Scrollbar */
+        /* Scrollbar global en dark mode */
         body.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
         body.dark ::-webkit-scrollbar-track { background: #0F172A; }
         body.dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
@@ -197,24 +340,29 @@
             if (tema === "dark") {
                 document.documentElement.classList.add("dark");
             }
+            // Aplicar estado del sidebar ANTES del render (evita flash)
+            if (localStorage.getItem("sidebar-collapsed") === "true") {
+                document.documentElement.classList.add("sidebar-collapsed-init");
+            }
         })();
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
     <!-- ==================== SIDEBAR ==================== -->
-    <aside class="w-64 bg-brand-dark fixed inset-y-0 left-0 z-30 flex flex-col">
+    <div id="sidebar-backdrop" class="fixed inset-0 z-20 hidden bg-black/50 md:hidden" aria-hidden="true"></div>
+    <aside id="sidebar" class="w-64 h-screen min-h-0 bg-brand-dark fixed inset-y-0 left-0 z-30 flex flex-col transform -translate-x-full transition-[transform,width] duration-200 ease-in-out md:translate-x-0">
 
-        <div class="px-5 py-6 border-b border-white/10">
-            <a href="/dashboard/" class="flex items-center gap-3">
+        <div class="shrink-0 px-5 py-6 border-b border-white/10">
+            <a href="/dashboard/" class="sidebar-brand flex items-center gap-3">
                 <img src="{% static 'img/logo.png' %}" alt="HidroSensor" class="h-10 w-auto">
-                <span class="font-serif text-lg font-bold text-white tracking-wide">
+                <span class="sidebar-brand-text font-serif text-lg font-bold text-white tracking-wide">
                     HIDRO<span class="text-green-400">SENSOR</span>
                 </span>
             </a>
         </div>
 
-        <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-1">
+        <nav id="sidebar-navigation" class="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain space-y-1">
 
             <a href="/dashboard/" class="sidebar-item">
                 <i data-lucide="home"></i>
@@ -294,12 +442,12 @@
 
         </nav>
 
-        <div class="px-4 py-4 border-t border-white/10">
+        <div class="sidebar-user-footer mt-auto shrink-0 px-4 py-4 border-t border-white/10">
             <div class="flex items-center gap-3">
-                <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">
+                <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm shrink-0">
                     A
                 </div>
-                <div class="flex-1 min-w-0">
+                <div class="sidebar-user-info flex-1 min-w-0">
                     <p id="sidebar-username" class="text-sm font-semibold text-white truncate">Usuario</p>
                     <p id="sidebar-rol" class="text-xs text-white/60 truncate capitalize">rol</p>
                 </div>
@@ -308,18 +456,40 @@
 
     </aside>
 
+    <!-- Botón de colapsar sidebar (solo desktop) -->
+    <button
+        id="btn-collapse-sidebar"
+        type="button"
+        aria-label="Colapsar menú lateral"
+        class="sidebar-collapse-btn"
+    >
+        <i data-lucide="chevron-left"></i>
+    </button>
+
     <!-- ==================== MAIN ==================== -->
-    <div class="ml-64 min-h-screen flex flex-col">
+    <div class="main-wrapper min-h-screen min-w-0 flex flex-col md:ml-64 transition-[margin] duration-200 ease-in-out">
 
-        <header class="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-20">
-            <div class="flex items-center justify-between gap-4">
+        <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sticky top-0 z-20">
+            <div class="flex items-center justify-between gap-2 sm:gap-4 min-w-0">
 
-                <div class="flex items-center gap-2 text-sm text-gray-700">
-                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span id="topbar-fecha">--</span>
+                <div class="flex items-center gap-2 min-w-0">
+                    <button
+                        id="btn-sidebar-toggle"
+                        type="button"
+                        aria-label="Abrir menú de navegación"
+                        aria-controls="sidebar"
+                        aria-expanded="false"
+                        class="md:hidden shrink-0 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                    >
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div class="hidden sm:flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span id="topbar-fecha">--</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1 sm:gap-4">
 
                     <!-- Botón modo oscuro -->
                     <button
@@ -358,41 +528,125 @@
             </div>
         </header>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1 min-w-0 w-full p-4 sm:p-6">
             {% block content %}{% endblock %}
         </main>
 
     </div>
 
     <script>
-        // --- 1. Verificar login ---
-        const token = localStorage.getItem("access_token");
-        const username = localStorage.getItem("username") || "Usuario";
-        const rol = localStorage.getItem("rol") || "operador";
+        // ==================== SIDEBAR COLLAPSE ====================
+        const sidebarEl = document.getElementById("sidebar");
+        const btnCollapse = document.getElementById("btn-collapse-sidebar");
+        const mainWrapper = document.querySelector(".main-wrapper");
 
-        if (!token) {
-            window.location.href = "/login/";
+        function setSidebarCollapsed(isCollapsed) {
+            sidebarEl.classList.toggle("collapsed", isCollapsed);
+            document.body.classList.toggle("sidebar-collapsed", isCollapsed);
+            localStorage.setItem("sidebar-collapsed", String(isCollapsed));
+            btnCollapse.setAttribute(
+                "aria-label",
+                isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral"
+            );
         }
 
-        // --- 2. Datos del usuario ---
-        const inicial = username.charAt(0).toUpperCase();
-        ["sidebar-avatar", "topbar-avatar"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = inicial;
+        // Aplicar estado guardado al cargar
+        (function initSidebarCollapsed() {
+            const saved = localStorage.getItem("sidebar-collapsed");
+            if (saved === "true") {
+                sidebarEl.classList.add("collapsed");
+                document.body.classList.add("sidebar-collapsed");
+                document.documentElement.classList.remove("sidebar-collapsed-init");
+            } else {
+                document.documentElement.classList.remove("sidebar-collapsed-init");
+            }
+        })();
+
+        btnCollapse.addEventListener("click", () => {
+            const isCollapsed = sidebarEl.classList.contains("collapsed");
+            setSidebarCollapsed(!isCollapsed);
         });
-        document.getElementById("sidebar-username").textContent = username;
-        document.getElementById("sidebar-rol").textContent = rol;
-        document.getElementById("topbar-username").textContent = username;
-        document.getElementById("topbar-rol").textContent = rol;
 
-        // --- 3. Mostrar/ocultar sección ADMINISTRACIÓN ---
-        if (rol !== "administrador") {
-            document.querySelectorAll('[data-role="admin"]').forEach(el => {
-                el.style.display = "none";
-            });
+        // Atajo de teclado: Ctrl + B (o Cmd + B en Mac)
+        document.addEventListener("keydown", (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === "b") {
+                event.preventDefault();
+                const isCollapsed = sidebarEl.classList.contains("collapsed");
+                setSidebarCollapsed(!isCollapsed);
+            }
+        });
+
+        // ==================== SIDEBAR MOBILE ====================
+        const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+        const sidebarToggle = document.getElementById("btn-sidebar-toggle");
+        const sidebarNavigation = document.getElementById("sidebar-navigation");
+        const savedSidebarScrollTop = sessionStorage.getItem("sidebarScrollTop");
+        if (savedSidebarScrollTop !== null) {
+            sidebarNavigation.scrollTop = Number(savedSidebarScrollTop);
+            sessionStorage.removeItem("sidebarScrollTop");
         }
 
-        // --- 4. Marcar item activo ---
+        function setSidebarOpen(isOpen) {
+            sidebarEl.classList.toggle("-translate-x-full", !isOpen);
+            sidebarBackdrop.classList.toggle("hidden", !isOpen);
+            document.body.classList.toggle("sidebar-open", isOpen);
+            sidebarToggle.setAttribute("aria-expanded", String(isOpen));
+            sidebarToggle.setAttribute("aria-label", isOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación");
+        }
+
+        sidebarToggle.addEventListener("click", () => {
+            setSidebarOpen(sidebarToggle.getAttribute("aria-expanded") !== "true");
+        });
+        sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+        sidebarEl.querySelectorAll(".sidebar-item").forEach(link => {
+            link.addEventListener("click", () => {
+                sessionStorage.setItem("sidebarScrollTop", String(sidebarNavigation.scrollTop));
+                setSidebarOpen(false);
+            });
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && sidebarToggle.getAttribute("aria-expanded") === "true") {
+                setSidebarOpen(false);
+                sidebarToggle.focus();
+            }
+        });
+        window.matchMedia("(min-width: 768px)").addEventListener("change", event => {
+            if (event.matches) setSidebarOpen(false);
+        });
+
+        // ==================== USUARIO ACTUAL ====================
+        let rol = "operador";
+        async function cargarUsuarioActual() {
+            const res = await fetch("/api/me/", { credentials: "same-origin" });
+            if (!res.ok) {
+                sessionStorage.clear();
+                window.location.href = "/login/";
+                return;
+            }
+            const usuario = await res.json();
+            rol = usuario.rol || "operador";
+            sessionStorage.setItem("username", usuario.username || "Usuario");
+            sessionStorage.setItem("rol", rol);
+
+            const inicial = (usuario.username || "Usuario").charAt(0).toUpperCase();
+            ["sidebar-avatar", "topbar-avatar"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = inicial;
+            });
+            document.getElementById("sidebar-username").textContent = usuario.username || "Usuario";
+            document.getElementById("sidebar-rol").textContent = rol;
+            document.getElementById("topbar-username").textContent = usuario.username || "Usuario";
+            document.getElementById("topbar-rol").textContent = rol;
+
+            if (rol !== "administrador") {
+                document.querySelectorAll('[data-role="admin"]').forEach(el => {
+                    el.style.display = "none";
+                });
+            }
+        }
+        cargarUsuarioActual();
+
+        // ==================== ITEM ACTIVO ====================
         const path = window.location.pathname;
         document.querySelectorAll(".sidebar-item").forEach(link => {
             const href = link.getAttribute("href");
@@ -401,19 +655,25 @@
             }
         });
 
-        // --- 5. Fecha ---
+        // ==================== FECHA ====================
         const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
         const ahora = new Date();
         const fechaStr = `${ahora.getDate()} ${meses[ahora.getMonth()]} ${ahora.getFullYear()} ${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`;
         document.getElementById("topbar-fecha").textContent = fechaStr;
 
-        // --- 6. Cerrar sesión ---
-        document.getElementById("logout-btn").addEventListener("click", () => {
-            localStorage.clear();
+        // ==================== LOGOUT ====================
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            await fetch("/api/logout/", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({}),
+            }).catch(() => null);
+            sessionStorage.clear();
             window.location.href = "/login/";
         });
 
-        // --- 7. MODO OSCURO ---
+        // ==================== MODO OSCURO ====================
         const btnTema = document.getElementById("btn-tema");
         const iconoTema = document.getElementById("icono-tema");
 
@@ -423,18 +683,15 @@
             } else {
                 document.body.classList.remove("dark");
             }
-            // Re-renderizar iconos
             setTimeout(() => {
                 iconoTema.setAttribute("data-lucide", tema === "dark" ? "sun" : "moon");
                 lucide.createIcons();
             }, 50);
         }
 
-        // Aplicar tema inicial
         const temaGuardado = localStorage.getItem("tema") || "light";
         aplicarTema(temaGuardado);
 
-        // Toggle al hacer click
         btnTema.addEventListener("click", () => {
             const temaActual = document.body.classList.contains("dark") ? "dark" : "light";
             const nuevoTema = temaActual === "dark" ? "light" : "dark";
@@ -442,7 +699,7 @@
             aplicarTema(nuevoTema);
         });
 
-        // --- 8. Renderizar iconos ---
+        // ==================== ICONOS ====================
         lucide.createIcons();
     </script>
 

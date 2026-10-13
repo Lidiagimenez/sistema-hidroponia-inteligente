@@ -1,10 +1,13 @@
+from django.db.models import Q
 from django.utils import timezone
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.alertas.models import ParametroAlerta, Alerta
-from apps.alertas.serializers import ParametroAlertaSerializer, AlertaSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from apps.alertas.models import Alerta, ParametroAlerta
+from apps.alertas.serializers import AlertaSerializer, ParametroAlertaSerializer
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 
 
@@ -20,6 +23,7 @@ class AlertaViewSet(viewsets.ModelViewSet):
     RF-22: visualización para ambos roles.
     RF-24: ambos roles pueden marcar una alerta como resuelta (solo PATCH sobre 'estado').
     Las alertas son automáticas → nadie puede crearlas, editarlas por completo ni borrarlas.
+    Filtro por cultivo: vía medición o vía evento.
     """
     queryset = Alerta.objects.all().order_by("-fecha_hora_inicio")
     serializer_class = AlertaSerializer
@@ -29,6 +33,22 @@ class AlertaViewSet(viewsets.ModelViewSet):
 
     # Solo GET y PATCH. Bloquea POST (create), PUT (update), DELETE (destroy).
     http_method_names = ["get", "patch", "head", "options"]
+
+    def get_queryset(self):
+        """
+        Filtra por cultivo. Una alerta se relaciona con un cultivo por:
+          - su medición → sensor → dispositivo → cultivo
+          - o por su evento → cultivo
+        Como son caminos distintos, usamos Q para OR.
+        """
+        qs = super().get_queryset()
+        cultivo_id = self.request.query_params.get("cultivo")
+        if cultivo_id:
+            qs = qs.filter(
+                Q(medicion__sensor__dispositivo__cultivo_id=cultivo_id) |
+                Q(evento__cultivo_id=cultivo_id)
+            ).distinct()
+        return qs
 
     def partial_update(self, request, *args, **kwargs):
         """Solo permite cambiar el campo 'estado' (marcar como resuelta)."""

@@ -26,3 +26,9 @@ class ReporteSerializer(serializers.ModelSerializer):
         req = self.context.get("request")
         # build_absolute_uri convierte "/media/..." en "http://localhost:8000/media/..."
         return req.build_absolute_uri(obj.archivo.url) if req else obj.archivo.url
+
+    def validate_formato(self, value):
+        formatos = {choice[0] for choice in Reporte.Formato.choices}
+        if value not in formatos:
+            raise serializers.ValidationError("Formato de reporte no permitido.")
+        return value

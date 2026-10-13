@@ -27,6 +27,7 @@ form.addEventListener("submit", async (e) => {
     try {
         const res = await fetch(`${API_BASE}/login/`, {
             method: "POST",
+            credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
         });
@@ -38,11 +39,9 @@ form.addEventListener("submit", async (e) => {
             return;
         }
 
-        // Guardar tokens y datos del usuario
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("rol", data.rol);
+        // Los JWT quedan en cookies HttpOnly; el cliente solo conserva datos de UI.
+        sessionStorage.setItem("username", data.username);
+        sessionStorage.setItem("rol", data.rol);
 
         // Redirigir al dashboard
         window.location.href = "/dashboard/";

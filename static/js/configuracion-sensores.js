@@ -139,7 +139,7 @@ function renderTabla() {
     tbody.innerHTML = sensoresFiltrados.map(s => {
         const tipo = tiposMap[s.tipo_sensor] || { nombre: "?", unidad: "" };
         const disp = dispositivosMap[s.dispositivo] || { nombre: "?" };
-        const cultivoNombre = disp.cultivo_id ? (cultivosMap[disp.cultivo_id] || "—") : "—";
+        const cultivoNombre = escapeHtml(disp.cultivo_id ? (cultivosMap[disp.cultivo_id] || "—") : "—");
         const rango = rangosPorSensor[s.id];
 
         const esSeleccionado = sensorSeleccionado && sensorSeleccionado.id === s.id;
@@ -155,7 +155,7 @@ function renderTabla() {
                    Sin rango
                </span>`;
 
-        const tipoNombre = tipo.nombre;
+        const tipoNombre = escapeHtml(tipo.nombre);
         const tipoConfig = TIPO_ICONO[tipoNombre] || { icono: "activity", bg: "bg-gray-100", color: "text-gray-600" };
 
         return `
@@ -219,7 +219,7 @@ function renderFormulario(sensor) {
                 <label class="block text-xs font-semibold text-gray-700 mb-1.5">Sensor</label>
                 <input
                     type="text"
-                    value="${tipo.nombre} · ${disp.nombre} (ID ${sensor.id})"
+                    value="${escapeHtml(tipo.nombre)} · ${escapeHtml(disp.nombre)} (ID ${sensor.id})"
                     readonly
                     class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
                 >
@@ -242,7 +242,7 @@ function renderFormulario(sensor) {
                     <label class="block text-xs font-semibold text-gray-700 mb-1.5">Tipo</label>
                     <input
                         type="text"
-                        value="${tipo.nombre}"
+                        value="${escapeHtml(tipo.nombre)}"
                         readonly
                         class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
                     >
