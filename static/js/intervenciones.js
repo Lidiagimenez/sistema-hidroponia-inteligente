@@ -74,8 +74,9 @@ function renderTabla() {
         const fecha = new Date(i.fecha_hora);
         const fechaStr = formatearFecha(i.fecha_hora);
         const horaStr = `${String(fecha.getHours()).padStart(2,"0")}:${String(fecha.getMinutes()).padStart(2,"0")}`;
-        const responsable = usuariosMap[i.operador] || `Usuario #${i.operador}`;
+        const responsable = escapeHtml(usuariosMap[i.operador] || `Usuario #${i.operador}`);
         const alertaRef = i.alerta ? `Alerta #${i.alerta}` : "—";
+        const observaciones = escapeHtml(i.observaciones || "Sin observaciones");
 
         // Estado según resuelta
         const estadoBadge = i.resuelta
@@ -94,9 +95,9 @@ function renderTabla() {
                         Intervención
                     </span>
                 </td>
-                <td class="py-3 px-3 text-gray-700 whitespace-nowrap text-xs">${alertaRef}</td>
-                <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate" title="${i.observaciones || ''}">
-                    ${i.observaciones || "Sin observaciones"}
+                <td class="py-3 px-3 text-gray-700 whitespace-nowrap text-xs">${escapeHtml(alertaRef)}</td>
+                <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate" title="${observaciones}">
+                    ${observaciones}
                 </td>
                 <td class="py-3 px-3 text-gray-700 whitespace-nowrap text-xs">${responsable}</td>
                 <td class="py-3 px-3">${estadoBadge}</td>
@@ -136,7 +137,7 @@ function configurarFormulario() {
             alertasDisponibles.map(a => {
                 const titulo = a.medicion ? `Medición #${a.medicion}` : `Evento #${a.evento}`;
                 const sev = a.severidad === "alta" ? "Crítica" : a.severidad === "media" ? "Advertencia" : "Info";
-                return `<option value="${a.id}">${titulo} — ${sev}</option>`;
+                return `<option value="${a.id}">${escapeHtml(titulo)} — ${escapeHtml(sev)}</option>`;
             }).join("");
     }
 
