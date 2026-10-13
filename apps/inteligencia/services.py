@@ -14,7 +14,9 @@ Y luego implementar con OpenCV.
 """
 
 import hashlib
+import ipaddress
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 import requests
 from django.core.files.base import ContentFile
@@ -94,6 +96,28 @@ def _url_captura_de(dispositivo):
     return None
 
 
+def _ip_local_segura(ip_local):
+    try:
+        ip = ipaddress.ip_address(ip_local)
+    except ValueError:
+        return False
+    if ip.is_loopback or ip.is_unspecified or ip.is_link_local or ip.is_multicast:
+        return False
+    if str(ip) == "169.254.169.254":
+        return False
+    return ip.is_private
+
+
+def _url_captura_segura(dispositivo, url):
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return False
+    ip_local = getattr(dispositivo, "ip_local", None)
+    if not ip_local or not _ip_local_segura(ip_local):
+        return False
+    return parsed.hostname == ip_local
+
+
 def _hash(contenido_bytes):
     return hashlib.sha256(contenido_bytes).hexdigest()
 
@@ -105,9 +129,11 @@ def traer_captura(dispositivo, origen="periodica"):
     url = _url_captura_de(dispositivo)
     if not url:
         return None
+    if not _url_captura_segura(dispositivo, url):
+        return None
 
     try:
-        r = requests.get(url, timeout=15)
+        r = requests.get(url, timeout=15, allow_redirects=False)
         r.raise_for_status()
     except requests.RequestException:
         return None
@@ -175,8 +201,10 @@ def listar_fotos_sd(dispositivo, desde=None, hasta=None):
         params["hasta"] = hasta.isoformat()
 
     try:
-        r = requests.get(f"http://{dispositivo.ip_local}/list",
-                         params=params, timeout=15)
+        url = f"http://{dispositivo.ip_local}/list"
+        if not _url_captura_segura(dispositivo, url):
+            return []
+        r = requests.get(url, params=params, timeout=15, allow_redirects=False)
         r.raise_for_status()
         return r.json()
     except (requests.RequestException, ValueError):
@@ -187,8 +215,10 @@ def descargar_foto_sd(dispositivo, nombre_archivo):
     if not getattr(dispositivo, "ip_local", None):
         return None
     try:
-        r = requests.get(f"http://{dispositivo.ip_local}/download",
-                         params={"archivo": nombre_archivo}, timeout=30)
+        url = f"http://{dispositivo.ip_local}/download"
+        if not _url_captura_segura(dispositivo, url):
+            return None
+        r = requests.get(url, params={"archivo": nombre_archivo}, timeout=30, allow_redirects=False)
         r.raise_for_status()
         return r.content
     except requests.RequestException:

@@ -16,8 +16,10 @@ class AuthAPITest(APITestCase):
         url = reverse("token_obtain_pair")
         response = self.client.post(url, {"username": "test_login", "password": "test12345"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
-        self.assertIn("refresh", response.data)
+        self.assertNotIn("access", response.data)
+        self.assertNotIn("refresh", response.data)
+        self.assertIn("hidro_access", response.cookies)
+        self.assertIn("hidro_refresh", response.cookies)
         self.assertEqual(response.data["rol"], Usuario.Rol.OPERADOR)
 
     def test_login_credenciales_invalidas(self):
@@ -28,18 +30,19 @@ class AuthAPITest(APITestCase):
     def test_refresh_token_valido(self):
         login_url = reverse("token_obtain_pair")
         login_response = self.client.post(login_url, {"username": "test_login", "password": "test12345"})
-        refresh = login_response.data["refresh"]
+        refresh = login_response.cookies["hidro_refresh"].value
 
         refresh_url = reverse("token_refresh")
         response = self.client.post(refresh_url, {"refresh": refresh})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
+        self.assertEqual(response.data["detail"], "Token renovado.")
+        self.assertIn("hidro_access", response.cookies)
 
     def test_logout_invalida_refresh_token(self):
         login_url = reverse("token_obtain_pair")
         login_response = self.client.post(login_url, {"username": "test_login", "password": "test12345"})
-        access = login_response.data["access"]
-        refresh = login_response.data["refresh"]
+        access = login_response.cookies["hidro_access"].value
+        refresh = login_response.cookies["hidro_refresh"].value
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
         logout_url = reverse("logout")
