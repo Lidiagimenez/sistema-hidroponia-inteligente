@@ -26,15 +26,14 @@
 <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
     <div class="flex flex-wrap items-center gap-3">
 
-        <select id="filtro-tipo" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option value="">Todos los tipos</option>
-            <option value="sensor_sin_comunicacion">Sensor sin comunicación</option>
-            <option value="corte_electrico">Corte de energía</option>
-            <option value="bomba_sin_caudal">Bomba sin caudal</option>
-        </select>
-
-        <select id="filtro-cultivo" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option value="">Todos los cultivos</option>
+        <select id="filtro-accion" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option value="">Todas las acciones</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+            <option value="crear">Crear</option>
+            <option value="editar">Editar</option>
+            <option value="eliminar">Eliminar</option>
+            <option value="login_fallido">Login fallido</option>
         </select>
 
         <select id="filtro-fecha" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
@@ -46,7 +45,7 @@
 
         <div class="flex-1 min-w-[200px] relative">
             <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="filtro-buscar" placeholder="Buscar en auditoría..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <input type="text" id="filtro-buscar" placeholder="Buscar por nombre de usuario..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
         </div>
 
     </div>
@@ -58,16 +57,17 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-200">
-                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha y hora</th>
-                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo de evento</th>
-                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
-                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dispositivo</th>
-                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acción</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Módulo/Entidad</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Detalles</th>
+                    <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">IP</th>
                     <th class="w-10"></th>
                 </tr>
             </thead>
             <tbody id="tbody-auditoria" class="divide-y divide-gray-100">
-                <tr><td colspan="6" class="py-8 text-center text-gray-400 text-sm">
+                <tr><td colspan="7" class="py-8 text-center text-gray-400 text-sm">
                     <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
                     Cargando...
                 </td></tr>
@@ -78,66 +78,16 @@
     <p id="contador-auditoria" class="text-xs text-gray-500 text-center mt-4"></p>
 </div>
 
-<!-- STATS -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-    <div class="bg-white rounded-2xl border border-gray-200 p-5">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="clipboard-list" class="w-6 h-6 text-blue-600"></i>
-            </div>
-            <div>
-                <p class="text-xs text-gray-500 mb-0.5">Total de eventos</p>
-                <p id="stat-total" class="text-2xl font-bold text-gray-900">0</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-gray-200 p-5">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="wifi-off" class="w-6 h-6 text-orange-600"></i>
-            </div>
-            <div>
-                <p class="text-xs text-gray-500 mb-0.5">Sensor sin comunicación</p>
-                <p id="stat-sensor" class="text-2xl font-bold text-gray-900">0</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-gray-200 p-5">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="zap-off" class="w-6 h-6 text-red-600"></i>
-            </div>
-            <div>
-                <p class="text-xs text-gray-500 mb-0.5">Cortes de energía</p>
-                <p id="stat-corte" class="text-2xl font-bold text-gray-900">0</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-gray-200 p-5">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="droplet" class="w-6 h-6 text-red-600"></i>
-            </div>
-            <div>
-                <p class="text-xs text-gray-500 mb-0.5">Bombas sin caudal</p>
-                <p id="stat-bomba" class="text-2xl font-bold text-gray-900">0</p>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- ==================== MODAL DETALLE DE EVENTO ==================== -->
+<!-- ==================== MODAL DETALLE DE AUDITORÍA ==================== -->
 <div id="modal-evento" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
 
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
 
         <div class="flex items-start justify-between gap-3 mb-5">
-            <div id="modal-evento-header"></div>
+            <div>
+                <h3 class="font-serif text-xl font-bold text-gray-900">Detalles de auditoría</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Registro completo</p>
+            </div>
             <button id="btn-cerrar-modal-evento" class="p-1 hover:bg-gray-100 rounded transition flex-shrink-0">
                 <i data-lucide="x" class="w-5 h-5 text-gray-500"></i>
             </button>

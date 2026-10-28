@@ -1,38 +1,59 @@
 // ============================================================
-// auditoria.js — Eventos con filtros, export CSV y modal
+// auditoria.js — Auditoría de acciones de usuario
 // ============================================================
 
-let eventos = [];
-let eventosFiltrados = [];
-let cultivosMap = {};
-let dispositivosMap = {};
+let registros = [];
+let registrosFiltrados = [];
 
-const TIPO_EVENTO_CONFIG = {
-    "sensor_sin_comunicacion": {
-        label: "Sensor sin comunicación",
-        badgeBg: "bg-orange-100",
-        badgeText: "text-orange-800",
-        iconoBg: "bg-orange-100",
-        iconoColor: "text-orange-600",
-        icono: "wifi-off",
+const ACCION_CONFIG = {
+    "login": {
+        label: "Login",
+        badgeBg: "bg-green-100",
+        badgeText: "text-green-800",
     },
-    "corte_electrico": {
-        label: "Corte de energía",
+    "logout": {
+        label: "Logout",
+        badgeBg: "bg-slate-100",
+        badgeText: "text-slate-700",
+    },
+    "crear": {
+        label: "Crear",
+        badgeBg: "bg-blue-100",
+        badgeText: "text-blue-800",
+    },
+    "editar": {
+        label: "Editar",
+        badgeBg: "bg-amber-100",
+        badgeText: "text-amber-800",
+    },
+    "eliminar": {
+        label: "Eliminar",
         badgeBg: "bg-red-100",
         badgeText: "text-red-800",
-        iconoBg: "bg-red-100",
-        iconoColor: "text-red-600",
-        icono: "zap-off",
     },
-    "bomba_sin_caudal": {
-        label: "Bomba sin caudal",
-        badgeBg: "bg-red-100",
-        badgeText: "text-red-800",
-        iconoBg: "bg-red-100",
-        iconoColor: "text-red-600",
-        icono: "droplet",
+    "login_fallido": {
+        label: "Login fallido",
+        badgeBg: "bg-purple-100",
+        badgeText: "text-purple-800",
     },
 };
+
+function obtenerAccionConfig(registro) {
+    const accion = registro.accion || "";
+    const config = ACCION_CONFIG[accion];
+    if (config) {
+        return {
+            label: registro.accion_display || config.label,
+            badgeBg: config.badgeBg,
+            badgeText: config.badgeText,
+        };
+    }
+    return {
+        label: registro.accion_display || accion,
+        badgeBg: "bg-gray-100",
+        badgeText: "text-gray-800",
+    };
+}
 
 // ---------- Cargar todo ----------
 async function cargarAuditoria() {
@@ -41,93 +62,50 @@ async function cargarAuditoria() {
 
     try {
         tbody.innerHTML = `
-            <tr><td colspan="6" class="py-8 text-center text-gray-400 text-sm">
+            <tr><td colspan="7" class="py-8 text-center text-gray-400 text-sm">
                 <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
-                Cargando eventos...
+                Cargando...
             </td></tr>
         `;
         lucide.createIcons();
 
-        await Promise.all([
-            cargarCultivos(),
-            cargarDispositivos(),
-        ]);
+        const resp = await apiGet("/auditoria/");
+        registros = Array.isArray(resp) ? resp : (resp.results || []);
+        registros.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
 
-        const resp = await apiGet("/eventos/");
-        eventos = Array.isArray(resp) ? resp : (resp.results || []);
-        eventos.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
-
-        eventosFiltrados = [...eventos];
-
-        poblarFiltrosCultivos();
+        registrosFiltrados = [...registros];
 
         renderTabla();
         renderContador();
-        renderStats(eventos);
         configurarFiltros();
         configurarExportar();
         configurarCierreModal();
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `
-            <tr><td colspan="6" class="py-8 text-center text-red-500 text-sm">
-                Error al cargar eventos: ${err.message}
+            <tr><td colspan="7" class="py-8 text-center text-red-500 text-sm">
+                Error al cargar auditoría: ${err.message}
             </td></tr>
         `;
     }
 }
 
-// ---------- Catálogos ----------
-async function cargarCultivos() {
-    const resp = await apiGet("/cultivos/");
-    const lista = Array.isArray(resp) ? resp : (resp.results || []);
-    cultivosMap = {};
-    lista.forEach(c => { cultivosMap[c.id_cultivo] = c.nombre; });
-}
-
-async function cargarDispositivos() {
-    const resp = await apiGet("/dispositivos/");
-    const lista = Array.isArray(resp) ? resp : (resp.results || []);
-    dispositivosMap = {};
-    lista.forEach(d => { dispositivosMap[d.id] = d.nombre; });
-}
-
-// ---------- Poblar select de cultivos ----------
-function poblarFiltrosCultivos() {
-    const select = document.getElementById("filtro-cultivo");
-    if (!select) return;
-
-    const cultivosUnicos = new Set();
-    eventos.forEach(e => {
-        if (e.cultivo) cultivosUnicos.add(e.cultivo);
-    });
-
-    const opciones = Array.from(cultivosUnicos).map(id =>
-        `<option value="${id}">${cultivosMap[id] || `Cultivo #${id}`}</option>`
-    ).join("");
-
-    select.innerHTML = `<option value="">Todos los cultivos</option>${opciones}`;
-}
-
 // ---------- Configurar filtros ----------
 function configurarFiltros() {
-    const filtroTipo = document.getElementById("filtro-tipo");
-    const filtroCultivo = document.getElementById("filtro-cultivo");
+    const filtroAccion = document.getElementById("filtro-accion");
     const filtroFecha = document.getElementById("filtro-fecha");
     const buscador = document.getElementById("filtro-buscar");
 
     function aplicarFiltros() {
-        const tipo = filtroTipo?.value || "";
-        const cultivoId = filtroCultivo?.value || "";
+        const accion = filtroAccion?.value || "";
         const rangoFecha = filtroFecha?.value || "";
         const texto = (buscador?.value || "").toLowerCase().trim();
 
-        eventosFiltrados = eventos.filter(e => {
-            if (tipo && e.tipo_evento !== tipo) return false;
-            if (cultivoId && String(e.cultivo) !== String(cultivoId)) return false;
+        registrosFiltrados = registros.filter(r => {
+            if (accion && r.accion !== accion) return false;
 
             if (rangoFecha) {
-                const fecha = new Date(e.fecha_hora);
+                const fecha = new Date(r.fecha_hora);
                 const ahora = new Date();
                 const difDias = (ahora - fecha) / (1000 * 60 * 60 * 24);
 
@@ -137,15 +115,8 @@ function configurarFiltros() {
             }
 
             if (texto) {
-                const cultivoNombre = (cultivosMap[e.cultivo] || "").toLowerCase();
-                const dispNombre = (dispositivosMap[e.dispositivo] || "").toLowerCase();
-                const descripcion = (e.descripcion || "").toLowerCase();
-                const tipoLabel = (TIPO_EVENTO_CONFIG[e.tipo_evento]?.label || "").toLowerCase();
-
-                if (!cultivoNombre.includes(texto) &&
-                    !dispNombre.includes(texto) &&
-                    !descripcion.includes(texto) &&
-                    !tipoLabel.includes(texto)) {
+                const username = (r.usuario_username || "").toLowerCase();
+                if (!username.includes(texto)) {
                     return false;
                 }
             }
@@ -155,10 +126,9 @@ function configurarFiltros() {
 
         renderTabla();
         renderContador();
-        renderStats(eventosFiltrados);
     }
 
-    [filtroTipo, filtroCultivo, filtroFecha].forEach(el => {
+    [filtroAccion, filtroFecha].forEach(el => {
         el?.addEventListener("change", aplicarFiltros);
     });
 
@@ -169,69 +139,55 @@ function configurarFiltros() {
 function renderTabla() {
     const tbody = document.getElementById("tbody-auditoria");
 
-    if (eventosFiltrados.length === 0) {
+    if (registrosFiltrados.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="6" class="py-12 text-center">
+            <tr><td colspan="7" class="py-12 text-center">
                 <i data-lucide="search-x" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
-                <p class="text-sm text-gray-500">No hay eventos que coincidan con los filtros.</p>
+                <p class="text-sm text-gray-500">No hay registros que coincidan con los filtros.</p>
             </td></tr>
         `;
         lucide.createIcons();
         return;
     }
 
-    tbody.innerHTML = eventosFiltrados.map(e => {
-        const config = TIPO_EVENTO_CONFIG[e.tipo_evento] || {
-            label: e.tipo_evento,
-            badgeBg: "bg-gray-100",
-            badgeText: "text-gray-800",
-            iconoBg: "bg-gray-100",
-            iconoColor: "text-gray-600",
-            icono: "info",
-        };
-
-        const cultivoNombre = escapeHtml(cultivosMap[e.cultivo] || `Cultivo #${e.cultivo}`);
-        const dispositivoNombre = e.dispositivo
-            ? escapeHtml(dispositivosMap[e.dispositivo] || `Disp #${e.dispositivo}`)
-            : "—";
-        const descripcion = escapeHtml(e.descripcion || "Sin descripción");
-
-        const fechaStr = formatearFechaHora(e.fecha_hora);
+    tbody.innerHTML = registrosFiltrados.map(r => {
+        const config = obtenerAccionConfig(r);
+        const fechaStr = formatearFechaHora(r.fecha_hora);
+        const usuario = escapeHtml(r.usuario_username || "Anónimo");
+        const entidad = escapeHtml(r.entidad || "—");
+        const ip = escapeHtml(r.ip_address || "—");
+        const detallesStr = r.detalles ? JSON.stringify(r.detalles) : "{}";
+        const detallesPreview = detallesStr.length > 80 ? detallesStr.substring(0, 77) + "..." : detallesStr;
 
         return `
             <tr class="hover:bg-gray-50">
                 <td class="py-3 px-3 text-gray-700 whitespace-nowrap text-xs">${fechaStr}</td>
+                <td class="py-3 px-3 text-gray-700 text-xs">${usuario}</td>
                 <td class="py-3 px-3">
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 ${config.iconoBg} rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="${config.icono}" class="w-3.5 h-3.5 ${config.iconoColor}"></i>
-                        </div>
-                        <span class="inline-flex items-center gap-1 ${config.badgeBg} ${config.badgeText} text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-                            ${config.label}
-                        </span>
-                    </div>
+                    <span class="inline-flex items-center gap-1 ${config.badgeBg} ${config.badgeText} text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                        ${escapeHtml(config.label)}
+                    </span>
                 </td>
-                <td class="py-3 px-3 text-gray-700 text-xs">${cultivoNombre}</td>
-                <td class="py-3 px-3 text-gray-600 text-xs">${dispositivoNombre}</td>
-                <td class="py-3 px-3 text-gray-600 text-xs max-w-md truncate" title="${descripcion}">
-                    ${descripcion}
+                <td class="py-3 px-3 text-gray-700 text-xs">${entidad}</td>
+                <td class="py-3 px-3 text-gray-600 text-xs max-w-xs truncate" title="${escapeHtml(detallesStr)}">
+                    ${escapeHtml(detallesPreview)}
                 </td>
+                <td class="py-3 px-3 text-gray-600 text-xs">${ip}</td>
                 <td class="py-3 px-3">
-                    <button class="btn-ver-evento p-1.5 hover:bg-gray-100 rounded transition" data-id="${e.id}" title="Ver detalle">
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                    <button class="btn-ver-auditoria p-1.5 hover:bg-gray-100 rounded transition" data-id="${r.id}" title="Ver detalles">
+                        <i data-lucide="eye" class="w-4 h-4 text-gray-400"></i>
                     </button>
                 </td>
             </tr>
         `;
     }).join("");
 
-    // Event listeners
-    document.querySelectorAll(".btn-ver-evento").forEach(btn => {
+    document.querySelectorAll(".btn-ver-auditoria").forEach(btn => {
         btn.addEventListener("click", (e) => {
             e.stopPropagation();
             const id = parseInt(btn.dataset.id);
-            const evento = eventos.find(ev => ev.id === id);
-            if (evento) abrirModalEvento(evento);
+            const registro = registros.find(r => r.id === id);
+            if (registro) abrirModalAuditoria(registro);
         });
     });
 
@@ -242,32 +198,14 @@ function renderTabla() {
 function renderContador() {
     const contador = document.getElementById("contador-auditoria");
     if (contador) {
-        const total = eventos.length;
-        const filtrado = eventosFiltrados.length;
+        const total = registros.length;
+        const filtrado = registrosFiltrados.length;
         if (filtrado === total) {
-            contador.textContent = `Mostrando 1 - ${total} de ${total} eventos`;
+            contador.textContent = `Mostrando ${total} registro${total === 1 ? "" : "s"}`;
         } else {
-            contador.textContent = `Mostrando ${filtrado} de ${total} eventos (filtrados)`;
+            contador.textContent = `Mostrando ${filtrado} de ${total} registros (filtrados)`;
         }
     }
-}
-
-// ---------- Stats ----------
-function renderStats(lista) {
-    const conteo = {
-        sensor_sin_comunicacion: 0,
-        corte_electrico: 0,
-        bomba_sin_caudal: 0,
-    };
-    lista.forEach(e => {
-        if (conteo[e.tipo_evento] !== undefined) conteo[e.tipo_evento]++;
-    });
-
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set("stat-total", lista.length);
-    set("stat-sensor", conteo.sensor_sin_comunicacion);
-    set("stat-corte", conteo.corte_electrico);
-    set("stat-bomba", conteo.bomba_sin_caudal);
 }
 
 // ---------- Exportar CSV ----------
@@ -276,21 +214,22 @@ function configurarExportar() {
     if (!btn) return;
 
     btn.addEventListener("click", () => {
-        if (eventosFiltrados.length === 0) {
-            alert("No hay eventos para exportar.");
+        if (registrosFiltrados.length === 0) {
+            alert("No hay registros para exportar.");
             return;
         }
 
-        const headers = ["Fecha y hora", "Tipo de evento", "Cultivo", "Dispositivo", "Descripción"];
+        const headers = ["Fecha y Hora", "Usuario", "Acción", "Módulo/Entidad", "Detalles", "IP"];
 
-        const filas = eventosFiltrados.map(e => {
-            const config = TIPO_EVENTO_CONFIG[e.tipo_evento] || { label: e.tipo_evento };
+        const filas = registrosFiltrados.map(r => {
+            const config = obtenerAccionConfig(r);
             return [
-                formatearFechaHora(e.fecha_hora),
+                formatearFechaHora(r.fecha_hora),
+                r.usuario_username || "Anónimo",
                 config.label,
-                cultivosMap[e.cultivo] || `Cultivo #${e.cultivo}`,
-                e.dispositivo ? (dispositivosMap[e.dispositivo] || `Disp #${e.dispositivo}`) : "—",
-                e.descripcion || "Sin descripción",
+                r.entidad || "",
+                JSON.stringify(r.detalles || {}),
+                r.ip_address || "",
             ];
         });
 
@@ -324,75 +263,47 @@ function configurarExportar() {
 // MODAL DETALLE
 // ============================================================
 
-function abrirModalEvento(evento) {
+function abrirModalAuditoria(registro) {
     const modal = document.getElementById("modal-evento");
     if (!modal) return;
 
-    const config = TIPO_EVENTO_CONFIG[evento.tipo_evento] || {
-        label: evento.tipo_evento,
-        badgeBg: "bg-gray-100",
-        badgeText: "text-gray-800",
-        iconoBg: "bg-gray-100",
-        iconoColor: "text-gray-600",
-        icono: "info",
-    };
-
-    const cultivoNombre = cultivosMap[evento.cultivo] || `Cultivo #${evento.cultivo}`;
-    const dispositivoNombre = evento.dispositivo
-        ? (dispositivosMap[evento.dispositivo] || `Disp #${evento.dispositivo}`)
-        : "—";
-
-    const header = document.getElementById("modal-evento-header");
-    header.innerHTML = `
-        <div class="flex items-start gap-3">
-            <div class="w-12 h-12 ${config.iconoBg} rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="${config.icono}" class="w-6 h-6 ${config.iconoColor}"></i>
-            </div>
-            <div>
-                <h3 class="font-serif text-xl font-bold text-gray-900">${config.label}</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Evento #${evento.id}</p>
-            </div>
-        </div>
-    `;
-
+    const config = obtenerAccionConfig(registro);
     const body = document.getElementById("modal-evento-body");
+
+    const detallesPretty = JSON.stringify(registro.detalles || {}, null, 2);
+
     body.innerHTML = `
         <div class="space-y-3 text-sm">
-
             <div>
-                <p class="text-xs text-gray-500 mb-0.5">Fecha y hora</p>
-                <p class="font-medium text-gray-900">${formatearFechaHora(evento.fecha_hora)}</p>
+                <p class="text-xs text-gray-500 mb-0.5">Fecha y Hora</p>
+                <p class="font-medium text-gray-900">${formatearFechaHora(registro.fecha_hora)}</p>
             </div>
-
             <div>
-                <p class="text-xs text-gray-500 mb-0.5">Tipo de evento</p>
+                <p class="text-xs text-gray-500 mb-0.5">Usuario</p>
+                <p class="font-medium text-gray-900">${escapeHtml(registro.usuario_username || "Anónimo")}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">Acción</p>
                 <span class="inline-flex items-center ${config.badgeBg} ${config.badgeText} text-xs font-semibold px-2 py-0.5 rounded-full">
-                    ${config.label}
+                    ${escapeHtml(config.label)}
                 </span>
             </div>
-
             <div>
-                <p class="text-xs text-gray-500 mb-0.5">Cultivo</p>
-                <p class="font-medium text-gray-900">${cultivoNombre}</p>
+                <p class="text-xs text-gray-500 mb-0.5">Módulo/Entidad</p>
+                <p class="font-medium text-gray-900">${escapeHtml(registro.entidad || "—")}</p>
             </div>
-
             <div>
-                <p class="text-xs text-gray-500 mb-0.5">Dispositivo</p>
-                <p class="font-medium text-gray-900">${dispositivoNombre}</p>
+                <p class="text-xs text-gray-500 mb-0.5">Objeto ID</p>
+                <p class="font-medium text-gray-900">${registro.objeto_id !== null && registro.objeto_id !== undefined ? registro.objeto_id : "—"}</p>
             </div>
-
-            ${evento.ciclo ? `
-                <div>
-                    <p class="text-xs text-gray-500 mb-0.5">Ciclo de producción</p>
-                    <p class="font-medium text-gray-900">Ciclo #${evento.ciclo}</p>
-                </div>
-            ` : ""}
-
+            <div>
+                <p class="text-xs text-gray-500 mb-0.5">IP</p>
+                <p class="font-medium text-gray-900">${escapeHtml(registro.ip_address || "—")}</p>
+            </div>
             <div class="pt-3 border-t border-gray-100">
-                <p class="text-xs text-gray-500 mb-1">Descripción</p>
-                <p class="text-gray-700 leading-relaxed">${escapeHtml(evento.descripcion || "Sin descripción")}</p>
+                <p class="text-xs text-gray-500 mb-2">Detalles (JSON)</p>
+                <pre class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs overflow-x-auto text-gray-800">${escapeHtml(detallesPretty)}</pre>
             </div>
-
         </div>
     `;
 
@@ -404,6 +315,7 @@ function abrirModalEvento(evento) {
 
 function cerrarModalEvento() {
     const modal = document.getElementById("modal-evento");
+    if (!modal) return;
     modal.classList.add("hidden");
     modal.classList.remove("flex");
 }
