@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from apps.inteligencia.views import (
@@ -6,6 +7,7 @@ from apps.inteligencia.views import (
     AvisoCrecimientoViewSet,
     RecomendacionViewSet,
     AnomaliaViewSet,
+    PrediccionAPIView,
 )
 
 router = DefaultRouter()
@@ -15,4 +17,6 @@ router.register(r"avisos-crecimiento", AvisoCrecimientoViewSet, basename="aviso-
 router.register(r"recomendaciones", RecomendacionViewSet, basename="recomendacion")
 router.register(r"anomalias", AnomaliaViewSet, basename="anomalia")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("predicciones/", PrediccionAPIView.as_view(), name="predicciones"),
+] + router.urls

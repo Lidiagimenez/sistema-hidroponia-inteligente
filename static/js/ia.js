@@ -36,6 +36,66 @@ const TIPO_AVISO_ICONO = {
     "caida_verdor":          { icono: "leaf",           bg: "bg-amber-100",   color: "text-amber-600"   },
 };
 
+// ---------- Cargar predicciones ----------
+async function cargarPredicciones() {
+    const mensajeEl = document.getElementById("prediccion-mensaje");
+    const detalleEl = document.getElementById("prediccion-detalle");
+    
+    if (!mensajeEl) return;
+    
+    try {
+        await cargarCultivos();
+        const cultivoIds = Object.keys(cultivosMap);
+        
+        if (cultivoIds.length === 0) {
+            mensajeEl.textContent = "No hay cultivos registrados para generar predicciones.";
+            if (detalleEl) detalleEl.classList.add("hidden");
+            return;
+        }
+        
+        // Intentar obtener predicciones por cultivo
+        const cultivoId = cultivoIds[0];
+        const resp = await apiGet(`/predicciones/?cultivo=${cultivoId}`);
+        
+        if (Array.isArray(resp)) {
+            // Múltiples sensores
+            const mensajes = resp.map(p => {
+                const tipo = p.tipo_sensor || "";
+                const pred = p.prediccion;
+                if (p.tendencia === "subiendo") {
+                    return `${tipo} subirá a ${pred}`;
+                } else if (p.tendencia === "bajando") {
+                    return `${tipo} bajará a ${pred}`;
+                } else {
+                    return `${tipo} se mantendrá estable`;
+                }
+            });
+            mensajeEl.textContent = `Predicción IA (Próxima medición): ${mensajes.join(". ")}.`;
+            if (detalleEl) {
+                detalleEl.innerHTML = resp.map(p => 
+                    `<span class="inline-block mr-3">• ${p.tipo_sensor}: Actual ${p.valor_actual} → Predicción ${p.prediccion} (${p.tendencia})</span>`
+                ).join("");
+                detalleEl.classList.remove("hidden");
+            }
+        } else if (resp && resp.mensaje) {
+            // Respuesta única con formato del backend
+            mensajeEl.textContent = `Predicción IA (Próxima medición): ${resp.mensaje.replace("Se espera", "").replace("en la próxima medición", "").trim()}. El ${resp.tipo_sensor} irá de ${resp.valor_actual} a ${resp.prediccion}.`;
+            if (detalleEl) {
+                detalleEl.innerHTML = `<span class="inline-block mr-3">• ${resp.tipo_sensor}: Actual ${resp.valor_actual} → Predicción ${resp.prediccion} (${resp.tendencia})</span>`;
+                detalleEl.classList.remove("hidden");
+            }
+        } else {
+            mensajeEl.textContent = "No hay suficientes datos históricos para generar predicciones fiables.";
+            if (detalleEl) detalleEl.classList.add("hidden");
+        }
+    } catch (err) {
+        console.error("Error cargando predicciones:", err);
+        mensajeEl.textContent = "No hay suficientes datos históricos para generar predicciones (se requiere mínimo de mediciones).";
+        if (detalleEl) detalleEl.classList.add("hidden");
+    }
+}
+
+
 // ---------- Cargar todo ----------
 async function cargarIA() {
     try {
@@ -46,6 +106,7 @@ async function cargarIA() {
             cargarAnomalias(),
         ]);
 
+        await cargarPredicciones();
         renderTabs();
         renderLista();
         renderStats();
@@ -303,31 +364,47 @@ function renderAnomalias(contenedor) {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-3 mb-1">
                             <h3 class="font-semibold text-gray-900">
-                                ${escapeHtml(a.sensor_nombre || "Anomalía")} — Score ${a.score.toFixed(2)}
+                                ${escapeHtml(a.sensor_nombre || "Anomalía")} — Score <span class="text-purple-700 font-bold">${typeof a.score === 'number' ? a.score.toFixed(2) : a.score}</span>
                             </h3>
                             ${estadoBadge}
                         </div>
                         <p class="text-xs text-gray-500 mb-2">
                             ${escapeHtml(a.cultivo_nombre || "—")} · ${escapeHtml(a.origen_display)}
                         </p>
+                        <p class="text-sm text-gray-600 mb-2 leading-relaxed">
+                            ${escapeHtml(a.descripcion || "")}
+                        </p>
                         <div class="grid grid-cols-3 gap-2 my-3 text-xs">
                             <div class="bg-gray-50 rounded-lg p-2">
-                                <p class="text-gray-400 mb-0.5">Valor</p>
+                                <p class="text-gray-400 mb-0.5">Valor observado</p>
                                 <p class="font-semibold text-gray-900">${a.valor_observado}</p>
                             </div>
-                            ${a.valor_esperado_min !== null ? `
+                            ${a.valor_esperado_min !== null && a.valor_esperado_min !== undefined ? `
                                 <div class="bg-gray-50 rounded-lg p-2">
                                     <p class="text-gray-400 mb-0.5">Min esperado</p>
                                     <p class="font-medium text-gray-700">${a.valor_esperado_min}</p>
                                 </div>
                             ` : ""}
-                            ${a.valor_esperado_max !== null ? `
+                            ${a.valor_esperado_max !== null && a.valor_esperado_max !== undefined ? `
                                 <div class="bg-gray-50 rounded-lg p-2">
                                     <p class="text-gray-400 mb-0.5">Max esperado</p>
                                     <p class="font-medium text-gray-700">${a.valor_esperado_max}</p>
                                 </div>
                             ` : ""}
                         </div>
+                        <details class="mb-2">
+                            <summary class="text-xs text-brand font-semibold cursor-pointer hover:underline">Ver detalles</summary>
+                            <div class="mt-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+                                <p><strong>ID:</strong> ${a.id}</p>
+                                <p><strong>Sensor:</strong> ${escapeHtml(a.sensor_nombre || "—")}</p>
+                                <p><strong>Cultivo:</strong> ${escapeHtml(a.cultivo_nombre || "—")}</p>
+                                <p><strong>Score:</strong> ${typeof a.score === 'number' ? a.score.toFixed(3) : a.score}</p>
+                                <p><strong>Origen:</strong> ${escapeHtml(a.origen_display || a.origen || "")}</p>
+                                <p><strong>Estado:</strong> ${escapeHtml(a.estado || "")}</p>
+                                <p><strong>Fecha detección:</strong> ${a.fecha_deteccion || ""}</p>
+                                ${a.descripcion ? `<p class="mt-1"><strong>Descripción:</strong> ${escapeHtml(a.descripcion)}</p>` : ""}
+                            </div>
+                        </details>
                         <div class="flex items-center justify-between gap-3 pt-2">
                             <span class="text-xs text-gray-400 flex items-center gap-1">
                                 <i data-lucide="clock" class="w-3 h-3"></i>
@@ -393,7 +470,11 @@ async function resolverAviso(id) {
 async function revisarAnomalia(id) {
     try {
         await apiPost(`/anomalias/${id}/revisar/`, {});
-        await cargarAnomalias();
+        // Actualizar visualmente sin recargar todo
+        const anom = anomalias.find(a => a.id === id);
+        if (anom) {
+            anom.estado = "revisada";
+        }
         renderTabs();
         renderLista();
         renderStats();
@@ -405,7 +486,11 @@ async function revisarAnomalia(id) {
 async function descartarAnomalia(id) {
     try {
         await apiPost(`/anomalias/${id}/descartar/`, {});
-        await cargarAnomalias();
+        // Actualizar visualmente sin recargar todo
+        const anom = anomalias.find(a => a.id === id);
+        if (anom) {
+            anom.estado = "descartada";
+        }
         renderTabs();
         renderLista();
         renderStats();
@@ -419,7 +504,7 @@ async function ejecutarMotor() {
     const btn = document.getElementById("btn-ejecutar-motor");
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Ejecutando...`;
+        btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Actualizando...`;
         lucide.createIcons();
     }
 
@@ -428,24 +513,30 @@ async function ejecutarMotor() {
         const cultivoIds = Object.keys(cultivosMap);
         if (cultivoIds.length === 0) {
             alert("No hay cultivos para evaluar.");
+            // Aún así actualizar predicciones
+            await cargarPredicciones();
             return;
         }
 
         const cultivoId = parseInt(cultivoIds[0]);
-        const resp = await apiPost("/recomendaciones/evaluar/", { cultivo: cultivoId });
-
-        alert(`✓ Motor ejecutado.\n\nRecomendaciones generadas: ${resp.generadas || 0}`);
+        try {
+            const resp = await apiPost("/recomendaciones/evaluar/", { cultivo: cultivoId });
+            alert(`✓ Análisis IA actualizado.\n\nRecomendaciones generadas: ${resp.generadas || 0}`);
+        } catch (e) {
+            console.error("Error evaluando recomendaciones:", e);
+        }
 
         await cargarRecomendaciones();
+        await cargarPredicciones();
         renderTabs();
         renderLista();
         renderStats();
     } catch (err) {
-        alert(`Error al ejecutar el motor: ${err.message}`);
+        alert(`Error al actualizar el análisis IA: ${err.message}`);
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> Ejecutar motor`;
+            btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualizar análisis IA`;
             lucide.createIcons();
         }
     }

@@ -2,10 +2,12 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.views import APIView
 
 from apps.cultivos.models import Cultivo, CicloProduccion
 from apps.dispositivos.models import Dispositivo
 from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
+from apps.usuarios.authentication import CookieJWTAuthentication
 from apps.inteligencia.models import (
     ParametroImagen, AnalisisImagen, AvisoCrecimiento, Recomendacion, Anomalia,
 )
@@ -16,6 +18,7 @@ from apps.inteligencia.serializers import (
 )
 from apps.inteligencia.services import procesar_analisis, traer_captura
 from apps.inteligencia.recomendaciones import evaluar_recomendaciones
+from apps.inteligencia import prediccion
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -230,3 +233,61 @@ class AnomaliaViewSet(viewsets.ModelViewSet):
                 self.get_serializer(page, many=True).data
             )
         return Response(self.get_serializer(qs, many=True).data)
+
+
+class PrediccionAPIView(APIView):
+    """
+    Endpoint de predicción con Random Forest.
+    GET /api/predicciones/?cultivo=<id> o /api/predicciones/?sensor=<id>
+    """
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [EsAdministradorOOperador]
+
+    def get(self, request):
+        cultivo_id = request.query_params.get("cultivo")
+        sensor_id = request.query_params.get("sensor")
+        tipo_sensor_id = request.query_params.get("tipo_sensor")
+
+        if not cultivo_id and not sensor_id and not tipo_sensor_id:
+            return Response(
+                {"detail": "Debe proporcionar 'cultivo', 'sensor' o 'tipo_sensor'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Si es por cultivo, devolver predicciones para todos los sensores
+        if cultivo_id:
+            resultados = prediccion.predecir_para_cultivo(cultivo_id)
+            if not resultados:
+                return Response(
+                    {"detail": "No hay datos suficientes para predecir o no hay sensores asociados."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            # Si hay múltiples, devolver lista; si hay uno, también puede devolver estructura simple
+            if len(resultados) == 1:
+                return Response(resultados[0])
+            return Response(resultados)
+
+        # Si es por sensor
+        if sensor_id:
+            resultado = prediccion.predecir_siguiente(sensor_id=sensor_id)
+            if not resultado:
+                return Response(
+                    {"detail": "No hay datos suficientes para predecir."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            return Response(resultado)
+
+        # Si es por tipo de sensor
+        if tipo_sensor_id:
+            resultado = prediccion.predecir_siguiente(tipo_sensor_id=tipo_sensor_id)
+            if not resultado:
+                return Response(
+                    {"detail": "No hay datos suficientes para predecir."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            return Response(resultado)
+
+        return Response(
+            {"detail": "Error inesperado."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

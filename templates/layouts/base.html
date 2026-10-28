@@ -476,6 +476,31 @@
             });
         };
 
+        // ==========================================
+        // MARCAR ITEM ACTIVO EN EL SIDEBAR (NUEVO)
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", () => {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.sidebar-item');
+
+            navItems.forEach(item => {
+                // Quitamos la clase active por defecto
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                if (!href) return;
+
+                // Caso especial para el inicio (/dashboard/ o /)
+                if ((currentPath === '/' || currentPath === '/dashboard/') && href === '/dashboard/') {
+                    item.classList.add('active');
+                }
+                // Caso general: comparamos si la ruta actual empieza con el href
+                // Usamos startsWith para que /cultivos/1/ también marque /cultivos/
+                else if (href !== '/dashboard/' && currentPath.startsWith(href)) {
+                    item.classList.add('active');
+                }
+            });
+        });
+
         if (window.lucide) lucide.createIcons();
     </script>
 
