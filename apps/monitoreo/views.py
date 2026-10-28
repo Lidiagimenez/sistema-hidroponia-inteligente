@@ -111,15 +111,33 @@ class SensorViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
         return Response(self.get_serializer(sensor).data)
 
 
+# apps/monitoreo/views.py
+
 class RangoOperacionViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
     auditar_entidad = "Rango de operación"
-    queryset = RangoOperacion.objects.all().order_by("pk")
     serializer_class = RangoOperacionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["sensor", "is_active"]
+
+    def get_queryset(self):
+        # 🔥 FILTRAMOS SOLO LOS ACTIVOS (Para no ver los eliminados)
+        qs = RangoOperacion.objects.filter(is_active=True).order_by("pk")
+        return qs
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [EsAdministrador()]
         return [EsAdministradorOOperador()]
+
+    # 🔥 BORRADO LÓGICO
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
+        self._registrar_accion(
+            RegistroAuditoria.Accion.ELIMINAR,
+            instance,
+            detalles={"modo": "desactivacion", "nota": "El rango de operación fue desactivado."},
+        )
 
 
 class MedicionViewSet(viewsets.ReadOnlyModelViewSet):

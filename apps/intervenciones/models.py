@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.utils import timezone
 from apps.alertas.models import Alerta
 from apps.cultivos.models import Cultivo, CicloProduccion
-from apps.monitoreo.models import Sensor  # <--- NUEVO IMPORT
+from apps.monitoreo.models import Sensor
 
 class Intervencion(models.Model):
     class Tipo(models.TextChoices):
@@ -45,6 +45,10 @@ class Intervencion(models.Model):
     descripcion_accion = models.TextField(blank=True)
     fecha_hora = models.DateTimeField(default=timezone.now)
     resuelta = models.BooleanField(default=False)
+    
+    # 🔥 NUEVO CAMPO PARA SOFT DELETE
+    is_active = models.BooleanField(default=True, db_index=True)
+
     fecha_cosecha_real = models.DateTimeField(null=True, blank=True)
     resultado_cosecha = models.CharField(
         max_length=20, choices=ResultadoCosecha.choices, null=True, blank=True,
@@ -59,14 +63,13 @@ class Intervencion(models.Model):
                     Q(alerta__isnull=False)
                     | Q(cultivo__isnull=False)
                     | Q(ciclo__isnull=False)
-                    | Q(sensor__isnull=False) # <--- NUEVA VALIDACIÓN
+                    | Q(sensor__isnull=False)
                 ),
                 name="intervencion_tiene_origen",
             )
         ]
 
     def clean(self):
-        # <--- ACTUALIZADO CON SENSOR
         if not self.alerta_id and not self.cultivo_id and not self.ciclo_id and not self.sensor_id:
             raise ValidationError("La intervención debe asociarse a una alerta, cultivo, ciclo o sensor.")
         if self.tipo == self.Tipo.COSECHA:

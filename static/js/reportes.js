@@ -16,11 +16,11 @@ const ESTADO_CONFIG = {
     "error":     { badgeBg: "bg-red-100",    badgeText: "text-red-800",    label: "Con errores", icono: "x-circle" },
 };
 
+// 🔥 ELIMINADA LA OPCIÓN "CRECIMIENTO"
 const TIPO_REPORTE_CONFIG = {
     "monitoreo":      { label: "Monitoreo",      icono: "line-chart" },
     "alertas":        { label: "Alertas",        icono: "bell" },
     "eventos":        { label: "Eventos",        icono: "calendar" },
-    "crecimiento":    { label: "Crecimiento",    icono: "sprout" },
     "intervenciones": { label: "Intervenciones", icono: "wrench" },
     "recomendaciones":{ label: "Recomendaciones",icono: "sparkles" },
 };
@@ -129,7 +129,7 @@ function renderTabla() {
                         <button class="btn-ver-reporte p-1.5 hover:bg-gray-100 rounded transition" data-id="${r.id}" title="Ver detalle">
                             <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i>
                         </button>
-                        <button class="btn-eliminar-reporte p-1.5 hover:bg-red-50 rounded transition" data-id="${r.id}" title="Eliminar">
+                        <button class="btn-eliminar-reporte p-1.5 hover:bg-red-50 rounded transition" data-id="${r.id}" title="Desactivar">
                             <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
                         </button>
                     </div>
@@ -175,12 +175,11 @@ function renderStats() {
     const total = reportes.length;
     const listos = reportes.filter(r => r.estado === "listo").length;
     const enProceso = reportes.filter(r => r.estado === "pendiente" || r.estado === "generando").length;
-    const conError = reportes.filter(r => r.estado === "error").length;
+    
 
     set("stat-total", total);
     set("stat-listos", listos);
     set("stat-proceso", enProceso);
-    set("stat-errores", conError);
 }
 
 // ---------- Filtros ----------
@@ -221,6 +220,15 @@ function configurarFiltros() {
 // ============================================================
 
 function configurarModal() {
+    // 🔥 OCULTAR BOTÓN SI NO ES ADMIN
+    if (getRol() !== "administrador") {
+        const btnNuevo = document.getElementById("btn-nuevo-reporte");
+        if (btnNuevo) btnNuevo.style.display = "none";
+        
+        // También ocultamos el botón de "Generar el primero" si la tabla está vacía
+        // (aunque esto es más complejo, con ocultar el de arriba es suficiente para la demo)
+    }
+
     document.getElementById("btn-nuevo-reporte")?.addEventListener("click", abrirModalReporte);
     document.getElementById("form-reporte")?.addEventListener("submit", guardarReporte);
     document.getElementById("btn-cerrar-modal-reporte")?.addEventListener("click", cerrarModalReporte);
@@ -438,26 +446,33 @@ function abrirModalDetalle(reporte) {
     lucide.createIcons();
 }
 
-// ---------- Eliminar ----------
+// ---------- Eliminar (Soft Delete) ----------
 async function eliminarReporte(id) {
     const reporte = reportes.find(r => r.id === id);
     if (!reporte) return;
 
-    if (!confirm(`¿Eliminar el reporte "${reporte.tipo_display}"?\n\nEsta acción no se puede deshacer.`)) return;
-
-    try {
-        await apiDelete(`/reportes/${id}/`);
-
-        // Recargar
-        reportes = reportes.filter(r => r.id !== id);
-        reportesFiltrados = reportesFiltrados.filter(r => r.id !== id);
-        renderTabla();
-        renderContador();
-        renderStats();
-
-    } catch (err) {
-        alert(`Error al eliminar: ${err.message}`);
-    }
+    // 🔥 USAMOS EL MODAL GLOBAL
+    confirmarAccion({
+        titulo: "Desactivar reporte",
+        mensaje: `El reporte "${reporte.tipo_display}" dejará de verse en la lista pero se conservará en la base de datos.`,
+        textoConfirmar: "Desactivar",
+        esPeligroso: true,
+        onConfirm: async () => {
+            try {
+                await apiDelete(`/reportes/${id}/`);
+        
+                // Recargar
+                reportes = reportes.filter(r => r.id !== id);
+                reportesFiltrados = reportesFiltrados.filter(r => r.id !== id);
+                renderTabla();
+                renderContador();
+                renderStats();
+        
+            } catch (err) {
+                alert(`Error al desactivar: ${err.message}`);
+            }
+        }
+    });
 }
 
 // ---------- Iniciar ----------

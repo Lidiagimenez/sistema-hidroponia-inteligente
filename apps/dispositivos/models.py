@@ -20,7 +20,16 @@ class Dispositivo(models.Model):
     tipo_dispositivo = models.CharField(max_length=20, choices=TipoDispositivo.choices)
     identificador_hardware = models.CharField(max_length=100, unique=True)
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.ACTIVO)
-    cultivo = models.ForeignKey(Cultivo, on_delete=models.CASCADE, related_name="dispositivos")
+    
+    # 🔥 CAMBIO AQUÍ: Ahora el cultivo es opcional (General)
+    cultivo = models.ForeignKey(
+        Cultivo, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="dispositivos"
+    )
+    
     fecha_alta = models.DateTimeField(auto_now_add=True)
 
     # --- Borrado lógico y origen de los datos ---

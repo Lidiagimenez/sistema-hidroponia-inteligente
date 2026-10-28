@@ -3,12 +3,11 @@ from django.db import models
 
 
 class Reporte(models.Model):
-    # Tipos de reporte disponibles (6 opciones cerradas)
+    # Tipos de reporte disponibles (5 opciones cerradas, sin crecimiento)
     class Tipo(models.TextChoices):
         MONITOREO = "monitoreo", "Monitoreo de sensores"
         ALERTAS = "alertas", "Historial de alertas"
         EVENTOS = "eventos", "Historial de eventos"
-        CRECIMIENTO = "crecimiento", "Crecimiento del cultivo"
         INTERVENCIONES = "intervenciones", "Intervenciones"
         RECOMENDACIONES = "recomendaciones", "Recomendaciones"
 
@@ -48,6 +47,9 @@ class Reporte(models.Model):
     )  # SET_NULL: el reporte sobrevive aunque borren al usuario
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
     fecha_generacion = models.DateTimeField(null=True, blank=True)
+
+    # 🔥 NUEVO CAMPO PARA SOFT DELETE
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         ordering = ["-fecha_solicitud"]  # más nuevos primero

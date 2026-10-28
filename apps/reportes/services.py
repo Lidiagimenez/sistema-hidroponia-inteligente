@@ -43,17 +43,6 @@ def _datos_eventos(reporte):
     return list(qs.values("id", "tipo_evento", "fecha_hora", "dispositivo", "cultivo"))
 
 
-def _datos_crecimiento(reporte):
-    from apps.inteligencia.models import AnalisisImagen
-    qs = AnalisisImagen.objects.filter(
-        fecha_hora__date__gte=reporte.fecha_desde,
-        fecha_hora__date__lte=reporte.fecha_hasta,
-    )
-    if reporte.cultivo:
-        qs = qs.filter(cultivo=reporte.cultivo)
-    return list(qs.values("id", "fecha_hora", "altura_estimada_cm", "area_foliar_cm2"))
-
-
 def _datos_intervenciones(reporte):
     from apps.intervenciones.models import Intervencion
     qs = Intervencion.objects.filter(
@@ -79,7 +68,7 @@ DISPATCH = {
     Reporte.Tipo.MONITOREO: _datos_monitoreo,
     Reporte.Tipo.ALERTAS: _datos_alertas,
     Reporte.Tipo.EVENTOS: _datos_eventos,
-    Reporte.Tipo.CRECIMIENTO: _datos_crecimiento,
+    # 🔥 ELIMINADO: Reporte.Tipo.CRECIMIENTO
     Reporte.Tipo.INTERVENCIONES: _datos_intervenciones,
     Reporte.Tipo.RECOMENDACIONES: _datos_recomendaciones,
 }

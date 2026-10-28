@@ -4,7 +4,7 @@ let intervenciones = [];
 let alertasDisponibles = [];
 let cultivosDisponibles = [];
 let ciclosDisponibles = [];
-let sensoresDisponibles = []; // <--- NUEVA VARIABLE
+let sensoresDisponibles = [];
 let tabActivoIntervenciones = "todas";
 
 const TIPOS_OPERADOR = new Set([
@@ -90,7 +90,6 @@ function poblarFiltrosYFormulario() {
         ciclo => idDe(ciclo, "id_ciclo", "id"),
         etiquetaCiclo,
     );
-    // <--- NUEVA POBLACIÓN PARA SENSORES
     poblarOpciones(
         document.getElementById("select-sensor"),
         sensoresDisponibles,
@@ -105,12 +104,12 @@ async function cargarReferencias() {
         apiGet("/alertas/"),
         apiGet("/cultivos/"),
         apiGet("/ciclos-produccion/"),
-        apiGet("/sensores/"), // <--- NUEVA LLAMADA
+        apiGet("/sensores/"),
     ]);
     alertasDisponibles = resultados(respuestas[0]);
     cultivosDisponibles = resultados(respuestas[1]);
     ciclosDisponibles = resultados(respuestas[2]);
-    sensoresDisponibles = resultados(respuestas[3]); // <--- NUEVA ASIGNACIÓN
+    sensoresDisponibles = resultados(respuestas[3]);
 }
 
 async function cargarIntervencionesData() {
@@ -153,7 +152,7 @@ function origen(intervencion) {
     if (intervencion.alerta) return intervencion.alerta_descripcion || "Alerta #" + intervencion.alerta;
     if (intervencion.cultivo) return intervencion.cultivo_nombre || "Cultivo #" + intervencion.cultivo;
     if (intervencion.ciclo) return intervencion.ciclo_nombre || "Ciclo #" + intervencion.ciclo;
-    if (intervencion.sensor) return intervencion.sensor_nombre || "Sensor #" + intervencion.sensor; // <--- NUEVO ORIGEN
+    if (intervencion.sensor) return intervencion.sensor_nombre || "Sensor #" + intervencion.sensor;
     return "Sin vínculo";
 }
 
@@ -191,14 +190,17 @@ function renderFila(intervencion) {
     );
     const descripcionCelda = crearElemento("td", "py-3 px-3 text-gray-600 text-xs max-w-xs truncate", descripcion);
     descripcionCelda.title = descripcion;
+    
     const accionesCelda = crearElemento("td", "py-3 px-3");
     const acciones = crearElemento("div", "flex items-center justify-end gap-1");
+    
     if (!intervencion.resuelta) {
         acciones.append(botonAccion("check", "Marcar como resuelta", "resolver", intervencion.id, "text-brand hover:bg-brand-light"));
     }
-    if (getRol() === "administrador") {
-        acciones.append(botonAccion("trash-2", "Eliminar", "eliminar", intervencion.id, "text-red-600 hover:bg-red-50"));
-    }
+    
+    acciones.append(botonAccion("pencil", "Editar", "editar", intervencion.id, "text-blue-600 hover:bg-blue-50"));
+    acciones.append(botonAccion("trash-2", "Desactivar", "eliminar", intervencion.id, "text-red-600 hover:bg-red-50"));
+    
     accionesCelda.append(acciones);
     fila.append(
         fechaCelda,
@@ -262,7 +264,6 @@ function actualizarVistaVinculo() {
     document.getElementById("grupo-vinculo-alerta")?.classList.toggle("hidden", seleccion !== "alerta");
     document.getElementById("grupo-vinculo-cultivo")?.classList.toggle("hidden", seleccion !== "cultivo");
     document.getElementById("grupo-vinculo-ciclo")?.classList.toggle("hidden", seleccion !== "ciclo");
-    // <--- NUEVO GRUPO
     document.getElementById("grupo-vinculo-sensor")?.classList.toggle("hidden", seleccion !== "sensor");
 }
 
@@ -292,6 +293,10 @@ function limpiarFormulario() {
     document.getElementById("input-fecha").value = valorFechaLocal();
     document.getElementById("input-responsable").value = getUsername();
     document.getElementById("error-intervencion")?.classList.add("hidden");
+    
+    document.getElementById("intervencion-id-editar").value = "";
+    document.getElementById("titulo-modal-intervencion").textContent = "Registrar intervención";
+
     const cultivo = document.querySelector("input[name='tipo-vinculo'][value='cultivo']");
     if (cultivo) cultivo.checked = true;
     actualizarVistaVinculo();
@@ -304,6 +309,41 @@ function abrirModal() {
     modal?.classList.remove("hidden");
     modal?.classList.add("flex");
     window.setTimeout(() => document.getElementById("select-tipo")?.focus(), 0);
+}
+
+function abrirModalEditar(id) {
+    const interv = intervenciones.find(i => i.id === id);
+    if (!interv) return;
+
+    limpiarFormulario();
+    
+    document.getElementById("intervencion-id-editar").value = interv.id;
+    document.getElementById("titulo-modal-intervencion").textContent = "Editar intervención";
+    
+    document.getElementById("select-tipo").value = interv.tipo;
+    document.getElementById("input-observaciones").value = interv.observaciones;
+    document.getElementById("input-descripcion-accion").value = interv.descripcion_accion || "";
+    
+    const fecha = new Date(interv.fecha_hora);
+    const fechaLocal = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    document.getElementById("input-fecha").value = fechaLocal;
+
+    let vinculo = "cultivo";
+    if (interv.alerta) vinculo = "alerta";
+    else if (interv.ciclo) vinculo = "ciclo";
+    else if (interv.sensor) vinculo = "sensor";
+
+    const radio = document.querySelector(`input[name='tipo-vinculo'][value='${vinculo}']`);
+    if (radio) radio.checked = true;
+    actualizarVistaVinculo();
+
+    const select = document.getElementById("select-" + vinculo);
+    if (select && interv[vinculo]) select.value = interv[vinculo];
+
+    const modal = document.getElementById("modal-intervencion");
+    modal?.classList.remove("hidden");
+    modal?.classList.add("flex");
+    lucide.createIcons();
 }
 
 function cerrarModal() {
@@ -321,6 +361,10 @@ function mostrarErrorForm(mensaje) {
 
 async function crearIntervencion(event) {
     event.preventDefault();
+    
+    const idEditar = document.getElementById("intervencion-id-editar").value;
+    const esEdicion = !!idEditar;
+    
     const tipo = document.getElementById("select-tipo").value;
     const observaciones = document.getElementById("input-observaciones").value.trim();
     const vinculo = document.querySelector("input[name='tipo-vinculo']:checked")?.value;
@@ -334,6 +378,7 @@ async function crearIntervencion(event) {
         mostrarErrorForm("Escribí observaciones sobre la intervención.");
         return;
     }
+    
     if (getRol() !== "administrador" && !TIPOS_OPERADOR.has(tipo)) {
         mostrarErrorForm("No tenés permisos para registrar ese tipo de intervención.");
         return;
@@ -345,6 +390,7 @@ async function crearIntervencion(event) {
         descripcion_accion: document.getElementById("input-descripcion-accion").value.trim(),
         fecha_hora: fechaParaApi(document.getElementById("input-fecha").value),
     };
+    
     datos[vinculo] = Number(valorVinculo);
 
     if (tipo === "cosecha") {
@@ -364,18 +410,33 @@ async function crearIntervencion(event) {
         }
     }
 
+    confirmarAccion({
+        titulo: esEdicion ? "Guardar cambios" : "Registrar intervención",
+        mensaje: esEdicion ? "¿Estás seguro de guardar los cambios en esta intervención?" : "¿Estás seguro de registrar esta nueva intervención?",
+        textoConfirmar: esEdicion ? "Sí, guardar" : "Sí, registrar",
+        esPeligroso: false,
+        onConfirm: () => ejecutarGuardadoIntervencion(idEditar, esEdicion, datos)
+    });
+}
+
+async function ejecutarGuardadoIntervencion(idEditar, esEdicion, datos) {
     const boton = document.getElementById("btn-guardar-intervencion");
     boton.disabled = true;
     boton.classList.add("opacity-70", "cursor-wait");
     document.getElementById("error-intervencion")?.classList.add("hidden");
+    
     try {
-        await apiPost("/intervenciones/", datos);
+        if (esEdicion) {
+            await apiPatch("/intervenciones/" + idEditar + "/", datos);
+        } else {
+            await apiPost("/intervenciones/", datos);
+        }
         cerrarModal();
         await cargarIntervencionesData();
         renderTodo();
     } catch (error) {
         console.error(error);
-        mostrarErrorForm(error.message || "No se pudo registrar la intervención.");
+        mostrarErrorForm(error.message || "No se pudo guardar la intervención.");
     } finally {
         boton.disabled = false;
         boton.classList.remove("opacity-70", "cursor-wait");
@@ -393,14 +454,21 @@ async function resolverIntervencion(id) {
 }
 
 async function eliminarIntervencion(id) {
-    if (!window.confirm("¿Eliminar esta intervención? Esta acción no se puede deshacer.")) return;
-    try {
-        await apiDelete("/intervenciones/" + id + "/");
-        await cargarIntervencionesData();
-        renderTodo();
-    } catch (error) {
-        mostrarErrorTabla(error.message || "No se pudo eliminar la intervención.");
-    }
+    confirmarAccion({
+        titulo: "Desactivar intervención",
+        mensaje: "El registro dejará de verse en la lista pero se conservará en la base de datos.",
+        textoConfirmar: "Desactivar",
+        esPeligroso: true,
+        onConfirm: async () => {
+            try {
+                await apiDelete("/intervenciones/" + id + "/");
+                await cargarIntervencionesData();
+                renderTodo();
+            } catch (error) {
+                mostrarErrorTabla(error.message || "No se pudo desactivar la intervención.");
+            }
+        }
+    });
 }
 
 function configurarEventos() {
@@ -420,6 +488,7 @@ function configurarEventos() {
     document.getElementById("select-tipo")?.addEventListener("change", actualizarVistaCosecha);
     document.getElementById("select-resultado-cosecha")?.addEventListener("change", actualizarVistaMotivo);
     document.getElementById("form-intervencion")?.addEventListener("submit", crearIntervencion);
+    
     ["filtro-tipo", "filtro-cultivo", "filtro-fecha"].forEach(id => {
         document.getElementById(id)?.addEventListener("change", async () => {
             try {
@@ -430,6 +499,7 @@ function configurarEventos() {
             }
         });
     });
+    
     document.querySelectorAll(".tab-intervencion").forEach(boton => {
         boton.addEventListener("click", () => {
             tabActivoIntervenciones = boton.dataset.tab;
@@ -439,13 +509,16 @@ function configurarEventos() {
             renderTodo();
         });
     });
+    
     document.getElementById("tbody-intervenciones")?.addEventListener("click", event => {
         const boton = event.target.closest(".accion-intervencion");
         if (!boton) return;
         const id = Number(boton.dataset.id);
         if (boton.dataset.accion === "resolver") resolverIntervencion(id);
         if (boton.dataset.accion === "eliminar") eliminarIntervencion(id);
+        if (boton.dataset.accion === "editar") abrirModalEditar(id);
     });
+    
     if (getRol() !== "administrador") {
         document.querySelectorAll("[data-solo-admin]").forEach(opcion => opcion.remove());
     }

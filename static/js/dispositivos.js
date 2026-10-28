@@ -21,7 +21,6 @@ async function cargarDispositivos() {
         `;
         lucide.createIcons();
 
-        // Cargar cultivos para el mapa de nombres y selectores
         try {
             const respCultivos = await apiGet("/cultivos/");
             cultivosLista = Array.isArray(respCultivos) ? respCultivos : (respCultivos.results || []);
@@ -33,13 +32,15 @@ async function cargarDispositivos() {
             cultivosLista = [];
         }
 
-        // Cargar dispositivos
-        const resp = await apiGet("/dispositivos/?incluir_inactivos=1");
+        const resp = await apiGet("/dispositivos/");
         dispositivos = Array.isArray(resp) ? resp : (resp.results || []);
+        
+        // 🔥 ORDENAMIENTO: El más nuevo (mayor ID) primero
+        dispositivos.sort((a, b) => b.id - a.id);
+        
         dispositivosFiltrados = [...dispositivos];
 
         renderTabla();
-        renderStats();
         renderContador();
         configurarFiltros();
         configurarModalDispositivo();
@@ -58,7 +59,7 @@ function actualizarSelectCultivos() {
     const select = document.getElementById("select-dispositivo-cultivo");
     if (!select) return;
 
-    select.innerHTML = `<option value="">Selecciona un cultivo...</option>` +
+    select.innerHTML = `<option value="">Todos los cultivos (general)</option>` +
         cultivosLista.map(c => `
             <option value="${c.id_cultivo}">${escapeHtml(c.nombre)} (${escapeHtml(c.tipo_cultivo || "Sin tipo")})</option>
         `).join("");
@@ -123,10 +124,9 @@ function renderTabla() {
             estadoBadge = `<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"><span class="w-1 h-1 bg-orange-600 rounded-full"></span>${escapeHtml(d.estado)}</span>`;
         }
 
-        const cultivoNombre = escapeHtml(cultivosMap[d.cultivo] || "—");
+        const cultivoNombre = escapeHtml(cultivosMap[d.cultivo] || "General");
         const tipoStr = escapeHtml(d.tipo_dispositivo || "—");
         const hardwareId = escapeHtml(d.identificador_hardware || "—");
-        const esInactivo = d.estado === "inactivo";
 
         return `
             <tr class="hover:bg-gray-50">
@@ -145,37 +145,20 @@ function renderTabla() {
                 </td>
                 <td class="py-3 px-3 text-right">
                     <div class="flex items-center justify-end gap-1">
+                        <!-- BOTÓN LLAVE -->
                         <button class="btn-regenerar p-1.5 hover:bg-amber-50 hover:text-amber-600 rounded-lg transition text-gray-500" data-id="${d.id}" title="Regenerar API key">
                             <i data-lucide="key" class="w-4 h-4"></i>
                         </button>
-                        <div class="relative inline-block text-left menu-dispositivo-wrapper">
-                            <button
-                                type="button"
-                                class="btn-menu-trigger p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-500 hover:text-gray-800"
-                                data-id="${d.id}"
-                                title="Opciones"
-                            >
-                                <i data-lucide="more-vertical" class="w-4 h-4"></i>
-                            </button>
-                            <div class="menu-dropdown hidden absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-30">
-                                <button
-                                    type="button"
-                                    class="btn-item-editar w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
-                                    data-id="${d.id}"
-                                >
-                                    <i data-lucide="pencil" class="w-3.5 h-3.5 text-blue-600"></i>
-                                    Editar datos
-                                </button>
-                                <button
-                                    type="button"
-                                    class="btn-item-toggle w-full text-left px-3 py-2 text-xs ${esInactivo ? 'text-green-700 hover:bg-green-50' : 'text-amber-700 hover:bg-amber-50'} flex items-center gap-2 transition"
-                                    data-id="${d.id}"
-                                >
-                                    <i data-lucide="${esInactivo ? 'power' : 'power-off'}" class="w-3.5 h-3.5"></i>
-                                    ${esInactivo ? 'Activar dispositivo' : 'Desactivar dispositivo'}
-                                </button>
-                            </div>
-                        </div>
+                        
+                        <!-- BOTÓN EDITAR -->
+                        <button class="btn-item-editar p-1.5 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-gray-500" data-id="${d.id}" title="Editar dispositivo">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+
+                        <!-- BOTÓN ELIMINAR (TACHITO) -->
+                        <button class="btn-item-eliminar p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition" data-id="${d.id}" title="Eliminar dispositivo">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -184,51 +167,24 @@ function renderTabla() {
 
     lucide.createIcons();
 
-    // Eventos regenerar API key
     tbody.querySelectorAll(".btn-regenerar").forEach(btn => {
         btn.addEventListener("click", () => regenerarApiKey(parseInt(btn.dataset.id)));
     });
 
-    // Eventos menú 3 puntitos
-    tbody.querySelectorAll(".btn-menu-trigger").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const wrapper = btn.closest(".menu-dispositivo-wrapper");
-            const dropdown = wrapper.querySelector(".menu-dropdown");
-            const estaAbierto = !dropdown.classList.contains("hidden");
-
-            document.querySelectorAll(".menu-dispositivo-wrapper .menu-dropdown").forEach(d => d.classList.add("hidden"));
-            if (!estaAbierto) dropdown.classList.remove("hidden");
-        });
-    });
-
     tbody.querySelectorAll(".btn-item-editar").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            document.querySelectorAll(".menu-dispositivo-wrapper .menu-dropdown").forEach(d => d.classList.add("hidden"));
+        btn.addEventListener("click", () => {
             const id = parseInt(btn.dataset.id);
             const disp = dispositivos.find(d => d.id === id);
             if (disp) abrirModalEditarDispositivo(disp);
         });
     });
 
-    tbody.querySelectorAll(".btn-item-toggle").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            document.querySelectorAll(".menu-dispositivo-wrapper .menu-dropdown").forEach(d => d.classList.add("hidden"));
-            const id = parseInt(btn.dataset.id);
-            const disp = dispositivos.find(d => d.id === id);
-            if (disp) confirmarToggleDispositivo(disp);
-        });
+    tbody.querySelectorAll(".btn-item-eliminar").forEach(btn => {
+        btn.addEventListener("click", () => eliminarDispositivo(parseInt(btn.dataset.id)));
     });
 }
 
-// Cerrar menús al clickear afuera
-document.addEventListener("click", () => {
-    document.querySelectorAll(".menu-dispositivo-wrapper .menu-dropdown").forEach(d => d.classList.add("hidden"));
-});
-
-// ---------- Modal Crear / Editar Dispositivo ----------
+// ---------- Funciones de Modales ----------
 function configurarModalDispositivo() {
     const modal = document.getElementById("modal-dispositivo");
     const btnAbrir = document.getElementById("btn-agregar-dispositivo");
@@ -244,9 +200,9 @@ function configurarModalDispositivo() {
         if (e.target === modal) cerrarModalDispositivo();
     });
 
-    form?.addEventListener("submit", async (e) => {
+    form?.addEventListener("submit", (e) => {
         e.preventDefault();
-        await guardarDispositivo();
+        guardarDispositivo(); // Abre el modal de confirmación
     });
 }
 
@@ -305,11 +261,10 @@ function cerrarModalDispositivo() {
     document.getElementById("dispositivo-id-editar").value = "";
 }
 
-// ---------- Guardar Dispositivo (POST o PATCH) ----------
-async function guardarDispositivo() {
+// ---------- Guardar (Crear/Editar) ----------
+function guardarDispositivo() {
     const idEditar = document.getElementById("dispositivo-id-editar").value;
     const esEdicion = !!idEditar;
-    const btn = document.getElementById("btn-guardar-dispositivo");
     const errorBox = document.getElementById("error-dispositivo");
 
     const nombre = document.getElementById("input-dispositivo-nombre").value.trim();
@@ -319,13 +274,38 @@ async function guardarDispositivo() {
     const cultivo = document.getElementById("select-dispositivo-cultivo").value;
     const ip = document.getElementById("input-dispositivo-ip").value.trim();
 
-    if (!nombre || !tipo || !estado || !hardware || !cultivo) {
+    if (!nombre || !tipo || !estado || !hardware) {
         if (errorBox) {
-            errorBox.textContent = "Por favor completa todos los campos requeridos (*)";
+            errorBox.textContent = "Por favor completa los campos requeridos (*)";
             errorBox.classList.remove("hidden");
         }
         return;
     }
+
+    const payload = {
+        nombre,
+        tipo_dispositivo: tipo,
+        estado,
+        identificador_hardware: hardware,
+        cultivo: cultivo ? parseInt(cultivo) : null,
+        ip_local: ip || null,
+    };
+
+    if (errorBox) errorBox.classList.add("hidden");
+
+    // 🔥 MODAL DE CONFIRMACIÓN
+    confirmarAccion({
+        titulo: esEdicion ? "Guardar cambios" : "Agregar dispositivo",
+        mensaje: esEdicion ? `¿Estás seguro de guardar los cambios en el dispositivo "${nombre}"?` : `¿Estás seguro de agregar el dispositivo "${nombre}"?`,
+        textoConfirmar: esEdicion ? "Sí, guardar" : "Sí, agregar",
+        esPeligroso: false,
+        onConfirm: () => ejecutarGuardadoDispositivo(idEditar, esEdicion, payload)
+    });
+}
+
+async function ejecutarGuardadoDispositivo(idEditar, esEdicion, payload) {
+    const btn = document.getElementById("btn-guardar-dispositivo");
+    const errorBox = document.getElementById("error-dispositivo");
 
     if (btn) {
         btn.disabled = true;
@@ -335,19 +315,10 @@ async function guardarDispositivo() {
     if (errorBox) errorBox.classList.add("hidden");
 
     try {
-        const payload = {
-            nombre,
-            tipo_dispositivo: tipo,
-            estado,
-            identificador_hardware: hardware,
-            cultivo: parseInt(cultivo),
-            ip_local: ip || null,
-        };
-
         if (esEdicion) {
             await apiPatch(`/dispositivos/${idEditar}/`, payload);
         } else {
-            payload.is_active = estado !== "inactivo";
+            payload.is_active = payload.estado !== "inactivo";
             await apiPost("/dispositivos/", payload);
         }
 
@@ -381,33 +352,7 @@ async function guardarDispositivo() {
     }
 }
 
-// ---------- Desactivar / Activar con Modal de Confirmación ----------
-function confirmarToggleDispositivo(d) {
-    const esInactivo = d.estado === "inactivo";
-    const nuevoEstado = esInactivo ? "activo" : "inactivo";
-    const accionTexto = esInactivo ? "activar" : "desactivar";
-
-    confirmarAccion({
-        titulo: `${esInactivo ? "Activar" : "Desactivar"} dispositivo`,
-        mensaje: `¿Estás seguro de que deseas ${accionTexto} el dispositivo "${d.nombre}"?`,
-        textoConfirmar: esInactivo ? "Activar" : "Desactivar",
-        esPeligroso: !esInactivo,
-        onConfirm: async () => {
-            try {
-                if (esInactivo) {
-                    await apiPost(`/dispositivos/${d.id}/activar/`, {});
-                } else {
-                    await apiPost(`/dispositivos/${d.id}/desactivar/`, {});
-                }
-                await cargarDispositivos();
-            } catch (err) {
-                alert(`Error al cambiar estado del dispositivo: ${err.message}`);
-            }
-        }
-    });
-}
-
-// ---------- Regenerar API key con Modal de Confirmación ----------
+// ---------- Regenerar API key ----------
 function regenerarApiKey(id) {
     const d = dispositivos.find(item => item.id === id);
     const nombre = d ? d.nombre : `ID ${id}`;
@@ -428,29 +373,27 @@ function regenerarApiKey(id) {
     });
 }
 
-// ---------- Stats inferiores ----------
-function renderStats() {
-    const total = dispositivos.length;
-    const online = dispositivos.filter(d => d.estado === "activo").length;
-    const offline = dispositivos.filter(d => d.estado === "inactivo").length;
-    const mantenimiento = total - online - offline;
+// ---------- Eliminar (Soft Delete) ----------
+function eliminarDispositivo(id) {
+    const d = dispositivos.find(item => item.id === id);
+    if (!d) return;
 
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set("stat-total", total);
-    set("stat-online", online);
-    set("stat-offline", offline);
-    set("stat-mantenimiento", mantenimiento);
-
-    const pctOnline = total > 0 ? Math.round((online / total) * 100) : 0;
-    const pctOffline = total > 0 ? Math.round((offline / total) * 100) : 0;
-    const pctMant = total > 0 ? Math.round((mantenimiento / total) * 100) : 0;
-
-    set("stat-online-pct", `${pctOnline}% del total`);
-    set("stat-offline-pct", `${pctOffline}% del total`);
-    set("stat-mant-pct", `${pctMant}% del total`);
+    confirmarAccion({
+        titulo: "Eliminar dispositivo",
+        mensaje: `El dispositivo "${d.nombre}" dejará de verse en la lista, pero se conservará su historial en la base de datos.`,
+        textoConfirmar: "Eliminar",
+        esPeligroso: true,
+        onConfirm: async () => {
+            try {
+                await apiDelete(`/dispositivos/${id}/`);
+                await cargarDispositivos();
+            } catch (err) {
+                alert(`Error al eliminar: ${err.message}`);
+            }
+        }
+    });
 }
 
-// ---------- Contador ----------
 function renderContador() {
     const contador = document.getElementById("contador-dispositivos");
     if (contador) contador.textContent = `Mostrando ${dispositivosFiltrados.length} de ${dispositivos.length} dispositivos`;

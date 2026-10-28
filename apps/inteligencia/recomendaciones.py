@@ -66,6 +66,13 @@ def construir_contexto(cultivo):
     for k, valores in promedios.items():
         promedios[k] = sum(valores) / len(valores) if valores else None
 
+    return {
+        "ultimas_mediciones": ultimas,
+        "promedios_24h": promedios,
+        "ultimo_analisis": AnalisisImagen.objects.filter(cultivo=cultivo).order_by("-fecha_hora").first(),
+        "tendencia_crecimiento": None,
+    }
+
 def _dias_sin_crecer(analisis_ordenados):
     if len(analisis_ordenados) < 2:
         return 0
@@ -84,7 +91,7 @@ def _dias_sin_crecer(analisis_ordenados):
 
 
 # =============================================================================
-# Reglas
+# Reglas (ACTUALIZADAS A LA ESCALA PPM)
 # =============================================================================
 
 def _ph_bajo(ctx):
@@ -95,13 +102,15 @@ def _ph_alto(ctx):
     m = ctx["ultimas_mediciones"].get("ph")
     return m is not None and m.valor > 7.5
 
+# 🔥 ACTUALIZADO: Ahora usa escala PPM (0 - 1000)
 def _conductividad_alta(ctx):
     m = ctx["ultimas_mediciones"].get("conductividad")
-    return m is not None and m.valor > 2.5
+    return m is not None and m.valor > 800  # > 800 ppm
 
+# 🔥 ACTUALIZADO: Ahora usa escala PPM (0 - 1000)
 def _conductividad_baja(ctx):
     m = ctx["ultimas_mediciones"].get("conductividad")
-    return m is not None and m.valor < 0.8
+    return m is not None and m.valor < 150  # < 150 ppm
 
 def _temperatura_alta_con_humedad(ctx):
     t = ctx["ultimas_mediciones"].get("temperatura")
@@ -127,6 +136,7 @@ def _crecimiento_acelerado(ctx):
     return tend is not None and tend["delta_por_dia_cm"] > 1.5
 
 
+# Registro de las reglas con sus textos actualizados
 regla("ph_bajo", _ph_bajo, "ph", "alta",
       "pH bajo detectado",
       "El pH está por debajo de 5.5. Agregar solución alcalina.")
@@ -135,10 +145,10 @@ regla("ph_alto", _ph_alto, "ph", "alta",
       "El pH está por encima de 7.5. Agregar solución ácida.")
 regla("conductividad_alta", _conductividad_alta, "conductividad", "media",
       "Conductividad elevada",
-      "Supera 2500 µS/cm. Diluir la solución nutritiva.")
+      "Supera los 800 ppm. Diluir la solución nutritiva.")
 regla("conductividad_baja", _conductividad_baja, "conductividad", "media",
       "Conductividad baja",
-      "Por debajo de 800 µS/cm. Reforzar solución nutritiva.")
+      "Por debajo de 150 ppm. Reforzar solución nutritiva.")
 regla("temp_alta_humedad_alta", _temperatura_alta_con_humedad, "temperatura", "alta",
       "Riesgo de hongos",
       "Temperatura >30 °C con humedad >70 %. Ventilar.")

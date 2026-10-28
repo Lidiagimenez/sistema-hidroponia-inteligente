@@ -55,13 +55,11 @@ async function cargarTipos() {
 
 // ---------- Cargar dispositivos + cultivos ----------
 async function cargarDispositivosCultivos() {
-    // Cultivos
     const respCultivos = await apiGet("/cultivos/");
     const cultivos = Array.isArray(respCultivos) ? respCultivos : (respCultivos.results || []);
     const cultivosMap = {};
     cultivos.forEach(c => { cultivosMap[c.id_cultivo] = c.nombre; });
 
-    // Dispositivos
     const respDisp = await apiGet("/dispositivos/");
     const dispositivos = Array.isArray(respDisp) ? respDisp : (respDisp.results || []);
     window._dispositivosMap = {};
@@ -130,7 +128,7 @@ function renderTabla() {
                         <button class="btn-editar-rango p-1.5 hover:bg-gray-100 rounded transition" data-id="${r.id}" title="Editar">
                             <i data-lucide="pencil" class="w-4 h-4 text-gray-500"></i>
                         </button>
-                        <button class="btn-eliminar-rango p-1.5 hover:bg-red-50 rounded transition" data-id="${r.id}" title="Eliminar">
+                        <button class="btn-eliminar-rango p-1.5 hover:bg-red-50 rounded transition" data-id="${r.id}" title="Desactivar">
                             <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
                         </button>
                     </div>
@@ -141,7 +139,6 @@ function renderTabla() {
 
     lucide.createIcons();
 
-    // Event listeners
     document.querySelectorAll(".btn-editar-rango").forEach(btn => {
         btn.addEventListener("click", () => {
             const id = parseInt(btn.dataset.id);
@@ -157,7 +154,6 @@ function renderTabla() {
     });
 }
 
-// ---------- Contador ----------
 function renderContador() {
     const contador = document.getElementById("contador-rangos");
     if (contador) contador.textContent = `Mostrando 1 - ${rangos.length} de ${rangos.length} rangos configurados`;
@@ -192,7 +188,6 @@ function abrirModalRango(rangoExistente = null) {
     form.reset();
     document.getElementById("error-rango").classList.add("hidden");
 
-    // Poblar select de sensores
     const select = document.getElementById("select-sensor");
     select.innerHTML = `<option value="">Selecciona un sensor</option>` +
         sensoresDisponibles.map(s => {
@@ -201,14 +196,12 @@ function abrirModalRango(rangoExistente = null) {
         }).join("");
 
     if (rangoExistente) {
-        // Modo edición
         document.getElementById("modal-titulo-rango").textContent = "Editar rango";
         document.getElementById("rango-id-editar").value = rangoExistente.id;
         document.getElementById("select-sensor").value = rangoExistente.sensor;
         document.getElementById("input-valor-min").value = rangoExistente.valor_min;
         document.getElementById("input-valor-max").value = rangoExistente.valor_max;
     } else {
-        // Modo creación
         document.getElementById("modal-titulo-rango").textContent = "Nuevo rango";
         document.getElementById("rango-id-editar").value = "";
     }
@@ -223,11 +216,10 @@ function cerrarModalRango() {
     modal.classList.remove("flex");
 }
 
-// ---------- Guardar (POST o PATCH) ----------
-async function guardarRango(event) {
+// ---------- Guardar (Valida y abre modal de confirmación) ----------
+function guardarRango(event) {
     event.preventDefault();
 
-    const btn = document.getElementById("btn-guardar-rango");
     const errorBox = document.getElementById("error-rango");
     const idEditar = document.getElementById("rango-id-editar").value;
     const sensorId = document.getElementById("select-sensor").value;
@@ -242,6 +234,25 @@ async function guardarRango(event) {
         return;
     }
 
+    const esEdicion = !!idEditar;
+    const sensor = sensoresMap[sensorId] || { tipo_nombre: "sensor" };
+
+    // 🔥 MODAL DE CONFIRMACIÓN GLOBAL
+    confirmarAccion({
+        titulo: esEdicion ? "Guardar cambios" : "Crear rango",
+        mensaje: esEdicion 
+            ? `¿Estás seguro de guardar los cambios en el rango de ${sensor.tipo_nombre}?`
+            : `¿Estás seguro de crear el nuevo rango para ${sensor.tipo_nombre} (${vmin} - ${vmax})?`,
+        textoConfirmar: esEdicion ? "Sí, guardar" : "Sí, crear",
+        esPeligroso: false,
+        onConfirm: () => ejecutarGuardadoRango(idEditar, sensorId, vmin, vmax)
+    });
+}
+
+// ---------- Ejecutar Guardado en API ----------
+async function ejecutarGuardadoRango(idEditar, sensorId, vmin, vmax) {
+    const btn = document.getElementById("btn-guardar-rango");
+    const errorBox = document.getElementById("error-rango");
     const esEdicion = !!idEditar;
 
     btn.disabled = true;
@@ -262,7 +273,6 @@ async function guardarRango(event) {
             await apiPost("/rangos-operacion/", datos);
         }
 
-        // Recargar la lista
         const resp = await apiGet("/rangos-operacion/");
         rangos = Array.isArray(resp) ? resp : (resp.results || []);
 
@@ -288,26 +298,30 @@ async function guardarRango(event) {
     }
 }
 
-// ---------- Eliminar ----------
-async function eliminarRango(id) {
+// ---------- Eliminar (Soft Delete con Modal) ----------
+function eliminarRango(id) {
     const rango = rangos.find(r => r.id === id);
     if (!rango) return;
 
     const sensor = sensoresMap[rango.sensor] || {};
-    if (!confirm(`¿Eliminar el rango ${rango.valor_min} - ${rango.valor_max} de ${sensor.tipo_nombre || "sensor"}?`)) return;
 
-    try {
-        await apiDelete(`/rangos-operacion/${id}/`);
-
-        // Recargar
-        const resp = await apiGet("/rangos-operacion/");
-        rangos = Array.isArray(resp) ? resp : (resp.results || []);
-        renderTabla();
-        renderContador();
-
-    } catch (err) {
-        alert(`Error al eliminar: ${err.message}`);
-    }
+    confirmarAccion({
+        titulo: "Desactivar rango",
+        mensaje: `El rango ${rango.valor_min} - ${rango.valor_max} de ${sensor.tipo_nombre || "sensor"} dejará de verse en la lista, pero se conservará en la base de datos.`,
+        textoConfirmar: "Desactivar",
+        esPeligroso: true,
+        onConfirm: async () => {
+            try {
+                await apiDelete(`/rangos-operacion/${id}/`);
+                const resp = await apiGet("/rangos-operacion/");
+                rangos = Array.isArray(resp) ? resp : (resp.results || []);
+                renderTabla();
+                renderContador();
+            } catch (err) {
+                alert(`Error al desactivar: ${err.message}`);
+            }
+        }
+    });
 }
 
 function mostrarErrorRango(msg) {

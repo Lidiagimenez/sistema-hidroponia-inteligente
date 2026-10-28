@@ -39,6 +39,8 @@ class RangoOperacion(models.Model):
     valor_max = models.FloatField()
     vigente_desde = models.DateTimeField(auto_now_add=True)
 
+    is_active = models.BooleanField(default=True, db_index=True)
+
     def __str__(self):
         return f"{self.valor_min}-{self.valor_max} ({self.sensor})"
 

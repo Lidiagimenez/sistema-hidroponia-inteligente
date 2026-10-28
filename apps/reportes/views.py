@@ -15,11 +15,14 @@ class ReporteViewSet(viewsets.ModelViewSet):
     RF-29: el Administrador descarga el informe. El Operador también puede verlos.
     Los reportes no se editan: se regeneran.
     """
-    queryset = Reporte.objects.select_related("cultivo", "generado_por").all()
     serializer_class = ReporteSerializer
 
     # GET + POST + DELETE. Bloquea PUT y PATCH (no se editan reportes).
     http_method_names = ["get", "post", "delete", "head", "options"]
+
+    def get_queryset(self):
+        # 🔥 FILTRO PARA SOFT DELETE: Solo mostramos los reportes activos
+        return Reporte.objects.select_related("cultivo", "generado_por").filter(is_active=True)
 
     def get_throttles(self):
         if self.action == "create":
@@ -37,6 +40,11 @@ class ReporteViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         reporte = serializer.save(generado_por=self.request.user)
         generar_reporte(reporte)
+
+    # 🔥 BORRADO LÓGICO (SOFT DELETE)
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
     @action(detail=True, methods=["post"], url_path="regenerar")
     def regenerar(self, request, pk=None):

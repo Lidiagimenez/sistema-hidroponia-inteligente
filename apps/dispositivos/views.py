@@ -11,22 +11,15 @@ from apps.usuarios.permissions import EsAdministrador, EsAdministradorOOperador
 
 class DispositivoViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
     auditar_entidad = "Dispositivo"
-    queryset = Dispositivo.objects.all().order_by("pk")
+    queryset = Dispositivo.objects.all().order_by("-pk")
     serializer_class = DispositivoSerializer
 
     def get_permissions(self):
-        # Admin: crear, editar, borrar, regenerar API key
         if self.action in [
-            "create",
-            "update",
-            "partial_update",
-            "destroy",
-            "regenerar_api_key",
-            "activar",
-            "desactivar",
+            "create", "update", "partial_update", "destroy",
+            "regenerar_api_key", "activar", "desactivar",
         ]:
             return [EsAdministrador()]
-        # Ambos: listar, ver detalle, accionar (encender/apagar)
         return [EsAdministradorOOperador()]
 
     def get_queryset(self):
@@ -37,12 +30,12 @@ class DispositivoViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
         return qs
 
     def perform_destroy(self, instance):
-        # Borrado lógico
+        # 🔥 BORRADO LÓGICO: Se oculta de la vista pero queda en la BD
         instance.is_active = False
         if instance.estado == Dispositivo.Estado.ACTIVO:
             instance.estado = Dispositivo.Estado.INACTIVO
         instance.save(update_fields=["is_active", "estado"])
-        # La auditoría lo marca como "eliminar (desactivación)".
+        
         self._registrar_accion(
             RegistroAuditoria.Accion.ELIMINAR,
             instance,
@@ -78,10 +71,8 @@ class DispositivoViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="regenerar-api-key")
     def regenerar_api_key(self, request, pk=None):
-        """Genera una API key nueva. Se muestra UNA sola vez; la anterior deja de valer."""
         dispositivo = self.get_object()
         clave = dispositivo.generar_api_key()
-        # Se audita la ACCIÓN, nunca el valor de la clave (dato sensible).
         self._registrar_accion(
             RegistroAuditoria.Accion.EDITAR,
             dispositivo,
@@ -95,18 +86,11 @@ class DispositivoViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="accionar")
     def accionar(self, request, pk=None):
-        """
-        Enciende o apaga un dispositivo (bomba, iluminación, etc.).
-        Disponible para operador Y administrador (RF-32).
-        """
         dispositivo = self.get_object()
         accion = request.data.get("accion")
 
         if accion not in ("encender", "apagar"):
-            return Response(
-                {"error": "accion debe ser 'encender' o 'apagar'"},
-                status=400,
-            )
+            return Response({"error": "accion debe ser 'encender' o 'apagar'"}, status=400)
 
         dispositivo.estado = "activo" if accion == "encender" else "inactivo"
         dispositivo.save()

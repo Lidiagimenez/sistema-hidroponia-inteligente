@@ -246,6 +246,201 @@ function renderListaAlertas(alertas) {
 }
 
 // ============================================================
+// DIAGNÓSTICO INTELIGENTE (Predicción IA + última imagen)
+// ============================================================
+
+let cultivosCacheAlertas = null;
+
+function mediaUrlImagen(valor) {
+    if (!valor) return "";
+    const url = String(valor).trim();
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith("//")) return "";
+    return url.startsWith("/") ? url : `/${url}`;
+}
+
+async function obtenerCultivosCache() {
+    if (cultivosCacheAlertas) return cultivosCacheAlertas;
+    try {
+        const resp = await apiGet("/cultivos/");
+        cultivosCacheAlertas = Array.isArray(resp) ? resp : (resp.results || []);
+    } catch (err) {
+        console.error("No se pudieron cargar los cultivos para el diagnóstico:", err);
+        cultivosCacheAlertas = [];
+    }
+    return cultivosCacheAlertas;
+}
+
+async function obtenerCultivoIdAlerta(alerta) {
+    const directo = alerta?.medicion_detalle?.cultivo_id
+        ?? alerta?.evento_cultivo
+        ?? alerta?.evento_detalle?.cultivo_id
+        ?? null;
+    if (directo) return directo;
+
+    // Las alertas por evento solo traen el nombre del cultivo: lo resolvemos contra /cultivos/.
+    const nombre = alerta?.evento_detalle?.cultivo;
+    if (!nombre) return null;
+
+    const cultivos = await obtenerCultivosCache();
+    const buscado = String(nombre).trim().toLowerCase();
+    const match = cultivos.find(c => String(c.nombre || "").trim().toLowerCase() === buscado);
+    return match ? (match.id_cultivo ?? match.id) : null;
+}
+
+function seccionDiagnosticoIA(alerta) {
+    return `
+        <div id="diagnostico-ia-${alerta.id}" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-4">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="brain-circuit" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-gray-900">Diagnóstico Inteligente</p>
+                    <p class="text-[11px] text-gray-500">Predicción IA del sensor y última imagen del cultivo</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="bg-white/80 border border-blue-100 rounded-xl p-3">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-blue-600"></i>
+                        <p class="text-xs font-semibold text-gray-700">Predicción IA</p>
+                    </div>
+                    <div id="diag-prediccion-${alerta.id}" class="text-xs text-gray-400 flex items-center gap-2 py-4 justify-center">
+                        <i data-lucide="loader" class="w-4 h-4 animate-spin"></i>
+                        Analizando datos del sensor...
+                    </div>
+                </div>
+
+                <div class="bg-white/80 border border-blue-100 rounded-xl p-3">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="camera" class="w-4 h-4 text-blue-600"></i>
+                        <p class="text-xs font-semibold text-gray-700">Última imagen del cultivo</p>
+                    </div>
+                    <div id="diag-imagen-${alerta.id}" class="w-full h-40 rounded-xl overflow-hidden bg-gray-100 flex flex-col items-center justify-center text-center">
+                        <i data-lucide="loader" class="w-6 h-6 text-gray-300 mb-2 animate-spin"></i>
+                        <p class="text-xs text-gray-400">Cargando imagen...</p>
+                    </div>
+                    <p id="diag-imagen-detalle-${alerta.id}" class="text-[11px] text-gray-500 mt-1.5">—</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderPrediccionDiag(contenedor, sensorId, resultado) {
+    if (!contenedor) return;
+
+    if (!sensorId) {
+        contenedor.innerHTML = `
+            <div class="flex items-start gap-2 text-gray-500">
+                <i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                <p class="text-xs leading-relaxed">Esta alerta proviene de un evento, por lo que no tiene un sensor asociado para predecir.</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    if (resultado.status !== "fulfilled" || !resultado.value || resultado.value.detail) {
+        contenedor.innerHTML = `
+            <div class="flex items-start gap-2 text-gray-500">
+                <i data-lucide="database" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                <p class="text-xs leading-relaxed">Sin datos históricos suficientes para generar una predicción de este sensor.</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    const p = resultado.value;
+    const tendencias = {
+        subiendo: { icono: "trending-up", clase: "bg-orange-100 text-orange-700", label: "Subiendo" },
+        bajando:  { icono: "trending-down", clase: "bg-blue-100 text-blue-700", label: "Bajando" },
+        estable:  { icono: "minus", clase: "bg-green-100 text-green-700", label: "Estable" },
+    };
+    const tend = tendencias[p.tendencia] || tendencias.estable;
+
+    contenedor.innerHTML = `
+        <div class="flex items-center justify-between gap-2 mb-2">
+            <p class="text-sm font-semibold text-gray-900 truncate">${escapeHtml(p.tipo_sensor || "Sensor")}</p>
+            <span class="inline-flex items-center gap-1 ${tend.clase} text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                <i data-lucide="${tend.icono}" class="w-3 h-3"></i>
+                ${tend.label}
+            </span>
+        </div>
+        <div class="flex items-center gap-2 text-xs text-gray-600">
+            <span>Actual <strong class="text-gray-900">${escapeHtml(p.valor_actual)}</strong></span>
+            <i data-lucide="arrow-right" class="w-3 h-3 text-gray-400"></i>
+            <span>Predicción <strong class="text-blue-700">${escapeHtml(p.prediccion)}</strong></span>
+        </div>
+        <p class="text-[11px] text-gray-500 mt-2 leading-relaxed">${escapeHtml(p.mensaje || "")}</p>
+        ${p.usado_fallback ? `<p class="text-[10px] text-gray-400 mt-1">Estimación por media móvil (modelo en entrenamiento).</p>` : ""}
+    `;
+    lucide.createIcons();
+}
+
+function renderImagenDiag(contenedor, detalle, cultivoId, resultado) {
+    if (!contenedor) return;
+
+    let lista = [];
+    if (resultado.status === "fulfilled" && resultado.value) {
+        lista = Array.isArray(resultado.value) ? resultado.value : (resultado.value.results || []);
+    }
+    const ultima = lista[0] || null;
+    const url = ultima ? mediaUrlImagen(ultima.archivo_url || ultima.archivo) : "";
+
+    if (!ultima || !url) {
+        contenedor.innerHTML = `
+            <i data-lucide="camera-off" class="w-10 h-10 text-gray-300 mb-2"></i>
+            <p class="text-xs text-gray-400 px-3">Sin imagen disponible</p>
+        `;
+        if (detalle) {
+            detalle.textContent = cultivoId ? "Sin imágenes todavía" : "Cultivo no identificado";
+        }
+        lucide.createIcons();
+        return;
+    }
+
+    contenedor.innerHTML = `
+        <img src="${escapeHtml(url)}"
+             alt="${escapeHtml(ultima.cultivo_nombre || "Cultivo")}"
+             class="w-full h-full object-cover"
+             loading="lazy">
+    `;
+    if (detalle) {
+        detalle.textContent = ultima.fecha_hora
+            ? `Última foto: ${formatearFechaHora(ultima.fecha_hora)}`
+            : (ultima.cultivo_nombre || "Imagen disponible");
+    }
+}
+
+async function cargarDiagnosticoIA(alerta) {
+    const contPred = document.getElementById(`diag-prediccion-${alerta.id}`);
+    const contImg = document.getElementById(`diag-imagen-${alerta.id}`);
+    const detalleImg = document.getElementById(`diag-imagen-detalle-${alerta.id}`);
+    if (!contPred && !contImg) return;
+
+    const sensorId = alerta?.medicion_detalle?.sensor_id ?? null;
+    const cultivoId = await obtenerCultivoIdAlerta(alerta);
+
+    const predPromesa = sensorId
+        ? apiGet(`/predicciones/?sensor=${sensorId}`)
+        : Promise.reject(new Error("Sin sensor asociado"));
+
+    const imgPromesa = cultivoId
+        ? apiGet(`/imagenes/?cultivo=${cultivoId}`)
+        : Promise.reject(new Error("Sin cultivo asociado"));
+
+    const [predResultado, imgResultado] = await Promise.allSettled([predPromesa, imgPromesa]);
+
+    renderPrediccionDiag(contPred, sensorId, predResultado);
+    renderImagenDiag(contImg, detalleImg, cultivoId, imgResultado);
+}
+
+// ============================================================
 // HELPERS
 // ============================================================
 
@@ -383,6 +578,8 @@ function renderDetalleAccordion(alerta, contenedor) {
             </div>
             ` : ""}
 
+            ${seccionDiagnosticoIA(alerta)}
+
             <div class="grid grid-cols-2 gap-x-4 gap-y-3 mb-5 pb-5 border-b border-gray-100 text-sm">
                 <div>
                     <p class="text-xs text-gray-500 mb-0.5">Severidad</p>
@@ -446,6 +643,8 @@ function renderDetalleAccordion(alerta, contenedor) {
     `;
 
     lucide.createIcons();
+
+    cargarDiagnosticoIA(alerta).catch(err => console.error("Error en el diagnóstico inteligente:", err));
 
     const btnIntervenir = document.getElementById(`btn-intervenir-${alerta.id}`);
     if (btnIntervenir) {

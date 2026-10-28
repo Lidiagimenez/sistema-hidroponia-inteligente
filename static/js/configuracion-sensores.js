@@ -9,6 +9,30 @@ let dispositivosMap = {};   // { disp_id: { id, nombre, cultivo_id } }
 let cultivosMap = {};       // { cultivo_id: nombre }
 let rangosPorSensor = {};   // { sensor_id: rango_obj }
 let sensorSeleccionado = null;
+let filtrosListenersListos = false;
+let selectoresListenersListos = false;
+let origenTipoDesdeSensor = false;
+
+// ---------- Toast de éxito ----------
+function mostrarToastConfig(mensaje) {
+    document.getElementById("toast-config-sensores")?.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "toast-config-sensores";
+    toast.className = "fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-green-600 text-white px-4 py-3 rounded-xl shadow-lg transition-all duration-300 opacity-0 translate-y-2";
+    toast.innerHTML = `
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span class="text-sm font-medium">${escapeHtml(mensaje)}</span>
+    `;
+    document.body.appendChild(toast);
+    if (window.lucide) lucide.createIcons();
+
+    setTimeout(() => toast.classList.remove("opacity-0", "translate-y-2"), 10);
+    setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 // ---------- Config visual de iconos ----------
 const TIPO_ICONO = {
@@ -103,22 +127,31 @@ async function cargarRangos() {
 function poblarFiltros() {
     const filtroTipo = document.getElementById("filtro-tipo-sensor");
     const filtroCultivo = document.getElementById("filtro-cultivo-sensor");
+    const valorTipoActual = filtroTipo?.value || "";
+    const valorCultivoActual = filtroCultivo?.value || "";
 
     if (filtroTipo) {
         filtroTipo.innerHTML = `<option value="">Todos los tipos</option>` +
             Object.values(tiposMap).map(t => `<option value="${t.id}">${escapeHtml(t.nombre)}</option>`).join("");
+        filtroTipo.value = valorTipoActual;
     }
 
     if (filtroCultivo) {
         filtroCultivo.innerHTML = `<option value="">Todos los cultivos</option>` +
             Object.entries(cultivosMap).map(([id, nombre]) => `<option value="${id}">${escapeHtml(nombre)}</option>`).join("");
+        filtroCultivo.value = valorCultivoActual;
     }
+
+    // Los listeners se enlazan una sola vez: poblarFiltros() puede re-ejecutarse
+    // tras crear un tipo de sensor sin duplicar eventos.
+    if (filtrosListenersListos) return;
+    filtrosListenersListos = true;
 
     const inputBuscar = document.getElementById("input-buscar-sensor");
     const aplicarFiltros = () => {
-        const query = (inputBuscar?.value || "").toLowerCase().trim();
-        const tipoId = filtroTipo?.value ? parseInt(filtroTipo.value) : null;
-        const cultivoId = filtroCultivo?.value ? parseInt(filtroCultivo.value) : null;
+        const query = (document.getElementById("input-buscar-sensor")?.value || "").toLowerCase().trim();
+        const tipoId = document.getElementById("filtro-tipo-sensor")?.value ? parseInt(document.getElementById("filtro-tipo-sensor").value) : null;
+        const cultivoId = document.getElementById("filtro-cultivo-sensor")?.value ? parseInt(document.getElementById("filtro-cultivo-sensor").value) : null;
 
         sensoresFiltrados = sensores.filter(s => {
             const tipo = tiposMap[s.tipo_sensor] || { nombre: "" };
@@ -149,21 +182,31 @@ function poblarSelectoresModal() {
     const selTipo = document.getElementById("select-sensor-tipo");
     const selDisp = document.getElementById("select-sensor-dispositivo");
     const selCultivo = document.getElementById("select-sensor-cultivo");
+    const valorTipoActual = selTipo?.value || "";
+    const valorDispActual = selDisp?.value || "";
+    const valorCultivoActual = selCultivo?.value || "";
 
     if (selTipo) {
         selTipo.innerHTML = `<option value="">Selecciona un tipo de sensor...</option>` +
             Object.values(tiposMap).map(t => `<option value="${t.id}" data-unidad="${escapeHtml(t.unidad)}">${escapeHtml(t.nombre)} (${escapeHtml(t.unidad || 's/u')})</option>`).join("");
+        selTipo.value = valorTipoActual;
     }
 
     if (selDisp) {
         selDisp.innerHTML = `<option value="">Selecciona un dispositivo...</option>` +
             Object.values(dispositivosMap).map(d => `<option value="${d.id}">${escapeHtml(d.nombre)}</option>`).join("");
+        selDisp.value = valorDispActual;
     }
 
     if (selCultivo) {
         selCultivo.innerHTML = `<option value="">Heredar del dispositivo o seleccionar cultivo...</option>` +
             Object.entries(cultivosMap).map(([id, nombre]) => `<option value="${id}">${escapeHtml(nombre)}</option>`).join("");
+        selCultivo.value = valorCultivoActual;
     }
+
+    // Igual que en los filtros: evitar listeners duplicados al repoblar.
+    if (selectoresListenersListos) return;
+    selectoresListenersListos = true;
 
     selTipo?.addEventListener("change", () => {
         const selected = selTipo.options[selTipo.selectedIndex];
@@ -298,6 +341,13 @@ function configurarModal() {
     const btnCancelar = document.getElementById("btn-cancelar-sensor-modal");
     const form = document.getElementById("form-sensor-modal");
 
+    const modalTipo = document.getElementById("modal-tipo-sensor");
+    const btnNuevoTipo = document.getElementById("btn-nuevo-tipo");
+    const btnCerrarTipo = document.getElementById("btn-cerrar-modal-tipo");
+    const btnCancelarTipo = document.getElementById("btn-cancelar-tipo-modal");
+    const formTipo = document.getElementById("form-tipo-sensor");
+    const btnIrNuevoTipo = document.getElementById("btn-ir-nuevo-tipo");
+
     btnNuevo?.addEventListener("click", abrirModalNuevoSensor);
     btnCerrar?.addEventListener("click", cerrarModalSensor);
     btnCancelar?.addEventListener("click", cerrarModalSensor);
@@ -309,6 +359,33 @@ function configurarModal() {
     form?.addEventListener("submit", async (e) => {
         e.preventDefault();
         await guardarSensor();
+    });
+
+    // ---------- Modal Tipo de Sensor ----------
+    btnNuevoTipo?.addEventListener("click", () => abrirModalNuevoTipo(false));
+    btnIrNuevoTipo?.addEventListener("click", () => {
+        cerrarModalSensor();
+        abrirModalNuevoTipo(true);
+    });
+    btnCerrarTipo?.addEventListener("click", cerrarModalTipo);
+    btnCancelarTipo?.addEventListener("click", cerrarModalTipo);
+
+    modalTipo?.addEventListener("click", (e) => {
+        if (e.target === modalTipo) cerrarModalTipo();
+    });
+
+    formTipo?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await guardarTipoSensor();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (modalTipo && !modalTipo.classList.contains("hidden")) {
+            cerrarModalTipo();
+        } else if (modal && !modal.classList.contains("hidden")) {
+            cerrarModalSensor();
+        }
     });
 }
 
@@ -373,6 +450,158 @@ function cerrarModalSensor() {
     document.getElementById("form-sensor-modal")?.reset();
     document.getElementById("sensor-id-editar").value = "";
     document.getElementById("rango-id-editar").value = "";
+}
+
+// ---------- Modal Tipo de Sensor ----------
+function abrirModalNuevoTipo(desdeSensor = false) {
+    const modal = document.getElementById("modal-tipo-sensor");
+    if (!modal) return;
+
+    origenTipoDesdeSensor = desdeSensor;
+    document.getElementById("form-tipo-sensor")?.reset();
+
+    const errorBox = document.getElementById("error-tipo-modal");
+    if (errorBox) {
+        errorBox.textContent = "";
+        errorBox.classList.add("hidden");
+    }
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    lucide.createIcons();
+    document.getElementById("input-tipo-nombre")?.focus();
+}
+
+function cerrarModalTipo() {
+    const modal = document.getElementById("modal-tipo-sensor");
+    if (!modal) return;
+
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.getElementById("form-tipo-sensor")?.reset();
+
+    const errorBox = document.getElementById("error-tipo-modal");
+    if (errorBox) {
+        errorBox.textContent = "";
+        errorBox.classList.add("hidden");
+    }
+
+    origenTipoDesdeSensor = false;
+}
+
+function formatearErrorApi(err) {
+    let msg = err?.message || "No se pudo completar la operación.";
+    const idx = msg.indexOf(": ");
+    if (idx !== -1) {
+        try {
+            const json = JSON.parse(msg.slice(idx + 2));
+            if (json && typeof json === "object") {
+                msg = Object.entries(json)
+                    .map(([campo, valor]) => `${campo}: ${Array.isArray(valor) ? valor.join(", ") : valor}`)
+                    .join(" · ");
+            }
+        } catch (_) {}
+    }
+    return msg;
+}
+
+async function guardarTipoSensor() {
+    const btn = document.getElementById("btn-guardar-tipo-modal");
+    const errorBox = document.getElementById("error-tipo-modal");
+
+    const nombre = (document.getElementById("input-tipo-nombre")?.value || "").trim();
+    const unidad = (document.getElementById("input-tipo-unidad")?.value || "").trim();
+    const minRaw = document.getElementById("input-tipo-min")?.value ?? "";
+    const maxRaw = document.getElementById("input-tipo-max")?.value ?? "";
+
+    const mostrarError = (mensaje) => {
+        if (errorBox) {
+            errorBox.textContent = mensaje;
+            errorBox.classList.remove("hidden");
+        } else {
+            alert(mensaje);
+        }
+    };
+
+    if (!nombre || !unidad || minRaw === "" || maxRaw === "") {
+        mostrarError("Completá el nombre, la unidad y ambos valores del rango físico.");
+        return;
+    }
+
+    const vMin = parseFloat(minRaw);
+    const vMax = parseFloat(maxRaw);
+
+    if (Number.isNaN(vMin) || Number.isNaN(vMax)) {
+        mostrarError("Los valores mínimo y máximo deben ser números válidos.");
+        return;
+    }
+
+    if (vMin >= vMax) {
+        mostrarError("El valor mínimo físico debe ser estrictamente menor que el máximo.");
+        return;
+    }
+
+    const nombreNormalizado = nombre.toLowerCase();
+    const existe = Object.values(tiposMap).some(t => (t.nombre || "").toLowerCase() === nombreNormalizado);
+    if (existe) {
+        mostrarError(`Ya existe un tipo de sensor llamado "${nombre}".`);
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Guardando...`;
+        lucide.createIcons();
+    }
+    if (errorBox) errorBox.classList.add("hidden");
+
+    try {
+        const nuevo = await apiPost("/tipos-sensor/", {
+            nombre,
+            unidad_medida: unidad,
+            valor_min_fisico: vMin,
+            valor_max_fisico: vMax,
+        });
+
+        // Actualizar el catálogo local al instante (sin recargar la página).
+        if (nuevo && nuevo.id != null) {
+            tiposMap[nuevo.id] = {
+                id: nuevo.id,
+                nombre: nuevo.nombre || nombre,
+                unidad: nuevo.unidad_medida || unidad,
+            };
+        }
+
+        poblarFiltros();
+        poblarSelectoresModal();
+
+        const volverAlSensor = origenTipoDesdeSensor;
+        cerrarModalTipo();
+        mostrarToastConfig(`Tipo de sensor "${nombre}" creado correctamente.`);
+
+        // Si venía desde "Nuevo sensor", reabrir ese modal con el tipo ya elegido.
+        if (volverAlSensor) {
+            abrirModalNuevoSensor();
+            if (nuevo && nuevo.id != null) {
+                const selTipo = document.getElementById("select-sensor-tipo");
+                if (selTipo) {
+                    selTipo.value = String(nuevo.id);
+                    const selected = selTipo.options[selTipo.selectedIndex];
+                    const labelUnidad = document.getElementById("label-unidad-rango");
+                    if (labelUnidad) labelUnidad.textContent = selected?.dataset?.unidad ? `(${selected.dataset.unidad})` : "";
+                }
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        mostrarError(formatearErrorApi(err));
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i id="icono-guardar-tipo" data-lucide="plus" class="w-4 h-4"></i> <span id="texto-guardar-tipo">Crear tipo</span>`;
+            lucide.createIcons();
+        }
+    }
 }
 
 // ---------- Guardar Sensor y Rango (POST o PATCH) ----------

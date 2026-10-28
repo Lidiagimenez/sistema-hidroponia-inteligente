@@ -1,13 +1,39 @@
 // ============================================================
-// ia.js — Recomendaciones, Avisos y Anomalías (Motor de IA)
+// ia.js — Recomendaciones y Anomalías (Motor de IA)
 // ============================================================
 
 let recomendaciones = [];
 let recomendacionesFiltradas = [];
-let avisos = [];
 let anomalias = [];
 let cultivosMap = {};
 let tabActual = "recomendaciones";
+
+// ---------- Toast de éxito ----------
+function mostrarToastExito(mensaje) {
+    const toast = document.createElement("div");
+    toast.className = "fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-green-600 text-white px-4 py-3 rounded-xl shadow-lg transition-all duration-300 opacity-0 translate-y-2";
+    toast.innerHTML = `
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span class="text-sm font-medium">${mensaje}</span>
+    `;
+    document.body.appendChild(toast);
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+    // Animación de entrada
+    setTimeout(() => {
+        toast.classList.remove("opacity-0", "translate-y-2");
+    }, 10);
+    // Desaparecer a los 3 segundos
+    setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
 
 // ---------- Config visual ----------
 
@@ -29,12 +55,68 @@ const TIPO_RECOMENDACION_ICONO = {
     "otro":           { icono: "info",          bg: "bg-gray-100",    color: "text-gray-600"    },
 };
 
-const TIPO_AVISO_ICONO = {
-    "sin_crecimiento":       { icono: "minus-circle",   bg: "bg-orange-100",  color: "text-orange-600"  },
-    "crecimiento_negativo":  { icono: "trending-down",  bg: "bg-red-100",     color: "text-red-600"     },
-    "desvio_curva":          { icono: "line-chart",     bg: "bg-yellow-100",  color: "text-yellow-600"  },
-    "caida_verdor":          { icono: "leaf",           bg: "bg-amber-100",   color: "text-amber-600"   },
-};
+// ---------- Cargar imagen del cultivo en el panel de predicción ----------
+function mediaUrl(valor) {
+    if (!valor) return "";
+    const url = String(valor).trim();
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith("//")) return "";
+    return url.startsWith("/") ? url : `/${url}`;
+}
+
+async function cargarImagenPrediccion() {
+    const contenedor = document.getElementById("prediccion-imagen");
+    const pie = document.getElementById("prediccion-imagen-detalle");
+    if (!contenedor) return;
+
+    const placeholder = (mensaje) => {
+        contenedor.innerHTML = `
+            <i data-lucide="camera" class="w-10 h-10 text-gray-300 mb-2"></i>
+            <p class="text-xs text-gray-400 px-3">${mensaje}</p>
+        `;
+        if (pie) pie.textContent = "Sin imágenes todavía";
+        if (window.lucide) lucide.createIcons();
+    };
+
+    try {
+        if (Object.keys(cultivosMap).length === 0) {
+            await cargarCultivos();
+        }
+
+        const cultivoIds = Object.keys(cultivosMap);
+        if (cultivoIds.length === 0) {
+            placeholder("Sin cultivos registrados");
+            return;
+        }
+
+        const cultivoId = cultivoIds[0];
+        const resp = await apiGet(`/imagenes/?cultivo=${cultivoId}`);
+        const lista = Array.isArray(resp) ? resp : (resp.results || []);
+        const ultima = lista[0] || null;
+        const url = ultima ? mediaUrl(ultima.archivo_url || ultima.archivo || "") : "";
+
+        if (!ultima || !url) {
+            placeholder("Sin imagen disponible");
+            return;
+        }
+
+        contenedor.innerHTML = `
+            <img src="${escapeHtml(url)}"
+                 alt="${escapeHtml(ultima.cultivo_nombre || cultivosMap[cultivoId] || "Cultivo")}"
+                 class="w-full h-full object-cover"
+                 loading="lazy">
+        `;
+        if (pie) {
+            pie.textContent = ultima.fecha_hora
+                ? `Última foto: ${formatearFechaHora(ultima.fecha_hora)}`
+                : (ultima.cultivo_nombre || "Imagen disponible");
+        }
+    } catch (err) {
+        console.error("No se pudo cargar la última imagen del cultivo:", err);
+        placeholder("Sin imagen disponible");
+    }
+}
 
 // ---------- Cargar predicciones ----------
 async function cargarPredicciones() {
@@ -63,14 +145,14 @@ async function cargarPredicciones() {
                 const tipo = p.tipo_sensor || "";
                 const pred = p.prediccion;
                 if (p.tendencia === "subiendo") {
-                    return `${tipo} subirá a ${pred}`;
+                    return `El ${tipo.toLowerCase()} subirá a ${pred}`;
                 } else if (p.tendencia === "bajando") {
-                    return `${tipo} bajará a ${pred}`;
+                    return `El ${tipo.toLowerCase()} bajará a ${pred}`;
                 } else {
-                    return `${tipo} se mantendrá estable`;
+                    return `El ${tipo.toLowerCase()} se mantendrá estable`;
                 }
             });
-            mensajeEl.textContent = `Predicción IA (Próxima medición): ${mensajes.join(". ")}.`;
+            mensajeEl.textContent = `${mensajes.join(". ")}.`;
             if (detalleEl) {
                 detalleEl.innerHTML = resp.map(p => 
                     `<span class="inline-block mr-3">• ${p.tipo_sensor}: Actual ${p.valor_actual} → Predicción ${p.prediccion} (${p.tendencia})</span>`
@@ -79,7 +161,13 @@ async function cargarPredicciones() {
             }
         } else if (resp && resp.mensaje) {
             // Respuesta única con formato del backend
-            mensajeEl.textContent = `Predicción IA (Próxima medición): ${resp.mensaje.replace("Se espera", "").replace("en la próxima medición", "").trim()}. El ${resp.tipo_sensor} irá de ${resp.valor_actual} a ${resp.prediccion}.`;
+            if (resp.tendencia === "subiendo") {
+                mensajeEl.textContent = `El ${resp.tipo_sensor.toLowerCase()} subirá a ${resp.prediccion}.`;
+            } else if (resp.tendencia === "bajando") {
+                mensajeEl.textContent = `El ${resp.tipo_sensor.toLowerCase()} bajará a ${resp.prediccion}.`;
+            } else {
+                mensajeEl.textContent = `El ${resp.tipo_sensor.toLowerCase()} se mantendrá estable.`;
+            }
             if (detalleEl) {
                 detalleEl.innerHTML = `<span class="inline-block mr-3">• ${resp.tipo_sensor}: Actual ${resp.valor_actual} → Predicción ${resp.prediccion} (${resp.tendencia})</span>`;
                 detalleEl.classList.remove("hidden");
@@ -102,15 +190,16 @@ async function cargarIA() {
         await cargarCultivos();
         await Promise.all([
             cargarRecomendaciones(),
-            cargarAvisos(),
             cargarAnomalias(),
         ]);
 
         await cargarPredicciones();
+        await cargarImagenPrediccion();
         renderTabs();
         renderLista();
         renderStats();
         configurarAcciones();
+        inicializarCooldownBoton();
     } catch (err) {
         console.error(err);
     }
@@ -129,14 +218,7 @@ async function cargarRecomendaciones() {
     recomendacionesFiltradas = [...recomendaciones];
 }
 
-async function cargarAvisos() {
-    try {
-        const resp = await apiGet("/avisos-crecimiento/");
-        avisos = Array.isArray(resp) ? resp : (resp.results || []);
-    } catch (e) {
-        avisos = [];
-    }
-}
+
 
 async function cargarAnomalias() {
     try {
@@ -152,7 +234,6 @@ function renderTabs() {
     // Actualizar contadores en los tabs
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set("count-recomendaciones", recomendaciones.filter(r => r.vigente && !r.resuelta).length);
-    set("count-avisos", avisos.filter(a => !a.resuelto).length);
     set("count-anomalias", anomalias.filter(a => a.estado === "nueva").length);
 
     // Event listeners de tabs
@@ -186,8 +267,6 @@ function renderLista() {
 
     if (tabActual === "recomendaciones") {
         renderRecomendaciones(contenedor);
-    } else if (tabActual === "avisos") {
-        renderAvisos(contenedor);
     } else {
         renderAnomalias(contenedor);
     }
@@ -266,70 +345,7 @@ function renderRecomendaciones(contenedor) {
     });
 }
 
-// ---------- Avisos ----------
-function renderAvisos(contenedor) {
-    const activos = avisos.filter(a => !a.resuelto);
 
-    if (activos.length === 0) {
-        contenedor.innerHTML = `
-            <div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                <i data-lucide="leaf" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
-                <p class="text-sm text-gray-500">No hay avisos de crecimiento activos.</p>
-            </div>
-        `;
-        return;
-    }
-
-    contenedor.innerHTML = activos.map(a => {
-        const tipoConf = TIPO_AVISO_ICONO[a.tipo] || TIPO_AVISO_ICONO.sin_crecimiento;
-        const sevBg = a.severidad === "advertencia" ? "bg-orange-100" : "bg-blue-100";
-        const sevText = a.severidad === "advertencia" ? "text-orange-700" : "text-blue-700";
-
-        return `
-            <div class="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md transition">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 ${tipoConf.bg} rounded-xl flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="${tipoConf.icono}" class="w-5 h-5 ${tipoConf.color}"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-3 mb-1">
-                            <h3 class="font-semibold text-gray-900">${escapeHtml(a.tipo_display)}</h3>
-                            <span class="inline-flex items-center ${sevBg} ${sevText} text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                                ${escapeHtml(a.severidad_display)}
-                            </span>
-                        </div>
-                        <p class="text-xs text-gray-500 mb-2">
-                            ${escapeHtml(a.cultivo_nombre || cultivosMap[a.cultivo] || "—")}
-                        </p>
-                        <p class="text-sm text-gray-600 mb-3 leading-relaxed">
-                            ${escapeHtml(a.descripcion || "Sin descripción")}
-                        </p>
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-xs text-gray-400 flex items-center gap-1">
-                                <i data-lucide="clock" class="w-3 h-3"></i>
-                                ${tiempoRelativo(a.fecha)}
-                            </span>
-                            <button
-                                class="btn-resolver-aviso inline-flex items-center gap-1.5 bg-green-50 hover:bg-green-100 text-brand text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                                data-id="${a.id}"
-                            >
-                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                                Marcar como resuelto
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join("");
-
-    document.querySelectorAll(".btn-resolver-aviso").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            resolverAviso(parseInt(btn.dataset.id));
-        });
-    });
-}
 
 // ---------- Anomalías ----------
 function renderAnomalias(contenedor) {
@@ -455,17 +471,7 @@ async function resolverRecomendacion(id) {
     }
 }
 
-async function resolverAviso(id) {
-    try {
-        await apiPost(`/avisos-crecimiento/${id}/resolver/`, {});
-        await cargarAvisos();
-        renderTabs();
-        renderLista();
-        renderStats();
-    } catch (err) {
-        alert(`Error: ${err.message}`);
-    }
-}
+
 
 async function revisarAnomalia(id) {
     try {
@@ -499,45 +505,114 @@ async function descartarAnomalia(id) {
     }
 }
 
+let cooldownTimer = null;
+
+// ---------- Cooldown del botón ----------
+function inicializarCooldownBoton() {
+    const btn = document.getElementById("btn-ejecutar-motor");
+    if (!btn) return;
+    
+    // Verificar si hay cooldown activo en localStorage
+    const cooldownEnd = localStorage.getItem("ia_cooldown_end");
+    if (cooldownEnd) {
+        const endTime = parseInt(cooldownEnd);
+        const now = Date.now();
+        if (endTime > now) {
+            const remaining = Math.ceil((endTime - now) / 1000);
+            iniciarCuentaRegresiva(remaining);
+        } else {
+            localStorage.removeItem("ia_cooldown_end");
+        }
+    }
+}
+
+function iniciarCuentaRegresiva(segundos) {
+    const btn = document.getElementById("btn-ejecutar-motor");
+    if (!btn) return;
+    
+    btn.disabled = true;
+    let remaining = segundos;
+    
+    if (cooldownTimer) {
+        clearInterval(cooldownTimer);
+    }
+    
+    btn.innerHTML = `<i data-lucide="clock" class="w-4 h-4"></i> Espera ${remaining}s...`;
+    if (window.lucide) lucide.createIcons();
+    
+    cooldownTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(cooldownTimer);
+            cooldownTimer = null;
+            localStorage.removeItem("ia_cooldown_end");
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualizar análisis IA`;
+            if (window.lucide) lucide.createIcons();
+        } else {
+            btn.innerHTML = `<i data-lucide="clock" class="w-4 h-4"></i> Espera ${remaining}s...`;
+            if (window.lucide) lucide.createIcons();
+        }
+    }, 1000);
+}
+
 // ---------- Ejecutar motor ----------
 async function ejecutarMotor() {
     const btn = document.getElementById("btn-ejecutar-motor");
+    if (btn && btn.disabled) {
+        return;
+    }
+    
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Actualizando...`;
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
     }
 
     try {
         // Tomar el primer cultivo
         const cultivoIds = Object.keys(cultivosMap);
         if (cultivoIds.length === 0) {
-            alert("No hay cultivos para evaluar.");
+            mostrarToastExito("No hay cultivos para evaluar.");
             // Aún así actualizar predicciones
             await cargarPredicciones();
+            await cargarImagenPrediccion();
+            // Iniciar cooldown de todas formas
+            const endTime = Date.now() + 60000;
+            localStorage.setItem("ia_cooldown_end", endTime.toString());
+            iniciarCuentaRegresiva(60);
             return;
         }
 
         const cultivoId = parseInt(cultivoIds[0]);
+        let generadas = 0;
         try {
             const resp = await apiPost("/recomendaciones/evaluar/", { cultivo: cultivoId });
-            alert(`✓ Análisis IA actualizado.\n\nRecomendaciones generadas: ${resp.generadas || 0}`);
+            generadas = resp.generadas || 0;
         } catch (e) {
             console.error("Error evaluando recomendaciones:", e);
         }
 
+        mostrarToastExito(`Análisis IA actualizado. Recomendaciones generadas: ${generadas}`);
+
         await cargarRecomendaciones();
         await cargarPredicciones();
+        await cargarImagenPrediccion();
         renderTabs();
         renderLista();
         renderStats();
+        
+        // Iniciar cooldown de 60 segundos
+        const endTime = Date.now() + 60000;
+        localStorage.setItem("ia_cooldown_end", endTime.toString());
+        iniciarCuentaRegresiva(60);
     } catch (err) {
         alert(`Error al actualizar el análisis IA: ${err.message}`);
-    } finally {
+        // En caso de error, reactivar botón
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4"></i> Actualizar análisis IA`;
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
     }
 }
@@ -548,11 +623,9 @@ function renderStats() {
 
     const recVigentes = recomendaciones.filter(r => r.vigente && !r.resuelta).length;
     const recResueltas = recomendaciones.filter(r => r.resuelta).length;
-    const avisosActivos = avisos.filter(a => !a.resuelto).length;
     const anomNuevas = anomalias.filter(a => a.estado === "nueva").length;
 
     set("stat-recomendaciones", recVigentes);
-    set("stat-avisos", avisosActivos);
     set("stat-anomalias", anomNuevas);
     set("stat-resueltas", recResueltas);
 }
