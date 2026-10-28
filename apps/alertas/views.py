@@ -37,7 +37,7 @@ class AlertaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Filtra por cultivo. Una alerta se relaciona con un cultivo por:
-          - su medición → sensor → dispositivo → cultivo
+          - su medición → sensor → (M2M cultivos) o dispositivo → cultivo
           - o por su evento → cultivo
         Como son caminos distintos, usamos Q para OR.
         """
@@ -45,6 +45,7 @@ class AlertaViewSet(viewsets.ModelViewSet):
         cultivo_id = self.request.query_params.get("cultivo")
         if cultivo_id:
             qs = qs.filter(
+                Q(medicion__sensor__cultivos__pk=cultivo_id) |
                 Q(medicion__sensor__dispositivo__cultivo_id=cultivo_id) |
                 Q(evento__cultivo_id=cultivo_id)
             ).distinct()

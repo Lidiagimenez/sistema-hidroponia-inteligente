@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from apps.dispositivos.models import Dispositivo
 from apps.cultivos.models import Cultivo
 
@@ -16,6 +17,17 @@ class TipoSensor(models.Model):
 class Sensor(models.Model):
     dispositivo = models.ForeignKey(Dispositivo, on_delete=models.CASCADE, related_name="sensores")
     tipo_sensor = models.ForeignKey(TipoSensor, on_delete=models.PROTECT, related_name="sensores")
+    cultivos = models.ManyToManyField(
+        Cultivo,
+        related_name="sensores",
+        blank=True,
+        help_text="Un sensor puede estar asociado a uno o varios cultivos.",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text="False = borrado lógico. El sensor deja de aceptar lecturas.",
+    )
 
     def __str__(self):
         return f"{self.tipo_sensor} en {self.dispositivo}"
@@ -38,7 +50,8 @@ class Medicion(models.Model):
 
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE, related_name="mediciones")
     valor = models.FloatField()
-    fecha_hora = models.DateTimeField(auto_now_add=True)
+    # 👇 CAMBIO AQUÍ: Se cambió auto_now_add por default=timezone.now
+    fecha_hora = models.DateTimeField(default=timezone.now) 
     estado_lectura = models.CharField(max_length=20, choices=EstadoLectura.choices, default=EstadoLectura.NORMAL)
 
     def __str__(self):
@@ -47,7 +60,8 @@ class Medicion(models.Model):
 
 class Imagen(models.Model):
     cultivo = models.ForeignKey(Cultivo, on_delete=models.CASCADE, related_name="imagenes")
-    fecha_hora = models.DateTimeField(auto_now_add=True)
+    # 👇 CAMBIO AQUÍ: También lo cambiamos por si mandas fotos desde la SD
+    fecha_hora = models.DateTimeField(default=timezone.now) 
     archivo = models.ImageField(upload_to="imagenes_cultivo/")
 
     def __str__(self):

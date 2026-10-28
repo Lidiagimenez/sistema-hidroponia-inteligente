@@ -37,64 +37,34 @@ def construir_contexto(cultivo):
     hace_7d = ahora - timedelta(days=7)
 
     ultimas = {}
-    for m in (
-        Medicion.objects
-        .filter(sensor__dispositivo__cultivo=cultivo)
-        .select_related("sensor", "sensor__tipo_sensor")
-        .order_by("-fecha_hora")[:200]
-    ):
-        nombre = m.sensor.tipo_sensor.nombre.lower()
-        if nombre not in ultimas:
-            ultimas[nombre] = m
+    try:
+        qs = Medicion.objects.filter(sensor__cultivos=cultivo).select_related("sensor", "sensor__tipo_sensor").order_by("-fecha_hora")[:200]
+        for m in qs:
+            nombre = m.sensor.tipo_sensor.nombre.lower()
+            if nombre not in ultimas:
+                ultimas[nombre] = m
+    except Exception:
+        pass
+    if not ultimas:
+        for m in Medicion.objects.filter(sensor__dispositivo__cultivo=cultivo).select_related("sensor", "sensor__tipo_sensor").order_by("-fecha_hora")[:200]:
+            nombre = m.sensor.tipo_sensor.nombre.lower()
+            if nombre not in ultimas:
+                ultimas[nombre] = m
 
     promedios = {}
-    for m in (
-        Medicion.objects
-        .filter(sensor__dispositivo__cultivo=cultivo, fecha_hora__gte=hace_24h)
-        .select_related("sensor", "sensor__tipo_sensor")
-    ):
-        nombre = m.sensor.tipo_sensor.nombre.lower()
-        promedios.setdefault(nombre, []).append(m.valor)
-
+    try:
+        qs_p = Medicion.objects.filter(sensor__cultivos=cultivo, fecha_hora__gte=hace_24h).select_related("sensor", "sensor__tipo_sensor")
+        for m in qs_p:
+            nombre = m.sensor.tipo_sensor.nombre.lower()
+            promedios.setdefault(nombre, []).append(m.valor)
+    except Exception:
+        pass
+    if not promedios:
+        for m in Medicion.objects.filter(sensor__dispositivo__cultivo=cultivo, fecha_hora__gte=hace_24h).select_related("sensor", "sensor__tipo_sensor"):
+            nombre = m.sensor.tipo_sensor.nombre.lower()
+            promedios.setdefault(nombre, []).append(m.valor)
     for k, valores in promedios.items():
         promedios[k] = sum(valores) / len(valores) if valores else None
-
-    ultimo_analisis = (
-        AnalisisImagen.objects
-        .filter(cultivo=cultivo)
-        .order_by("-fecha_hora")
-        .first()
-    )
-
-    tendencia = None
-    analisis_7d = list(
-        AnalisisImagen.objects
-        .filter(
-            cultivo=cultivo,
-            fecha_hora__gte=hace_7d,
-            altura_estimada_cm__isnull=False,
-        )
-        .order_by("fecha_hora")
-    )
-    if len(analisis_7d) >= 2:
-        primera = analisis_7d[0].altura_estimada_cm
-        ultima = analisis_7d[-1].altura_estimada_cm
-        dias = (analisis_7d[-1].fecha_hora - analisis_7d[0].fecha_hora).days or 1
-        tendencia = {
-            "delta_cm": ultima - primera,
-            "delta_por_dia_cm": (ultima - primera) / dias,
-            "dias_sin_crecer": _dias_sin_crecer(analisis_7d),
-        }
-
-    return {
-        "cultivo": cultivo,
-        "ahora": ahora,
-        "ultimas_mediciones": ultimas,
-        "promedios_24h": promedios,
-        "ultimo_analisis": ultimo_analisis,
-        "tendencia_crecimiento": tendencia,
-    }
-
 
 def _dias_sin_crecer(analisis_ordenados):
     if len(analisis_ordenados) < 2:
@@ -165,10 +135,10 @@ regla("ph_alto", _ph_alto, "ph", "alta",
       "El pH está por encima de 7.5. Agregar solución ácida.")
 regla("conductividad_alta", _conductividad_alta, "conductividad", "media",
       "Conductividad elevada",
-      "Supera 2.5 mS/cm. Diluir la solución nutritiva.")
+      "Supera 2500 µS/cm. Diluir la solución nutritiva.")
 regla("conductividad_baja", _conductividad_baja, "conductividad", "media",
       "Conductividad baja",
-      "Por debajo de 0.8 mS/cm. Reforzar solución nutritiva.")
+      "Por debajo de 800 µS/cm. Reforzar solución nutritiva.")
 regla("temp_alta_humedad_alta", _temperatura_alta_con_humedad, "temperatura", "alta",
       "Riesgo de hongos",
       "Temperatura >30 °C con humedad >70 %. Ventilar.")

@@ -87,7 +87,7 @@ class Command(BaseCommand):
         if modelo is None:
             self.stdout.write(self.style.WARNING(
                 f"  ⚠ Sin datos suficientes. Mínimo requerido: "
-                f"{ia.MIN_MUESTRAS_ENTRENAMIENTO} mediciones normales."
+                f"{ia.MIN_MUESTRAS_ENTRENAMIENTO} mediciones."
             ))
         else:
             ruta = ia._ruta_modelo(tipo.id)

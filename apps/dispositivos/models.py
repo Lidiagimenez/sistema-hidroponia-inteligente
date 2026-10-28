@@ -14,6 +14,7 @@ class Dispositivo(models.Model):
     class Estado(models.TextChoices):
         ACTIVO = "activo", "Activo"
         INACTIVO = "inactivo", "Inactivo"
+        MANTENIMIENTO = "mantenimiento", "En mantenimiento"
 
     nombre = models.CharField(max_length=100)
     tipo_dispositivo = models.CharField(max_length=20, choices=TipoDispositivo.choices)
@@ -21,6 +22,17 @@ class Dispositivo(models.Model):
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.ACTIVO)
     cultivo = models.ForeignKey(Cultivo, on_delete=models.CASCADE, related_name="dispositivos")
     fecha_alta = models.DateTimeField(auto_now_add=True)
+
+    # --- Borrado lógico y origen de los datos ---
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text="False = borrado lógico. No se elimina el registro ni su historial.",
+    )
+    es_simulado = models.BooleanField(
+        default=False,
+        help_text="True = dispositivo de demo/simulación. Se marca distinto en la UI.",
+    )
 
     # --- Red / cámara (ESP32) ---
     ip_local = models.GenericIPAddressField(
@@ -45,7 +57,8 @@ class Dispositivo(models.Model):
 
     @property
     def esta_activo(self):
-        return self.estado == self.Estado.ACTIVO
+        """Solo un dispositivo activo (y no borrado lógicamente) puede operar."""
+        return self.is_active and self.estado == self.Estado.ACTIVO
 
     @staticmethod
     def hashear_api_key(clave):

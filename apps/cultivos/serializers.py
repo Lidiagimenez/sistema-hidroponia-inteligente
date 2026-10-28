@@ -94,6 +94,7 @@ class CultivoSerializer(serializers.ModelSerializer):
             "fecha_siembra",
             "estado_ciclo",
             "duracion_ciclo_dias",
+            "is_active",
         )
         read_only_fields = ["usuario"]
 

@@ -6,10 +6,13 @@ class Cultivo(models.Model):
     id_cultivo = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     tipo_cultivo = models.CharField(
-    max_length=100,
-    default="No especificado",
-)
+        max_length=100,
+        default="No especificado",
+    )
     fecha_creacion = models.DateField()
+    
+    # NUEVO CAMPO PARA SOFT DELETE
+    is_active = models.BooleanField(default=True, verbose_name="Activo")
 
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -22,7 +25,6 @@ class Cultivo(models.Model):
 
 
 class CicloProduccion(models.Model):
-    
     id_ciclo = models.BigAutoField(primary_key=True)
 
     cultivo = models.ForeignKey(
@@ -41,9 +43,9 @@ class CicloProduccion(models.Model):
         blank=True,
     )
     estado = models.CharField(
-    max_length=30,
-    default="germinacion",
-)
+        max_length=30,
+        default="germinacion",
+    )
 
     def __str__(self):
         return f"Ciclo de {self.cultivo.nombre}"

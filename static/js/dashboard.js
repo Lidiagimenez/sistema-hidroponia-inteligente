@@ -4,20 +4,24 @@
 
 let todosLosCultivos = [];
 let cultivoActivo = null;
+// Alimenta solo el contador de "Alertas activas" (la tarjeta lateral se retiró del HTML)
 let alertasActivas = [];
 let mediciones = [];
 let sensoresMap = {};
 let agrupadas = {};
-
-const TIPOS_CONFIG = {
-    "ph":           { unidad: "pH",         icono: "droplet",     color: "text-brand",      bg: "bg-green-100",  min: 5.5, max: 6.5 },
-    "conductividad":{ unidad: "mS/cm",      icono: "activity",    color: "text-teal-600",   bg: "bg-teal-100",   min: 1300, max: 2000 },
-    "temperatura":  { unidad: "°C",         icono: "thermometer", color: "text-orange-600", bg: "bg-orange-100", min: 18, max: 26 },
-    "luz":          { unidad: "µmol/m²/s",  icono: "sun",         color: "text-yellow-600", bg: "bg-yellow-100", min: 200, max: 500 },
-};
+let listaSensoresFull = [];
+let listaTiposSensor = [];
+// Rangos de operación reales por sensor (API /rangos-operacion/)
+// sensor_id -> { valor_min, valor_max, vigente_desde }
+let rangosPorSensor = {};
+let tipoGraficoActual = "ph";
 
 // Duración por defecto si el ciclo no tiene fecha_fin_estimada
 const DURACION_DEFAULT_DIAS = 28;
+
+// Ventana de datos del gráfico: últimas 24 horas, con tope de 50 puntos
+const VENTANA_HORAS = 24;
+const MAX_PUNTOS_GRAFICO = 50;
 
 
 // ---------- Cargar todo ----------
@@ -27,6 +31,7 @@ async function cargarDashboard() {
             cargarCultivos(),
             cargarSensoresYMediciones(),
             cargarAlertas(),
+            cargarRangosOperacion(),
         ]);
 
         if (todosLosCultivos.length > 0) {
@@ -34,9 +39,28 @@ async function cargarDashboard() {
         }
 
         renderTodo();
+        // La imagen es independiente del gráfico: queda el placeholder mientras llega
+        cargarImagenReciente();
+
+        // Tiempo real: indicador "en vivo" + refresh automático cada 30 s.
+        iniciarIndicadorEnVivo();
+        iniciarPolling(refrescarDashboard);
     } catch (err) {
         console.error(err);
     }
+}
+
+/**
+ * Refresh automático (polling cada 30 s, gestionado por tiempo-real.js).
+ */
+async function refrescarDashboard() {
+    await Promise.all([
+        cargarSensoresYMediciones(),
+        cargarAlertas(),
+    ]);
+
+    renderTarjetas();
+    renderGrafico(tipoGraficoActual);
 }
 
 // ---------- Cultivos ----------
@@ -48,22 +72,30 @@ async function cargarCultivos() {
 // ---------- Sensores y mediciones ----------
 async function cargarSensoresYMediciones() {
     const respSensores = await apiGet("/sensores/");
-    const listaSensores = Array.isArray(respSensores) ? respSensores : (respSensores.results || []);
+    if (respSensores === null) throw new Error("No se pudo obtener /sensores/ (sesión expirada o API caída)");
+    listaSensoresFull = Array.isArray(respSensores) ? respSensores : (respSensores.results || []);
 
     const respTipos = await apiGet("/tipos-sensor/");
-    const listaTipos = Array.isArray(respTipos) ? respTipos : (respTipos.results || []);
+    if (respTipos === null) throw new Error("No se pudo obtener /tipos-sensor/ (sesión expirada o API caída)");
+    listaTiposSensor = Array.isArray(respTipos) ? respTipos : (respTipos.results || []);
     const mapaTipos = {};
-    listaTipos.forEach(t => { mapaTipos[t.id] = t; });
+    listaTiposSensor.forEach(t => { mapaTipos[t.id] = t; });
 
     sensoresMap = {};
-    listaSensores.forEach(s => {
+    listaSensoresFull.forEach(s => {
         const tipo = mapaTipos[s.tipo_sensor];
         if (tipo) {
-            sensoresMap[s.id] = { tipo_nombre: tipo.nombre, unidad: tipo.unidad_medida };
+            sensoresMap[s.id] = {
+                tipo_nombre: tipo.nombre,
+                unidad: tipo.unidad_medida,
+                es_simulado: s.es_simulado || (s.dispositivo && s.dispositivo.es_simulado) || false,
+                dispositivo_nombre: s.dispositivo_nombre || "",
+            };
         }
     });
 
     const respMed = await apiGet("/mediciones/");
+    if (respMed === null) throw new Error("No se pudo obtener /mediciones/ (sesión expirada o API caída)");
     mediciones = Array.isArray(respMed) ? respMed : (respMed.results || []);
 
     agrupadas = {};
@@ -78,18 +110,60 @@ async function cargarSensoresYMediciones() {
     });
 }
 
+// ---------- Rangos de operación (parámetro dinámico del gráfico) ----------
+async function cargarRangosOperacion() {
+    rangosPorSensor = {};
+    try {
+        const resp = await apiGet("/rangos-operacion/");
+        const lista = Array.isArray(resp) ? resp : (resp.results || []);
+        lista.forEach(r => {
+            const actual = rangosPorSensor[r.sensor];
+            if (!actual || new Date(r.vigente_desde) > new Date(actual.vigente_desde)) {
+                rangosPorSensor[r.sensor] = r;
+            }
+        });
+    } catch (err) {
+        console.warn("No se pudieron cargar los rangos de operación:", err);
+    }
+}
+
+function obtenerRangoVigente(tipo) {
+    const ultima = agrupadas[tipo]?.[0];
+    if (ultima && rangosPorSensor[ultima.sensor]) {
+        return rangosPorSensor[ultima.sensor];
+    }
+
+    const sensoresTipo = listaSensoresFull.filter(
+        s => (s.tipo_sensor_nombre || "").toLowerCase() === tipo
+    );
+    const delCultivo = cultivoActivo
+        ? sensoresTipo.filter(s =>
+            (s.cultivos_detalle || []).some(c => c.id_cultivo === cultivoActivo.id_cultivo))
+        : [];
+
+    for (const sensor of [...delCultivo, ...sensoresTipo]) {
+        if (rangosPorSensor[sensor.id]) return rangosPorSensor[sensor.id];
+    }
+    return null;
+}
+
+function actualizarLeyendaRango(rango) {
+    const leyenda = document.getElementById("leyenda-rango");
+    if (!leyenda) return;
+    leyenda.textContent = rango
+        ? `Rango permitido (${rango.valor_min} - ${rango.valor_max})`
+        : "Sin rango configurado";
+}
+
 // ---------- Alertas ----------
 async function cargarAlertas() {
     const resp = await apiGet("/alertas/");
+    if (resp === null) throw new Error("No se pudo obtener /alertas/ (sesión expirada o API caída)");
     const todas = Array.isArray(resp) ? resp : (resp.results || []);
     alertasActivas = todas.filter(a => a.estado === "activa");
 }
 
 // ---------- Helpers del ciclo ----------
-/**
- * Devuelve la fecha de inicio del ciclo activo, o la fecha de creación
- * del cultivo si no hay ciclo activo.
- */
 function obtenerFechaInicio(cultivo) {
     if (cultivo?.ciclo_activo?.fecha_inicio) {
         return new Date(cultivo.ciclo_activo.fecha_inicio);
@@ -97,10 +171,6 @@ function obtenerFechaInicio(cultivo) {
     return new Date(cultivo?.fecha_creacion || new Date());
 }
 
-/**
- * Devuelve la duración del ciclo en días (fecha_fin_estimada - fecha_inicio).
- * Si no hay fecha_fin_estimada, devuelve el default.
- */
 function obtenerDuracionCiclo(cultivo) {
     const ciclo = cultivo?.ciclo_activo;
     if (!ciclo?.fecha_fin_estimada || !ciclo?.fecha_inicio) {
@@ -113,9 +183,6 @@ function obtenerDuracionCiclo(cultivo) {
     return Math.max(1, dias);
 }
 
-/**
- * Devuelve los días transcurridos desde el inicio del ciclo activo.
- */
 function obtenerDiasTranscurridos(cultivo) {
     if (!cultivo) return 0;
     const inicio = obtenerFechaInicio(cultivo);
@@ -128,8 +195,8 @@ function obtenerDiasTranscurridos(cultivo) {
 function renderTodo() {
     renderBanner();
     renderTarjetas();
-    renderGrafico();
-    renderAlertas();
+    renderSelectorGrafico();
+    renderGrafico(tipoGraficoActual);
 }
 
 // ---------- Banner con selector debajo ----------
@@ -155,12 +222,10 @@ function renderBanner() {
     const dias = obtenerDiasTranscurridos(cultivoActivo);
     const totalDias = obtenerDuracionCiclo(cultivoActivo);
 
-    // Etapa: viene del ciclo activo si existe. Fallback: calculada por días.
     const etapa = cultivoActivo.ciclo_activo?.estado
         ? capitalizar(cultivoActivo.ciclo_activo.estado)
         : (dias < 7 ? "Germinación" : dias < 21 ? "Crecimiento" : "Cosecha");
 
-    // Estado del ciclo respecto a la duración esperada
     const atraso = dias - totalDias;
     const esUltimoDia = dias === totalDias;
     const estaAtrasado = dias > totalDias;
@@ -174,10 +239,7 @@ function renderBanner() {
     cont.innerHTML = `
         <div class="relative bg-gradient-to-r from-green-50 via-white to-green-50/30 rounded-2xl overflow-hidden border border-green-100">
             <div class="p-6">
-
-                <!-- Fila 1: Ícono + datos + badge -->
                 <div class="flex items-center justify-between gap-5 flex-wrap">
-
                     <div class="flex items-center gap-5">
                         <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center flex-shrink-0">
                             <i data-lucide="sprout" class="w-7 h-7 text-brand"></i>
@@ -202,10 +264,8 @@ function renderBanner() {
                         <span class="w-2 h-2 bg-green-600 rounded-full"></span>
                         Normal
                     </span>
-
                 </div>
 
-                <!-- Fila 2: Selector de cultivo (si hay más de 1) -->
                 ${todosLosCultivos.length > 1 ? `
                     <div class="mt-5 pt-5 border-t border-green-100 flex items-center gap-3">
                         <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -238,6 +298,7 @@ function renderBanner() {
             if (cultivo) {
                 cultivoActivo = cultivo;
                 renderTodo();
+                cargarImagenReciente();
             }
         });
     }
@@ -254,10 +315,34 @@ function renderTarjetas() {
     const ultPh = agrupadas["ph"]?.[0];
     const valorPh = ultPh ? ultPh.valor.toFixed(2) : "—";
 
-    const diasCultivo = obtenerDiasTranscurridos(cultivoActivo);
-    const totalDiasCiclo = obtenerDuracionCiclo(cultivoActivo);
-    const estaAtrasadoTarjeta = diasCultivo > totalDiasCiclo;
-    const diasAtraso = diasCultivo - totalDiasCiclo;
+    const ultCond = agrupadas["conductividad"]?.[0];
+    const rangoCond = obtenerRangoVigente("conductividad");
+    const tipoCond = listaTiposSensor.find(t => (t.nombre || "").toLowerCase() === "conductividad");
+    const unidadCond = tipoCond?.unidad_medida || "";
+    let valorCond = "—";
+    let estadoCond = "Sin datos";
+    let condColor = "text-gray-500";
+    
+    if (ultCond !== undefined && ultCond.valor !== undefined && ultCond.valor !== null) {
+        // El valor se muestra tal como lo manda el sensor (ya no divide por 1000)
+        valorCond = Number(ultCond.valor).toFixed(0);
+        if (!rangoCond) {
+            estadoCond = "Sin rango";
+            condColor = "text-gray-500";
+        } else if (ultCond.valor < rangoCond.valor_min) {
+            estadoCond = "Bajo";
+            condColor = "text-amber-600";
+        } else if (ultCond.valor > rangoCond.valor_max) {
+            estadoCond = "Alto";
+            condColor = "text-red-600";
+        } else {
+            estadoCond = "OK";
+            condColor = "text-emerald-600";
+        }
+    }
+
+    const haySimulados = listaSensoresFull.some(s => s.es_simulado);
+    const hayReales = listaSensoresFull.some(s => !s.es_simulado);
 
     cont.innerHTML = `
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
@@ -271,6 +356,10 @@ function renderTarjetas() {
                         <span class="text-brand">${online}</span>
                         <span class="text-gray-300 text-lg font-normal">/ ${totalSensores}</span>
                     </p>
+                    ${listaSensoresFull.length > 0 ? `<div class="flex items-center gap-1 mt-1">
+                        ${hayReales ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">Real</span>` : ""}
+                        ${haySimulados ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">Simulado</span>` : ""}
+                    </div>` : ""}
                 </div>
             </div>
         </div>
@@ -301,15 +390,13 @@ function renderTarjetas() {
 
         <div class="bg-white rounded-2xl border border-gray-200 p-5">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 ${estaAtrasadoTarjeta ? "bg-amber-100" : "bg-cyan-100"} rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="calendar-days" class="w-6 h-6 ${estaAtrasadoTarjeta ? "text-amber-600" : "text-cyan-600"}"></i>
+                <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="activity" class="w-6 h-6 text-teal-600"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 mb-0.5">Días del ciclo</p>
-                    <p class="text-2xl font-bold text-gray-900">
-                        ${diasCultivo} <span class="text-gray-300 text-lg font-normal">/ ${totalDiasCiclo}</span>
-                    </p>
-                    ${estaAtrasadoTarjeta ? `<p class="text-[11px] font-semibold text-amber-600 mt-0.5">+${diasAtraso} días de atraso</p>` : ""}
+                    <p class="text-xs text-gray-500 mb-0.5">Conductividad</p>
+                    <p class="text-2xl font-bold text-gray-900">${valorCond} <span class="text-gray-400 text-sm font-medium">${escapeHtml(unidadCond)}</span></p>
+                    <p class="text-[11px] font-semibold ${condColor} mt-0.5">${estadoCond}</p>
                 </div>
             </div>
         </div>
@@ -317,23 +404,144 @@ function renderTarjetas() {
     lucide.createIcons();
 }
 
+// ---------- Selector gráfico ----------
+function tituloEvolucion(tipoNombre, modoFallback = false) {
+    const base = tipoNombre ? `Evolución de ${tipoNombre}` : "Evolución";
+    const sufijo = modoFallback
+        ? `Últimas ${MAX_PUNTOS_GRAFICO} mediciones`
+        : `Últimas ${VENTANA_HORAS} hs`;
+    return `${base} (${sufijo})`;
+}
+
+function renderSelectorGrafico() {
+    const select = document.getElementById("selector-tipo-grafico");
+    const titulo = document.getElementById("titulo-grafico-dashboard");
+    if (!select) return;
+
+    const opciones = (listaTiposSensor.length ? listaTiposSensor : [{nombre: "ph"}])
+        .map(t => {
+            const nombre = (t.nombre || "").toLowerCase();
+            return `<option value="${escapeHtml(nombre)}">${escapeHtml(t.nombre)}</option>`;
+        }).join("");
+
+    select.innerHTML = opciones;
+    if (tipoGraficoActual && !Array.from(select.options).some(o => o.value === tipoGraficoActual)) {
+        tipoGraficoActual = "ph";
+    }
+    select.value = tipoGraficoActual;
+
+    if (titulo) {
+        const tipo = listaTiposSensor.find(t => (t.nombre || "").toLowerCase() === tipoGraficoActual);
+        titulo.textContent = tituloEvolucion(tipo?.nombre);
+    }
+
+    select.onchange = () => {
+        tipoGraficoActual = select.value || "ph";
+        renderGrafico(tipoGraficoActual);
+        if (titulo) {
+            const tipo = listaTiposSensor.find(t => (t.nombre || "").toLowerCase() === tipoGraficoActual);
+            titulo.textContent = tituloEvolucion(tipo?.nombre);
+        }
+    };
+}
+
 // ---------- Gráfico ----------
-function renderGrafico() {
+function renderGrafico(tipo = tipoGraficoActual) {
+    tipoGraficoActual = tipo;
     const canvas = document.getElementById("chart-ph");
     if (!canvas) return;
 
-    const medicionesPh = agrupadas["ph"] || [];
+    const medicionesTipo = agrupadas[tipo] || [];
 
-    // Tomar las últimas 50 mediciones sin importar la fecha
-    const filtradas = medicionesPh
-        .slice(0, 50)
-        .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
+    const limiteVentana = Date.now() - VENTANA_HORAS * 60 * 60 * 1000;
+    let filtradas = [...medicionesTipo]
+        .filter(m => new Date(m.fecha_hora).getTime() >= limiteVentana)
+        .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+        .slice(-MAX_PUNTOS_GRAFICO);
 
+    let modoFallback = false;
+    if (filtradas.length === 0 && medicionesTipo.length > 0) {
+        modoFallback = true;
+        filtradas = [...medicionesTipo]
+            .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+            .slice(-MAX_PUNTOS_GRAFICO);
+    }
+
+    const tituloEl = document.getElementById("titulo-grafico-dashboard");
+    if (tituloEl) {
+        const tipoInfo = listaTiposSensor.find(t => (t.nombre || "").toLowerCase() === tipo);
+        tituloEl.textContent = tituloEvolucion(tipoInfo?.nombre, modoFallback);
+    }
+
+    const cruzaDias = new Set(filtradas.map(m => new Date(m.fecha_hora).toDateString())).size > 1;
     const labels = filtradas.map(m => {
         const d = new Date(m.fecha_hora);
-        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        if (!cruzaDias) return `${hh}:${mm}`;
+        return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")} ${hh}:${mm}`;
     });
     const valores = filtradas.map(m => m.valor);
+
+    const rango = obtenerRangoVigente(tipo);
+
+    if (labels.length === 0 && window.graficoDashboard && window.graficoDashboard.__tipo === tipo) {
+        return;
+    }
+
+    actualizarLeyendaRango(rango);
+
+    const apoyosY = [];
+    if (rango) {
+        apoyosY.push(rango.valor_min, rango.valor_max);
+    }
+    valores.forEach(v => { if (Number.isFinite(v)) apoyosY.push(v); });
+    if (apoyosY.length === 0) {
+        apoyosY.push(5.5, 6.5); 
+    }
+    const lo = Math.min(...apoyosY);
+    const hi = Math.max(...apoyosY);
+    const pad = (hi - lo) * 0.1 || 1;
+    const yMin = lo - pad;
+    const yMax = hi + pad;
+
+    const datasets = [{
+        data: valores,
+        borderColor: "#15803D",
+        backgroundColor: "rgba(21, 128, 61, 0.1)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        pointBackgroundColor: "#15803D",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+    }];
+
+    if (rango) {
+        const estiloLineaRango = {
+            borderColor: "#9CA3AF",
+            borderDash: [6, 4],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            pointHitRadius: 0,
+            fill: false,
+            tension: 0,
+        };
+        datasets.push(
+            { label: "Rango mínimo", data: filtradas.map(() => rango.valor_min), ...estiloLineaRango },
+            { label: "Rango máximo", data: filtradas.map(() => rango.valor_max), ...estiloLineaRango },
+        );
+    }
+
+    if (window.graficoDashboard && window.graficoDashboard.__tipo === tipo) {
+        window.graficoDashboard.data.labels = labels;
+        window.graficoDashboard.data.datasets = datasets;
+        window.graficoDashboard.options.scales.y.min = yMin;
+        window.graficoDashboard.options.scales.y.max = yMax;
+        window.graficoDashboard.update();
+        return;
+    }
 
     if (window.graficoDashboard) window.graficoDashboard.destroy();
 
@@ -341,22 +549,12 @@ function renderGrafico() {
         type: "line",
         data: {
             labels: labels,
-            datasets: [{
-                data: valores,
-                borderColor: "#15803D",
-                backgroundColor: "rgba(21, 128, 61, 0.1)",
-                fill: true,
-                tension: 0.4,
-                pointRadius: 3,
-                pointHoverRadius: 6,
-                pointBackgroundColor: "#15803D",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 2,
-            }],
+            datasets: datasets,
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: "nearest", axis: "x", intersect: false },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -364,13 +562,29 @@ function renderGrafico() {
                     padding: 10,
                     cornerRadius: 8,
                     displayColors: false,
-                    callbacks: { label: (c) => `pH: ${c.parsed.y.toFixed(2)}` },
+                    filter: (item) => item.datasetIndex === 0,
+                    callbacks: {
+                        label: (c) => {
+                            const tipoInfo = listaTiposSensor.find(
+                                t => (t.nombre || "").toLowerCase() === tipo
+                            );
+                            const unidad = tipoInfo?.unidad_medida || "";
+                            const valor = c.parsed.y;
+                            const texto = Number.isInteger(valor) ? valor.toFixed(0) : valor.toFixed(2);
+                            return unidad ? `${tipo}: ${texto} ${unidad}` : `${tipo}: ${texto}`;
+                        },
+                    },
                 },
             },
             scales: {
                 y: {
-                    min: 5.0, max: 7.0,
-                    ticks: { stepSize: 0.5, color: "#9CA3AF", font: { size: 11 }, callback: v => v.toFixed(1) },
+                    min: yMin,
+                    max: yMax,
+                    ticks: {
+                        color: "#9CA3AF",
+                        font: { size: 11 },
+                        callback: v => Number.isInteger(v) ? String(v) : v.toFixed(1),
+                    },
                     grid: { color: "#F3F4F6" },
                 },
                 x: {
@@ -379,75 +593,73 @@ function renderGrafico() {
                 },
             },
         },
-        plugins: [{
-            id: "rangoPermitido",
-            beforeDatasetsDraw: (chart) => {
-                const { ctx, chartArea, scales } = chart;
-                const yMin = scales.y.getPixelForValue(5.5);
-                const yMax = scales.y.getPixelForValue(6.5);
-                ctx.save();
-                ctx.fillStyle = "rgba(34, 197, 94, 0.08)";
-                ctx.fillRect(chartArea.left, yMin, chartArea.right - chartArea.left, yMax - yMin);
-                ctx.restore();
-            },
-        }],
     });
+
+    window.graficoDashboard.__tipo = tipo;
 }
 
-// ---------- Alertas ----------
-function renderAlertas() {
-    const cont = document.getElementById("alertas-recientes");
-    if (!cont) return;
+// ---------- Última imagen del cultivo (API /imagenes/) ----------
+function mediaUrl(valor) {
+    if (!valor) return "";
+    const url = String(valor).trim();
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith("//")) return "";
+    return url.startsWith("/") ? url : `/${url}`;
+}
 
-    if (alertasActivas.length === 0) {
+async function cargarImagenReciente() {
+    const cont = document.getElementById("ultima-imagen");
+    if (!cont) return;
+    const pie = document.getElementById("ultima-imagen-detalle");
+    const cultivoId = cultivoActivo?.id_cultivo;
+    if (!cultivoId) return;
+
+    let ultima = null;
+    try {
+        const resp = await apiGet(`/imagenes/?cultivo=${cultivoId}`);
+        const lista = Array.isArray(resp) ? resp : (resp.results || []);
+        ultima = lista[0] || null;
+    } catch (err) {
+        console.error("No se pudo cargar la última imagen del cultivo:", err);
+    }
+
+    const url = ultima ? mediaUrl(ultima.archivo_url || ultima.archivo || "") : "";
+    if (ultima && url) {
         cont.innerHTML = `
-            <div class="text-center py-6">
-                <i data-lucide="check-circle" class="w-8 h-8 text-green-500 mx-auto mb-2"></i>
-                <p class="text-sm text-gray-500">Sin alertas activas</p>
-            </div>
+            <img src="${escapeHtml(url)}"
+                 alt="${escapeHtml(ultima.cultivo_nombre || "Cultivo")}"
+                 class="w-full h-full object-cover">
         `;
-        lucide.createIcons();
+        if (pie) {
+            pie.textContent = ultima.fecha_hora
+                ? `Última foto: ${formatearFechaHora(ultima.fecha_hora)}`
+                : "Imagen disponible";
+        }
         return;
     }
 
-    const estilosSeveridad = {
-        "alta":  { bg: "bg-red-50", border: "border-red-100", iconoBg: "bg-red-100", iconoColor: "text-red-600", badgeBg: "bg-red-100", badgeText: "text-red-700", label: "Crítica", icono: "alert-triangle" },
-        "media": { bg: "bg-orange-50", border: "border-orange-100", iconoBg: "bg-orange-100", iconoColor: "text-orange-600", badgeBg: "bg-orange-100", badgeText: "text-orange-700", label: "Aviso", icono: "alert-circle" },
-        "baja":  { bg: "bg-blue-50", border: "border-blue-100", iconoBg: "bg-blue-100", iconoColor: "text-blue-600", badgeBg: "bg-blue-100", badgeText: "text-blue-700", label: "Info", icono: "info" },
-    };
-
-    cont.innerHTML = alertasActivas.slice(0, 3).map(a => {
-        const est = estilosSeveridad[a.severidad] || estilosSeveridad.baja;
-        const titulo = a.medicion ? "Medición fuera de rango" : "Evento del sistema";
-
-        return `
-            <div class="flex items-start gap-3 p-3 rounded-xl ${est.bg} border ${est.border}">
-                <div class="w-8 h-8 ${est.iconoBg} rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="${est.icono}" class="w-4 h-4 ${est.iconoColor}"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 truncate">${titulo}</p>
-                    <p class="text-xs text-gray-600 mt-0.5">${escapeHtml(cultivoActivo?.nombre || "—")}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">${tiempoRelativo(a.fecha_hora_inicio)}</p>
-                </div>
-                <span class="text-[10px] font-bold ${est.badgeText} ${est.badgeBg} px-2 py-0.5 rounded-full whitespace-nowrap">
-                    ${est.label}
-                </span>
-            </div>
-        `;
-    }).join("");
-
+    cont.innerHTML = `
+        <i data-lucide="camera" class="w-12 h-12 text-gray-300 mb-2"></i>
+        <p class="text-xs text-gray-400 px-3">Sin imagen disponible</p>
+    `;
+    if (pie) pie.textContent = "Sin imágenes todavía";
     lucide.createIcons();
 }
 
 // ---------- Utilidades ----------
-/**
- * Capitaliza un string: "crecimiento" → "Crecimiento"
- */
+function escapeHtml(text) {
+    if (text == null) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function capitalizar(str) {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
+
 
 // ---------- Iniciar ----------
 if (document.readyState === "loading") {

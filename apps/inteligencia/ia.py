@@ -55,7 +55,7 @@ MIN_MUESTRAS_ENTRENAMIENTO = 50
 # Ventana temporal por defecto para entrenar (últimos 30 días)
 VENTANA_ENTRENAMIENTO_DIAS = 30
 
-# Umbral de score a partir del cual consideramos "anomalía"
+# Umbral de score a partir del cual consideramos "anomalía" (0-1, real respecto a offset_)
 UMBRAL_SCORE_ANOMALIA = 0.5
 
 # Cache de tipos de sensor sin datos suficientes (evita spam de logs).
@@ -105,9 +105,11 @@ def entrenar_modelo(tipo_sensor_id, ventana_dias=VENTANA_ENTRENAMIENTO_DIAS):
     """
     Entrena un Isolation Forest para un tipo de sensor.
 
-    Solo se usan mediciones marcadas como "normal" para que el modelo
-    aprenda la distribución esperada. Las mediciones fuera de rango
-    operativo se excluyen del entrenamiento.
+    Usa TODAS las mediciones de la ventana temporal (normales o
+    'fuera_rango'): el Isolation Forest es un modelo no supervisado y
+    debe aprender de la distribución real de los datos que llegan
+    del hardware. La clasificación normal/fuera_de_rango del motor
+    de reglas no se usa para filtrar el entrenamiento.
 
     Devuelve el modelo entrenado, o None si no hay suficientes datos.
     """
@@ -120,7 +122,6 @@ def entrenar_modelo(tipo_sensor_id, ventana_dias=VENTANA_ENTRENAMIENTO_DIAS):
         .filter(
             sensor__tipo_sensor_id=tipo_sensor_id,
             fecha_hora__gte=hace,
-            estado_lectura=Medicion.EstadoLectura.NORMAL,
         )
         .values_list("valor", flat=True)
     )
@@ -182,16 +183,6 @@ def evaluar_medicion(medicion):
       - score: float en [0.0, 1.0]. Mayor = más anómalo.
       - es_anomalia: bool.
     Si no hay modelo disponible, devuelve (None, False).
-
-    Cómo se calcula el score:
-      Usamos `decision_function`, que devuelve la distancia de la muestra
-      al umbral interno del modelo. Valores positivos = normal, negativos
-      = anómalo. La escala práctica está en [-0.15, 0.15], así que
-      mapeamos a [0, 1] con la fórmula `0.5 - decision * 3`.
-
-      No usamos `score_samples` directo porque su rango es muy estrecho
-      y centrado en -0.5, lo que hace imposible normalizarlo sin conocer
-      la distribución de los datos de entrenamiento.
     """
     modelo = cargar_modelo(medicion.sensor.tipo_sensor_id)
     if modelo is None:
@@ -201,16 +192,16 @@ def evaluar_medicion(medicion):
 
     try:
         # decision_function: positivo = normal, negativo = anómalo.
-        # La escala es aproximadamente [-0.15, 0.15] en la práctica.
         decision = float(modelo.decision_function(X)[0])
+        offset = float(getattr(modelo, "offset_", 0.0))
+        if offset == 0.0:
+            offset = 0.5
 
-        # Mapear a [0, 1]:
-        #   decision = +0.15 → score ≈ 0.05 (muy normal)
-        #   decision =  0.00 → score = 0.50 (borderline)
-        #   decision = -0.15 → score ≈ 0.95 (muy anómalo)
-        score = float(max(0.0, min(1.0, 0.5 - decision * 3)))
+        # Escalado real: decision == offset_ => frontera (score ~ 0.5)
+        # Usamos una sigmoide inversa lineal centrada en offset_ para obtener [0,1]
+        score = 0.5 - (decision / (2.0 * abs(offset)))
+        score = float(max(0.0, min(1.0, score)))
 
-        # La decisión se deriva del score normalizado
         es_anomalia = score >= UMBRAL_SCORE_ANOMALIA
     except Exception as e:
         logger.error("Error evaluando medición %s: %s", medicion.pk, e)
@@ -225,9 +216,6 @@ def detectar_y_registrar(medicion, umbral_score=UMBRAL_SCORE_ANOMALIA):
     crea un registro Anomalia.
 
     Devuelve la Anomalia creada, o None si no se detectó nada.
-
-    El umbral_score permite ajustar la sensibilidad: valores bajos
-    generan más anomalías (más sensible), valores altos menos.
     """
     from apps.inteligencia.models import Anomalia
 
@@ -238,8 +226,23 @@ def detectar_y_registrar(medicion, umbral_score=UMBRAL_SCORE_ANOMALIA):
     # Obtener el rango operativo para dar contexto
     rango = medicion.sensor.rangos.order_by("-vigente_desde").first()
 
+    # Buscar cultivo asociado (M2M primero, fallback a dispositivo)
+    cultivo = None
+    try:
+        cultivo = medicion.sensor.cultivos.first()
+    except Exception:
+        cultivo = None
+    if cultivo is None and getattr(medicion.sensor, "dispositivo_id", None):
+        try:
+            cultivo = medicion.sensor.dispositivo.cultivo
+        except Exception:
+            cultivo = None
+    if cultivo is None:
+        logger.warning("No se pudo asignar cultivo a anomalía para medición %s", medicion.pk)
+        return None
+
     anomalia = Anomalia.objects.create(
-        cultivo=medicion.sensor.dispositivo.cultivo,
+        cultivo=cultivo,
         sensor=medicion.sensor,
         medicion=medicion,
         origen=Anomalia.OrigenDeteccion.MEDICION,
@@ -262,7 +265,7 @@ def detectar_y_registrar(medicion, umbral_score=UMBRAL_SCORE_ANOMALIA):
 # Operaciones batch
 # =============================================================================
 
-def entrenar_todos_los_modelos():
+def entrenar_todos_los_modelos(ventana_dias=VENTANA_ENTRENAMIENTO_DIAS):
     """
     Entrena un modelo por cada tipo de sensor que tenga suficientes datos.
     Devuelve un dict {tipo_sensor_id: 'ok' | 'sin_datos' | 'error'}.
@@ -272,7 +275,7 @@ def entrenar_todos_los_modelos():
     resultado = {}
     for tipo in TipoSensor.objects.all():
         try:
-            modelo = entrenar_modelo(tipo.id)
+            modelo = entrenar_modelo(tipo.id, ventana_dias=ventana_dias)
             resultado[tipo.id] = "ok" if modelo else "sin_datos"
         except Exception as e:
             logger.error("Error entrenando tipo sensor %s: %s", tipo.id, e)
@@ -294,6 +297,7 @@ def evaluar_mediciones_recientes(horas=1, umbral_score=UMBRAL_SCORE_ANOMALIA):
         Medicion.objects
         .filter(fecha_hora__gte=hace)
         .select_related("sensor", "sensor__tipo_sensor", "sensor__dispositivo")
+        .prefetch_related("sensor__cultivos")
         .order_by("fecha_hora")
     )
 

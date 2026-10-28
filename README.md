@@ -55,6 +55,16 @@ Para tener el sistema con datos:
 # simulacion de datos de sensores
     python manage.py generar_datos_demo
 
+
+# para correr con los datos que vienen de la ESP32
+# En la terminal (Git Bash) 
+python manage.py runserver 0.0.0.0:8000 #(para que acepte al ESP32).
+
+#En el navegador (Chrome) se ingresa así: 
+http://127.0.0.1:8000/ o http://192.168.0.47:8000/ 
+#(porque 0.0.0.0 en el navegador da error).
+
+
 Con Docker:
 
     docker compose up -d

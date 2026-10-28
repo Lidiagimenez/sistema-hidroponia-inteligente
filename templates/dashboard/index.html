@@ -17,17 +17,31 @@
     <div class="col-span-full text-center py-6 text-gray-400 text-sm">Cargando...</div>
 </div>
 
-<!-- FILA PRINCIPAL -->
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+<!-- FILA INFERIOR: gráfico (izquierda) + última imagen (derecha) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
     <!-- GRÁFICO -->
     <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-serif text-xl font-bold text-gray-900">Evolución de pH</h3>
-            <span class="text-xs text-gray-500">Últimas mediciones</span>
+        <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div class="flex items-center gap-3 flex-wrap">
+                <h3 id="titulo-grafico-dashboard" class="font-serif text-xl font-bold text-gray-900">Evolución</h3>
+                <!-- Indicador "en vivo" (tiempo-real.js lo activa y actualiza cada 1 s) -->
+                <span id="indicador-en-vivo" class="hidden items-center gap-2 text-xs text-gray-500"
+                      title="Los datos se actualizan automáticamente cada 30 segundos">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <!-- Halo "ping" + punto sólido verde: pulso sin JS extra -->
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-600"></span>
+                    </span>
+                    <span id="texto-en-vivo">Sincronizando…</span>
+                </span>
+            </div>
+            <select id="selector-tipo-grafico" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+                <option value="">Cargando...</option>
+            </select>
         </div>
-        <div class="h-56">
-            <canvas id="chart-ph"></canvas>
+        <div class="relative w-full h-[350px] min-w-0">
+            <canvas id="chart-ph" class="w-full h-full block"></canvas>
         </div>
         <div class="flex items-center justify-center gap-6 mt-4 text-xs text-gray-600">
             <span class="flex items-center gap-2">
@@ -36,7 +50,7 @@
             </span>
             <span class="flex items-center gap-2">
                 <span class="w-6 border-t-2 border-dashed border-gray-400"></span>
-                Rango permitido (5.5 - 6.5)
+                <span id="leyenda-rango">Rango permitido</span>
             </span>
             <span class="flex items-center gap-2">
                 <span class="w-3 h-3 bg-red-500 rounded-full"></span>
@@ -45,27 +59,14 @@
         </div>
     </div>
 
-    <!-- ALERTAS -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-5">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-serif text-lg font-bold text-gray-900">Alertas que requieren atención</h3>
-            <a href="/alertas/" class="text-xs text-brand hover:underline">Ver todas</a>
-        </div>
-        <div id="alertas-recientes" class="space-y-3">
-            <div class="text-center py-4 text-gray-400 text-sm">
-                <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
-                Cargando...
-            </div>
-        </div>
-    </div>
-
-    <!-- ÚLTIMA IMAGEN -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+    <!-- ÚLTIMA IMAGEN DEL CULTIVO -->
+    <div class="lg:col-span-1 h-full bg-white rounded-2xl border border-gray-200 p-5 flex flex-col">
         <h3 class="font-serif text-lg font-bold text-gray-900 mb-4">Última imagen del cultivo</h3>
-        <div class="rounded-xl overflow-hidden aspect-square bg-gray-100 mb-3 flex items-center justify-center">
-            <i data-lucide="image" class="w-12 h-12 text-gray-300"></i>
+        <div id="ultima-imagen" class="flex-1 w-full min-h-[350px] rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center text-center">
+            <i data-lucide="camera" class="w-12 h-12 text-gray-300 mb-2"></i>
+            <p class="text-xs text-gray-400 px-3">Sin imagen disponible</p>
         </div>
-        <p class="text-xs text-gray-500 text-center">Sin imágenes todavía</p>
+        <p id="ultima-imagen-detalle" class="text-xs text-gray-500 text-center mt-3">Sin imágenes todavía</p>
     </div>
 
 </div>
@@ -76,5 +77,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/static/js/api.js"></script>
+<script src="/static/js/tiempo-real.js"></script>
 <script src="/static/js/dashboard.js"></script>
 {% endblock %}

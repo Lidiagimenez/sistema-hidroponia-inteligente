@@ -15,120 +15,180 @@
             <p class="text-sm text-gray-600">Define la configuración y los umbrales de cada sensor.</p>
         </div>
     </div>
+
+    <button id="btn-nuevo-sensor" class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nuevo sensor
+    </button>
 </div>
 
-<!-- CONTENIDO: 3 COLUMNAS -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- CONTENIDO: TABLA DE ANCHO COMPLETO -->
+<div class="w-full">
 
-    <!-- ========== IZQUIERDA: TABLA DE SENSORES ========== -->
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-
-            <h2 class="font-serif text-lg font-bold text-gray-900 mb-1">Sensores configurados</h2>
-            <p class="text-xs text-gray-500 mb-4">Lista de sensores y su configuración actual.</p>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-200">
-                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Sensor</th>
-                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
-                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Cultivo</th>
-                            <th class="text-left py-2 px-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-sensores" class="divide-y divide-gray-100">
-                        <tr><td colspan="4" class="py-8 text-center text-gray-400 text-sm">
-                            <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
-                            Cargando...
-                        </td></tr>
-                    </tbody>
-                </table>
+    <!-- FILTROS -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex-1 min-w-[200px] relative">
+                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="input-buscar-sensor" placeholder="Buscar sensor, dispositivo o cultivo..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
             </div>
-
-            <p id="contador-sensores" class="text-xs text-gray-500 text-center mt-3"></p>
-
+            <select id="filtro-tipo-sensor" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+                <option value="">Todos los tipos</option>
+            </select>
+            <select id="filtro-cultivo-sensor" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+                <option value="">Todos los cultivos</option>
+            </select>
         </div>
     </div>
 
-    <!-- ========== CENTRO: FORMULARIO CONFIGURAR ========== -->
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-            <h2 class="font-serif text-lg font-bold text-gray-900 mb-1">Configurar sensor</h2>
-            <p class="text-xs text-gray-500 mb-5">Ajusta los parámetros y umbrales del sensor seleccionado.</p>
-
-            <div id="form-sensor-contenido">
-                <div class="text-center py-8 text-gray-400 text-sm">
-                    <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
-                    Cargando...
-                </div>
-            </div>
+    <!-- TABLA -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sensor / Tipo</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dispositivo</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cultivo asociado</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rango de operación</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="w-28 text-right pr-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-sensores" class="divide-y divide-gray-100">
+                    <tr><td colspan="6" class="py-8 text-center text-gray-400 text-sm">
+                        <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
+                        Cargando sensores...
+                    </td></tr>
+                </tbody>
+            </table>
         </div>
+
+        <p id="contador-sensores" class="text-xs text-gray-500 text-center mt-4"></p>
     </div>
 
-    <!-- ========== DERECHA: HISTORIAL + GRÁFICO ========== -->
-    <div class="lg:col-span-1 space-y-4">
+</div>
 
-        <!-- Historial -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-            <h2 class="font-serif text-lg font-bold text-gray-900 mb-1">Historial de cambios</h2>
-            <p class="text-xs text-gray-500 mb-4">Registro de modificaciones en la configuración (sesión actual).</p>
-
-            <div class="grid grid-cols-3 gap-2 pb-2 border-b border-gray-100 text-[10px] font-semibold text-gray-500 uppercase">
-                <span>Fecha</span>
-                <span>Usuario</span>
-                <span>Cambio</span>
-            </div>
-
-            <div id="historial-config">
-                <div class="text-center py-4 text-gray-400 text-xs">
-                    Sin cambios registrados todavía.
+<!-- ==================== MODAL SENSOR (CREAR / EDITAR) ==================== -->
+<div id="modal-sensor-config" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center">
+                    <i data-lucide="sliders" class="w-5 h-5 text-brand"></i>
+                </div>
+                <div>
+                    <h2 id="modal-titulo-sensor" class="font-serif text-xl font-bold text-gray-900">Configurar sensor</h2>
+                    <p id="modal-subtitulo-sensor" class="text-xs text-gray-500">Ajusta los parámetros y umbrales del sensor.</p>
                 </div>
             </div>
+            <button type="button" id="btn-cerrar-modal-sensor" class="p-1 hover:bg-gray-100 rounded transition text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
 
-            <!-- Info azul -->
-            <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 mt-4">
-                <div class="flex items-start gap-2">
-                    <i data-lucide="info" class="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5"></i>
+        <form id="form-sensor-modal" class="space-y-4">
+            <input type="hidden" id="sensor-id-editar" value="">
+            <input type="hidden" id="rango-id-editar" value="">
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Tipo de sensor <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="select-sensor-tipo"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"
+                >
+                    <option value="">Selecciona un tipo de sensor...</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Dispositivo IoT asociado <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="select-sensor-dispositivo"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"
+                >
+                    <option value="">Selecciona un dispositivo...</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Cultivo vinculado
+                </label>
+                <select
+                    id="select-sensor-cultivo"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"
+                >
+                    <option value="">Heredar del dispositivo o seleccionar cultivo...</option>
+                </select>
+                <p class="text-[11px] text-gray-400 mt-1">El cultivo al cual se asocia este sensor para las métricas.</p>
+            </div>
+
+            <!-- Rango de operación -->
+            <div class="pt-2 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-semibold text-gray-700">
+                        Rango de operación permitido <span id="label-unidad-rango" class="text-gray-400 font-normal"></span>
+                    </label>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <p class="text-xs font-semibold text-gray-900">Los cambios se aplican automáticamente</p>
-                        <p class="text-xs text-gray-600 mt-0.5">La nueva configuración se enviará al dispositivo en la próxima sincronización.</p>
+                        <label class="block text-[11px] text-gray-500 mb-1">Mínimo</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="input-sensor-min"
+                            placeholder="Ej: 5.5"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-gray-500 mb-1">Máximo</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="input-sensor-max"
+                            placeholder="Ej: 6.5"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                        >
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Gráfico -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h2 id="titulo-grafico-sensor" class="font-serif text-lg font-bold text-gray-900">Evolución del sensor</h2>
+                <p class="text-[11px] text-gray-400 mt-1.5">Si los valores leídos salen de este rango, el sistema generará una alerta.</p>
             </div>
 
-            <div class="h-40">
-                <canvas id="chart-sensor-config"></canvas>
-            </div>
+            <div id="error-sensor-modal" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg"></div>
 
-            <div class="flex items-center justify-center gap-4 mt-3 text-[10px] text-gray-600">
-                <span class="flex items-center gap-1">
-                    <span class="w-2 h-2 bg-brand rounded-full"></span>
-                    Valores
-                </span>
-                <span class="flex items-center gap-1">
-                    <span class="w-4 border-t border-dashed border-gray-400"></span>
-                    <span id="leyenda-rango-sensor">Rango</span>
-                </span>
+            <div class="flex gap-2 pt-2">
+                <button
+                    type="button"
+                    id="btn-cancelar-sensor-modal"
+                    class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    id="btn-guardar-sensor-modal"
+                    class="flex-1 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-brand/20"
+                >
+                    <i id="icono-guardar-sensor" data-lucide="save" class="w-4 h-4"></i>
+                    <span id="texto-guardar-sensor">Guardar sensor</span>
+                </button>
             </div>
-        </div>
-
+        </form>
     </div>
-
 </div>
 
 {% endblock %}
 
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/static/js/api.js"></script>
 <script src="/static/js/configuracion-sensores.js"></script>
 {% endblock %}

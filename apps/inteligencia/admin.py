@@ -1,5 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 
+from apps.inteligencia import ia
 from apps.inteligencia.models import (
     ParametroImagen,
     AnalisisImagen,
@@ -62,17 +63,12 @@ class AnomaliaAdmin(admin.ModelAdmin):
     date_hierarchy = "fecha_deteccion"
 
     fieldsets = (
-        ("Contexto", {
-            "fields": ("cultivo", "sensor", "medicion", "origen")
-        }),
-        ("Detección", {
-            "fields": ("score", "valor_observado",
-                       "valor_esperado_min", "valor_esperado_max")
-        }),
-        ("Descripción", {
-            "fields": ("descripcion", "modelo_version")
-        }),
-        ("Estado", {
-            "fields": ("estado", "fecha_deteccion")
-        }),
+        ("Contexto", {"fields": ("cultivo", "sensor", "medicion", "origen")}),
+        ("Detección", {"fields": ("score", "valor_observado", "valor_esperado_min", "valor_esperado_max")}),
+        ("Descripción", {"fields": ("descripcion", "modelo_version")}),
+        ("Estado", {"fields": ("estado", "fecha_deteccion")}),
     )
+
+
+# Acción de entrenamiento disponible vía admin de monitoreo/otro admin, o se puede usar desde shell.
+# Evitamos registrar TipoSensor aquí para no duplicar con apps.monitoreo.admin.

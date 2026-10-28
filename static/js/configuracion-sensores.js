@@ -1,19 +1,16 @@
 // ============================================================
-// configuracion-sensores.js
+// configuracion-sensores.js — Gestión de Sensores y Umbrales
 // ============================================================
 
 let sensores = [];
 let sensoresFiltrados = [];
-let tiposMap = {};          // { tipo_id: { nombre, unidad } }
-let dispositivosMap = {};   // { disp_id: { nombre, cultivo_id } }
+let tiposMap = {};          // { tipo_id: { id, nombre, unidad } }
+let dispositivosMap = {};   // { disp_id: { id, nombre, cultivo_id } }
 let cultivosMap = {};       // { cultivo_id: nombre }
 let rangosPorSensor = {};   // { sensor_id: rango_obj }
-let medicionesPorSensor = {}; // { sensor_id: [mediciones] }
 let sensorSeleccionado = null;
-let historial = [];
 
-// ---------- Config visual ----------
-
+// ---------- Config visual de iconos ----------
 const TIPO_ICONO = {
     "ph":              { icono: "droplet",     bg: "bg-green-100",  color: "text-brand" },
     "conductividad":   { icono: "activity",    bg: "bg-teal-100",   color: "text-teal-600" },
@@ -30,9 +27,9 @@ async function cargarConfiguracion() {
 
     try {
         tbody.innerHTML = `
-            <tr><td colspan="4" class="py-8 text-center text-gray-400 text-sm">
+            <tr><td colspan="6" class="py-8 text-center text-gray-400 text-sm">
                 <i data-lucide="loader" class="w-5 h-5 mx-auto mb-2 animate-spin"></i>
-                Cargando...
+                Cargando configuración de sensores...
             </td></tr>
         `;
         lucide.createIcons();
@@ -43,25 +40,22 @@ async function cargarConfiguracion() {
             cargarCultivos(),
         ]);
 
-        await cargarSensores();
-        await cargarRangos();
-        await cargarMediciones();
+        await Promise.all([
+            cargarSensores(),
+            cargarRangos(),
+        ]);
 
         sensoresFiltrados = [...sensores];
+        poblarFiltros();
+        poblarSelectoresModal();
         renderTabla();
-
-        // Seleccionar el primero
-        if (sensoresFiltrados.length > 0) {
-            seleccionarSensor(sensoresFiltrados[0]);
-        }
-
-        configurarFormulario();
-        cargarHistorialDesdeLocal();
+        renderContador();
+        configurarModal();
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `
-            <tr><td colspan="4" class="py-8 text-center text-red-500 text-sm">
-                Error: ${err.message}
+            <tr><td colspan="6" class="py-8 text-center text-red-500 text-sm">
+                Error al cargar sensores: ${err.message}
             </td></tr>
         `;
     }
@@ -72,14 +66,14 @@ async function cargarTipos() {
     const resp = await apiGet("/tipos-sensor/");
     const lista = Array.isArray(resp) ? resp : (resp.results || []);
     tiposMap = {};
-    lista.forEach(t => { tiposMap[t.id] = { nombre: t.nombre, unidad: t.unidad_medida }; });
+    lista.forEach(t => { tiposMap[t.id] = { id: t.id, nombre: t.nombre, unidad: t.unidad_medida }; });
 }
 
 async function cargarDispositivos() {
-    const resp = await apiGet("/dispositivos/");
+    const resp = await apiGet("/dispositivos/?incluir_inactivos=1");
     const lista = Array.isArray(resp) ? resp : (resp.results || []);
     dispositivosMap = {};
-    lista.forEach(d => { dispositivosMap[d.id] = { nombre: d.nombre, cultivo_id: d.cultivo }; });
+    lista.forEach(d => { dispositivosMap[d.id] = { id: d.id, nombre: d.nombre, cultivo_id: d.cultivo }; });
 }
 
 async function cargarCultivos() {
@@ -89,450 +83,423 @@ async function cargarCultivos() {
     lista.forEach(c => { cultivosMap[c.id_cultivo] = c.nombre; });
 }
 
-// ---------- Sensores ----------
 async function cargarSensores() {
-    const resp = await apiGet("/sensores/");
+    const resp = await apiGet("/sensores/?incluir_inactivos=1");
     sensores = Array.isArray(resp) ? resp : (resp.results || []);
 }
 
-// ---------- Rangos ----------
 async function cargarRangos() {
     const resp = await apiGet("/rangos-operacion/");
     const lista = Array.isArray(resp) ? resp : (resp.results || []);
     rangosPorSensor = {};
     lista.forEach(r => {
-        // Solo nos interesa el más reciente por sensor
         if (!rangosPorSensor[r.sensor] || new Date(r.vigente_desde) > new Date(rangosPorSensor[r.sensor].vigente_desde)) {
             rangosPorSensor[r.sensor] = r;
         }
     });
 }
 
-// ---------- Mediciones ----------
-async function cargarMediciones() {
-    const resp = await apiGet("/mediciones/");
-    const lista = Array.isArray(resp) ? resp : (resp.results || []);
-    medicionesPorSensor = {};
-    lista.forEach(m => {
-        if (!medicionesPorSensor[m.sensor]) medicionesPorSensor[m.sensor] = [];
-        medicionesPorSensor[m.sensor].push(m);
-    });
-    // Ordenar cada grupo por fecha
-    Object.keys(medicionesPorSensor).forEach(sid => {
-        medicionesPorSensor[sid].sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
+// ---------- Poblar Filtros y Modal Selects ----------
+function poblarFiltros() {
+    const filtroTipo = document.getElementById("filtro-tipo-sensor");
+    const filtroCultivo = document.getElementById("filtro-cultivo-sensor");
+
+    if (filtroTipo) {
+        filtroTipo.innerHTML = `<option value="">Todos los tipos</option>` +
+            Object.values(tiposMap).map(t => `<option value="${t.id}">${escapeHtml(t.nombre)}</option>`).join("");
+    }
+
+    if (filtroCultivo) {
+        filtroCultivo.innerHTML = `<option value="">Todos los cultivos</option>` +
+            Object.entries(cultivosMap).map(([id, nombre]) => `<option value="${id}">${escapeHtml(nombre)}</option>`).join("");
+    }
+
+    const inputBuscar = document.getElementById("input-buscar-sensor");
+    const aplicarFiltros = () => {
+        const query = (inputBuscar?.value || "").toLowerCase().trim();
+        const tipoId = filtroTipo?.value ? parseInt(filtroTipo.value) : null;
+        const cultivoId = filtroCultivo?.value ? parseInt(filtroCultivo.value) : null;
+
+        sensoresFiltrados = sensores.filter(s => {
+            const tipo = tiposMap[s.tipo_sensor] || { nombre: "" };
+            const disp = dispositivosMap[s.dispositivo] || { nombre: "" };
+            const cNombre = disp.cultivo_id ? (cultivosMap[disp.cultivo_id] || "") : "";
+
+            const coincideTexto = !query ||
+                (tipo.nombre || "").toLowerCase().includes(query) ||
+                (disp.nombre || "").toLowerCase().includes(query) ||
+                cNombre.toLowerCase().includes(query);
+
+            const coincideTipo = !tipoId || s.tipo_sensor === tipoId;
+            const coincideCultivo = !cultivoId || (disp.cultivo_id === cultivoId) || (s.cultivos && s.cultivos.includes(cultivoId));
+
+            return coincideTexto && coincideTipo && coincideCultivo;
+        });
+
+        renderTabla();
+        renderContador();
+    };
+
+    inputBuscar?.addEventListener("input", aplicarFiltros);
+    filtroTipo?.addEventListener("change", aplicarFiltros);
+    filtroCultivo?.addEventListener("change", aplicarFiltros);
+}
+
+function poblarSelectoresModal() {
+    const selTipo = document.getElementById("select-sensor-tipo");
+    const selDisp = document.getElementById("select-sensor-dispositivo");
+    const selCultivo = document.getElementById("select-sensor-cultivo");
+
+    if (selTipo) {
+        selTipo.innerHTML = `<option value="">Selecciona un tipo de sensor...</option>` +
+            Object.values(tiposMap).map(t => `<option value="${t.id}" data-unidad="${escapeHtml(t.unidad)}">${escapeHtml(t.nombre)} (${escapeHtml(t.unidad || 's/u')})</option>`).join("");
+    }
+
+    if (selDisp) {
+        selDisp.innerHTML = `<option value="">Selecciona un dispositivo...</option>` +
+            Object.values(dispositivosMap).map(d => `<option value="${d.id}">${escapeHtml(d.nombre)}</option>`).join("");
+    }
+
+    if (selCultivo) {
+        selCultivo.innerHTML = `<option value="">Heredar del dispositivo o seleccionar cultivo...</option>` +
+            Object.entries(cultivosMap).map(([id, nombre]) => `<option value="${id}">${escapeHtml(nombre)}</option>`).join("");
+    }
+
+    selTipo?.addEventListener("change", () => {
+        const selected = selTipo.options[selTipo.selectedIndex];
+        const unidad = selected?.dataset?.unidad || "";
+        const labelUnidad = document.getElementById("label-unidad-rango");
+        if (labelUnidad) labelUnidad.textContent = unidad ? `(${unidad})` : "";
     });
 }
 
 // ---------- Renderizar tabla ----------
 function renderTabla() {
     const tbody = document.getElementById("tbody-sensores");
+    if (!tbody) return;
 
     if (sensoresFiltrados.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="4" class="py-8 text-center text-gray-400 text-sm">
-                No hay sensores registrados.
+            <tr><td colspan="6" class="py-12 text-center">
+                <i data-lucide="sliders" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
+                <p class="text-sm text-gray-500">No se encontraron sensores configurados.</p>
             </td></tr>
         `;
+        lucide.createIcons();
         return;
     }
 
     tbody.innerHTML = sensoresFiltrados.map(s => {
-        const tipo = tiposMap[s.tipo_sensor] || { nombre: "?", unidad: "" };
-        const disp = dispositivosMap[s.dispositivo] || { nombre: "?" };
-        const cultivoNombre = escapeHtml(disp.cultivo_id ? (cultivosMap[disp.cultivo_id] || "—") : "—");
+        const tipo = tiposMap[s.tipo_sensor] || { nombre: "Sensor", unidad: "" };
+        const disp = dispositivosMap[s.dispositivo] || { nombre: "Dispositivo" };
+        const cultivoId = (s.cultivos && s.cultivos.length > 0) ? s.cultivos[0] : disp.cultivo_id;
+        const cultivoNombre = escapeHtml(cultivoId ? (cultivosMap[cultivoId] || "—") : "—");
         const rango = rangosPorSensor[s.id];
 
-        const esSeleccionado = sensorSeleccionado && sensorSeleccionado.id === s.id;
-        const claseRow = esSeleccionado ? "bg-green-50" : "hover:bg-gray-50";
+        const tipoNombre = escapeHtml(tipo.nombre);
+        const tipoConfig = TIPO_ICONO[tipo.nombre.toLowerCase()] || { icono: "activity", bg: "bg-gray-100", color: "text-gray-600" };
 
-        // Determinar estado (normal si tiene rango)
-        const estadoBadge = rango
-            ? `<span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                   <span class="w-1 h-1 bg-green-600 rounded-full"></span>
-                   Configurado
+        let rangoTexto = "—";
+        if (rango && (rango.valor_min !== null || rango.valor_max !== null)) {
+            rangoTexto = `${rango.valor_min} - ${rango.valor_max} <span class="text-xs text-gray-400">${escapeHtml(tipo.unidad || '')}</span>`;
+        }
+
+        const estadoBadge = s.is_active !== false
+            ? `<span class="inline-flex items-center gap-1 bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                   <span class="w-1 h-1 bg-green-600 rounded-full"></span> Activo
                </span>`
-            : `<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                   Sin rango
+            : `<span class="inline-flex items-center gap-1 bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                   <span class="w-1 h-1 bg-red-600 rounded-full"></span> Inactivo
                </span>`;
 
-        const tipoNombre = escapeHtml(tipo.nombre);
-        const tipoConfig = TIPO_ICONO[tipoNombre] || { icono: "activity", bg: "bg-gray-100", color: "text-gray-600" };
-
         return `
-            <tr class="${claseRow} cursor-pointer sensor-row" data-id="${s.id}">
-                <td class="py-2 px-2">
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 ${tipoConfig.bg} rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="${tipoConfig.icono}" class="w-3.5 h-3.5 ${tipoConfig.color}"></i>
+            <tr class="hover:bg-gray-50 cursor-pointer sensor-fila-item transition" data-id="${s.id}">
+                <td class="py-3 px-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 ${tipoConfig.bg} rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="${tipoConfig.icono}" class="w-4 h-4 ${tipoConfig.color}"></i>
                         </div>
                         <div>
-                            <p class="text-gray-900 font-medium text-xs">${tipoNombre}</p>
-                            <p class="text-[10px] text-gray-400">ID ${s.id}</p>
+                            <p class="text-gray-900 font-medium text-sm">${tipoNombre}</p>
+                            <p class="text-[11px] text-gray-400">Sensor #${s.id}</p>
                         </div>
                     </div>
                 </td>
-                <td class="py-2 px-2 text-gray-700 text-xs">${tipoNombre}</td>
-                <td class="py-2 px-2 text-gray-700 text-xs">${cultivoNombre}</td>
-                <td class="py-2 px-2">${estadoBadge}</td>
+                <td class="py-3 px-3 text-gray-700 text-xs">${escapeHtml(disp.nombre)}</td>
+                <td class="py-3 px-3 text-gray-700 text-xs">${cultivoNombre}</td>
+                <td class="py-3 px-3 text-gray-900 font-semibold text-xs">${rangoTexto}</td>
+                <td class="py-3 px-3">${estadoBadge}</td>
+                <td class="py-3 px-3 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                        <button
+                            type="button"
+                            class="btn-editar-sensor p-1.5 hover:bg-green-50 hover:text-brand rounded-lg transition text-gray-500"
+                            title="Editar sensor"
+                            data-id="${s.id}"
+                        >
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <button
+                            type="button"
+                            class="btn-eliminar-sensor p-1.5 hover:bg-red-50 hover:text-red-600 rounded-lg transition text-gray-500"
+                            title="Desactivar / Eliminar sensor"
+                            data-id="${s.id}"
+                        >
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </td>
             </tr>
         `;
     }).join("");
 
-    // Event listeners
-    document.querySelectorAll(".sensor-row").forEach(row => {
-        row.addEventListener("click", () => {
-            const id = parseInt(row.dataset.id);
+    lucide.createIcons();
+
+    // Eventos: click en fila abre el modal con datos cargados
+    tbody.querySelectorAll(".sensor-fila-item").forEach(fila => {
+        fila.addEventListener("click", () => {
+            const id = parseInt(fila.dataset.id);
             const sensor = sensores.find(s => s.id === id);
-            if (sensor) seleccionarSensor(sensor);
+            if (sensor) abrirModalEditarSensor(sensor);
         });
     });
 
-    lucide.createIcons();
+    // Evento botón editar
+    tbody.querySelectorAll(".btn-editar-sensor").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id);
+            const sensor = sensores.find(s => s.id === id);
+            if (sensor) abrirModalEditarSensor(sensor);
+        });
+    });
 
+    // Evento botón eliminar/desactivar
+    tbody.querySelectorAll(".btn-eliminar-sensor").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id);
+            const sensor = sensores.find(s => s.id === id);
+            if (sensor) confirmarEliminarSensor(sensor);
+        });
+    });
+}
+
+function renderContador() {
     const contador = document.getElementById("contador-sensores");
-    if (contador) contador.textContent = `Mostrando 1 - ${sensoresFiltrados.length} de ${sensoresFiltrados.length} sensores`;
+    if (contador) contador.textContent = `Mostrando ${sensoresFiltrados.length} de ${sensores.length} sensores configurados`;
 }
 
-// ---------- Seleccionar sensor ----------
-function seleccionarSensor(sensor) {
-    sensorSeleccionado = sensor;
-    renderTabla();
-    renderFormulario(sensor);
-    renderGrafico(sensor);
+// ---------- Configuración del Modal ----------
+function configurarModal() {
+    const modal = document.getElementById("modal-sensor-config");
+    const btnNuevo = document.getElementById("btn-nuevo-sensor");
+    const btnCerrar = document.getElementById("btn-cerrar-modal-sensor");
+    const btnCancelar = document.getElementById("btn-cancelar-sensor-modal");
+    const form = document.getElementById("form-sensor-modal");
+
+    btnNuevo?.addEventListener("click", abrirModalNuevoSensor);
+    btnCerrar?.addEventListener("click", cerrarModalSensor);
+    btnCancelar?.addEventListener("click", cerrarModalSensor);
+
+    modal?.addEventListener("click", (e) => {
+        if (e.target === modal) cerrarModalSensor();
+    });
+
+    form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await guardarSensor();
+    });
 }
 
-// ---------- Renderizar formulario ----------
-function renderFormulario(sensor) {
-    const contenedor = document.getElementById("form-sensor-contenido");
-    if (!contenedor) return;
+function abrirModalNuevoSensor() {
+    const modal = document.getElementById("modal-sensor-config");
+    if (!modal) return;
 
-    const tipo = tiposMap[sensor.tipo_sensor] || { nombre: "?", unidad: "" };
-    const disp = dispositivosMap[sensor.dispositivo] || { nombre: "?" };
-    const cultivoNombre = disp.cultivo_id ? (cultivosMap[disp.cultivo_id] || "—") : "—";
+    document.getElementById("form-sensor-modal")?.reset();
+    document.getElementById("sensor-id-editar").value = "";
+    document.getElementById("rango-id-editar").value = "";
+
+    document.getElementById("modal-titulo-sensor").textContent = "Nuevo sensor";
+    document.getElementById("modal-subtitulo-sensor").textContent = "Vincula un sensor físico con su dispositivo y umbrales.";
+    document.getElementById("texto-guardar-sensor").textContent = "Crear sensor";
+    document.getElementById("icono-guardar-sensor").setAttribute("data-lucide", "plus");
+    document.getElementById("label-unidad-rango").textContent = "";
+
+    document.getElementById("error-sensor-modal")?.classList.add("hidden");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    lucide.createIcons();
+}
+
+function abrirModalEditarSensor(sensor) {
+    const modal = document.getElementById("modal-sensor-config");
+    if (!modal || !sensor) return;
+
+    document.getElementById("sensor-id-editar").value = sensor.id;
+    document.getElementById("select-sensor-tipo").value = sensor.tipo_sensor || "";
+    document.getElementById("select-sensor-dispositivo").value = sensor.dispositivo || "";
+
+    const cultivoId = (sensor.cultivos && sensor.cultivos.length > 0) ? sensor.cultivos[0] : "";
+    document.getElementById("select-sensor-cultivo").value = cultivoId || "";
+
+    const tipo = tiposMap[sensor.tipo_sensor];
+    const labelUnidad = document.getElementById("label-unidad-rango");
+    if (labelUnidad) labelUnidad.textContent = tipo?.unidad ? `(${tipo.unidad})` : "";
+
     const rango = rangosPorSensor[sensor.id];
+    document.getElementById("rango-id-editar").value = rango ? rango.id : "";
+    document.getElementById("input-sensor-min").value = rango ? rango.valor_min : "";
+    document.getElementById("input-sensor-max").value = rango ? rango.valor_max : "";
 
-    contenedor.innerHTML = `
-        <div class="space-y-4">
+    document.getElementById("modal-titulo-sensor").textContent = "Configurar sensor";
+    document.getElementById("modal-subtitulo-sensor").textContent = `Editando sensor #${sensor.id} (${tipo ? tipo.nombre : ''}).`;
+    document.getElementById("texto-guardar-sensor").textContent = "Guardar cambios";
+    document.getElementById("icono-guardar-sensor").setAttribute("data-lucide", "save");
 
-            <!-- Sensor (solo lectura) -->
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Sensor</label>
-                <input
-                    type="text"
-                    value="${escapeHtml(tipo.nombre)} · ${escapeHtml(disp.nombre)} (ID ${sensor.id})"
-                    readonly
-                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
-                >
-            </div>
+    document.getElementById("error-sensor-modal")?.classList.add("hidden");
 
-            <!-- Cultivo (solo lectura) -->
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Cultivo asociado</label>
-                <input
-                    type="text"
-                    value="${cultivoNombre}"
-                    readonly
-                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
-                >
-            </div>
-
-            <!-- Grid: Tipo + Unidad -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Tipo</label>
-                    <input
-                        type="text"
-                        value="${escapeHtml(tipo.nombre)}"
-                        readonly
-                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
-                    >
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Unidad</label>
-                    <input
-                        type="text"
-                        value="${tipo.unidad || "—"}"
-                        readonly
-                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600 outline-none"
-                    >
-                </div>
-            </div>
-
-            <!-- Rango de operación (editable) -->
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Rango de operación</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <input
-                        type="number"
-                        step="0.01"
-                        id="input-min"
-                        value="${rango ? rango.valor_min : ""}"
-                        placeholder="Mínimo"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                    >
-                    <input
-                        type="number"
-                        step="0.01"
-                        id="input-max"
-                        value="${rango ? rango.valor_max : ""}"
-                        placeholder="Máximo"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
-                    >
-                </div>
-                <div class="flex justify-between mt-1">
-                    <span class="text-[10px] text-gray-500">Mínimo</span>
-                    <span class="text-[10px] text-gray-500">Máximo</span>
-                </div>
-            </div>
-
-            <!-- Botón guardar -->
-            <button
-                id="btn-guardar-config"
-                class="w-full bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-brand/20 mt-2"
-            >
-                <i data-lucide="save" class="w-4 h-4"></i>
-                Guardar cambios
-            </button>
-
-            <div id="msg-config" class="hidden text-xs px-3 py-2 rounded-lg"></div>
-
-        </div>
-    `;
-
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
     lucide.createIcons();
-
-    // Event listener del botón guardar
-    document.getElementById("btn-guardar-config")?.addEventListener("click", () => guardarConfigSensor(sensor));
 }
 
-// ---------- Guardar configuración ----------
-async function guardarConfigSensor(sensor) {
-    const btn = document.getElementById("btn-guardar-config");
-    const msg = document.getElementById("msg-config");
-    const vMin = document.getElementById("input-min").value;
-    const vMax = document.getElementById("input-max").value;
+function cerrarModalSensor() {
+    const modal = document.getElementById("modal-sensor-config");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.getElementById("form-sensor-modal")?.reset();
+    document.getElementById("sensor-id-editar").value = "";
+    document.getElementById("rango-id-editar").value = "";
+}
 
-    if (vMin === "" || vMax === "") {
-        mostrarMsgConfig("Completá el mínimo y el máximo", "error");
-        return;
-    }
-    if (parseFloat(vMin) >= parseFloat(vMax)) {
-        mostrarMsgConfig("El mínimo debe ser menor que el máximo", "error");
-        return;
-    }
+// ---------- Guardar Sensor y Rango (POST o PATCH) ----------
+async function guardarSensor() {
+    const idSensor = document.getElementById("sensor-id-editar").value;
+    const idRango = document.getElementById("rango-id-editar").value;
+    const esEdicion = !!idSensor;
 
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Guardando...`;
-    lucide.createIcons();
+    const btn = document.getElementById("btn-guardar-sensor-modal");
+    const errorBox = document.getElementById("error-sensor-modal");
 
-    try {
-        const rangoExistente = rangosPorSensor[sensor.id];
-        const datos = {
-            sensor: sensor.id,
-            valor_min: parseFloat(vMin),
-            valor_max: parseFloat(vMax),
-        };
+    const tipoSensor = document.getElementById("select-sensor-tipo").value;
+    const dispositivo = document.getElementById("select-sensor-dispositivo").value;
+    const cultivo = document.getElementById("select-sensor-cultivo").value;
+    const vMin = document.getElementById("input-sensor-min").value;
+    const vMax = document.getElementById("input-sensor-max").value;
 
-        let resultado;
-        if (rangoExistente) {
-            // PATCH al rango existente
-            resultado = await apiPatch(`/rangos-operacion/${rangoExistente.id}/`, datos);
-        } else {
-            // POST nuevo rango
-            resultado = await apiPost("/rangos-operacion/", datos);
+    if (!tipoSensor || !dispositivo) {
+        if (errorBox) {
+            errorBox.textContent = "Por favor selecciona el tipo de sensor y el dispositivo.";
+            errorBox.classList.remove("hidden");
         }
+        return;
+    }
 
-        // Actualizar en memoria
-        rangosPorSensor[sensor.id] = resultado;
+    if (vMin !== "" && vMax !== "" && parseFloat(vMin) >= parseFloat(vMax)) {
+        if (errorBox) {
+            errorBox.textContent = "El valor mínimo del rango debe ser estrictamente menor que el máximo.";
+            errorBox.classList.remove("hidden");
+        }
+        return;
+    }
 
-        // Guardar en historial local
-        agregarCambioHistorial(sensor, datos);
-
-        mostrarMsgConfig("✓ Cambios guardados correctamente", "exito");
-        renderTabla();
-
-    } catch (err) {
-        console.error(err);
-        mostrarMsgConfig(`Error: ${err.message}`, "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Guardar cambios`;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Guardando...`;
         lucide.createIcons();
     }
-}
+    if (errorBox) errorBox.classList.add("hidden");
 
-function mostrarMsgConfig(texto, tipo) {
-    const msg = document.getElementById("msg-config");
-    if (!msg) return;
-
-    msg.textContent = texto;
-    msg.classList.remove("hidden");
-    if (tipo === "error") {
-        msg.className = "text-xs px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700";
-    } else {
-        msg.className = "text-xs px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700";
-    }
-    setTimeout(() => msg.classList.add("hidden"), 4000);
-}
-
-// ---------- Historial ----------
-function agregarCambioHistorial(sensor, datos) {
-    const tipo = tiposMap[sensor.tipo_sensor] || { nombre: "Sensor" };
-    const entrada = {
-        fecha: new Date().toISOString(),
-        usuario: getUsername(),
-        sensor: tipo.nombre,
-        cambio: `Rango: ${datos.valor_min} - ${datos.valor_max}`,
-    };
-
-    historial.unshift(entrada);
-    historial = historial.slice(0, 10); // últimos 10
-    localStorage.setItem("historial_config", JSON.stringify(historial));
-    renderHistorial();
-}
-
-function cargarHistorialDesdeLocal() {
     try {
-        historial = JSON.parse(localStorage.getItem("historial_config") || "[]");
-    } catch (e) {
-        historial = [];
+        const payloadSensor = {
+            tipo_sensor: parseInt(tipoSensor),
+            dispositivo: parseInt(dispositivo),
+            cultivos: cultivo ? [parseInt(cultivo)] : [],
+        };
+
+        let sensorResult;
+        if (esEdicion) {
+            sensorResult = await apiPatch(`/sensores/${idSensor}/`, payloadSensor);
+        } else {
+            payloadSensor.is_active = true;
+            sensorResult = await apiPost("/sensores/", payloadSensor);
+        }
+
+        const sid = sensorResult.id || idSensor;
+
+        // Actualizar o crear Rango si se completaron los valores
+        if (vMin !== "" && vMax !== "") {
+            const payloadRango = {
+                sensor: sid,
+                valor_min: parseFloat(vMin),
+                valor_max: parseFloat(vMax),
+            };
+
+            if (idRango) {
+                await apiPatch(`/rangos-operacion/${idRango}/`, payloadRango);
+            } else {
+                await apiPost("/rangos-operacion/", payloadRango);
+            }
+        }
+
+        await Promise.all([cargarSensores(), cargarRangos()]);
+        sensoresFiltrados = [...sensores];
+        renderTabla();
+        renderContador();
+        cerrarModalSensor();
+    } catch (err) {
+        console.error(err);
+        let msg = err.message;
+        try {
+            const json = JSON.parse(msg.split(": ").slice(1).join(": "));
+            if (typeof json === "object") {
+                msg = Object.entries(json).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" · ");
+            }
+        } catch (e) {}
+
+        if (errorBox) {
+            errorBox.textContent = `Error: ${msg}`;
+            errorBox.classList.remove("hidden");
+        } else {
+            alert(`Error: ${msg}`);
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            const esEditFinal = !!document.getElementById("sensor-id-editar")?.value;
+            btn.innerHTML = esEditFinal
+                ? `<i id="icono-guardar-sensor" data-lucide="save" class="w-4 h-4"></i> <span id="texto-guardar-sensor">Guardar cambios</span>`
+                : `<i id="icono-guardar-sensor" data-lucide="plus" class="w-4 h-4"></i> <span id="texto-guardar-sensor">Crear sensor</span>`;
+            lucide.createIcons();
+        }
     }
-    renderHistorial();
 }
 
-function renderHistorial() {
-    const contenedor = document.getElementById("historial-config");
-    if (!contenedor) return;
+// ---------- Eliminar / Desactivar con Confirmación ----------
+function confirmarEliminarSensor(sensor) {
+    const tipo = tiposMap[sensor.tipo_sensor]?.nombre || "Sensor";
+    const disp = dispositivosMap[sensor.dispositivo]?.nombre || "Dispositivo";
 
-    if (historial.length === 0) {
-        contenedor.innerHTML = `
-            <div class="text-center py-4 text-gray-400 text-xs">
-                Sin cambios registrados todavía.
-            </div>
-        `;
-        return;
-    }
-
-    contenedor.innerHTML = historial.map(h => `
-        <div class="grid grid-cols-3 gap-2 text-xs py-2 border-b border-gray-100 last:border-0">
-            <span class="text-gray-600">${formatearFechaHora(h.fecha)}</span>
-            <span class="text-gray-700 font-medium truncate">${h.usuario}</span>
-            <span class="text-gray-700 truncate">${h.cambio}</span>
-        </div>
-    `).join("");
-}
-
-// ---------- Gráfico ----------
-function renderGrafico(sensor) {
-    const canvas = document.getElementById("chart-sensor-config");
-    if (!canvas) return;
-
-    const tipo = tiposMap[sensor.tipo_sensor] || { nombre: "?", unidad: "" };
-    const rango = rangosPorSensor[sensor.id];
-    const mediciones = medicionesPorSensor[sensor.id] || [];
-
-    // Últimas 50
-    const ultimas = mediciones.slice(0, 50).sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
-
-    const labels = ultimas.map(m => {
-        const d = new Date(m.fecha_hora);
-        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    confirmarAccion({
+        titulo: "Desactivar sensor",
+        mensaje: `¿Estás seguro de que deseas desactivar el ${tipo} (#${sensor.id}) en ${disp}?\nEl sensor dejará de recibir lecturas en tiempo real.`,
+        textoConfirmar: "Desactivar sensor",
+        esPeligroso: true,
+        onConfirm: async () => {
+            try {
+                await apiDelete(`/sensores/${sensor.id}/`);
+                await cargarSensores();
+                sensoresFiltrados = [...sensores];
+                renderTabla();
+                renderContador();
+            } catch (err) {
+                alert(`Error al desactivar sensor: ${err.message}`);
+            }
+        }
     });
-    const valores = ultimas.map(m => m.valor);
-
-    // Actualizar título
-    const titulo = document.getElementById("titulo-grafico-sensor");
-    if (titulo) titulo.textContent = `Evolución de ${tipo.nombre}`;
-
-    // Leyenda
-    const leyenda = document.getElementById("leyenda-rango-sensor");
-    if (leyenda && rango) {
-        leyenda.textContent = `Rango (${rango.valor_min} - ${rango.valor_max})`;
-    }
-
-    if (window.graficoSensorConfig) window.graficoSensorConfig.destroy();
-
-    // Calcular min/max para el gráfico
-    let yMin = 0, yMax = 10;
-    if (rango) {
-        const rangoTam = rango.valor_max - rango.valor_min;
-        yMin = rango.valor_min - rangoTam * 0.3;
-        yMax = rango.valor_max + rangoTam * 0.3;
-    } else if (valores.length > 0) {
-        const minVal = Math.min(...valores);
-        const maxVal = Math.max(...valores);
-        const tam = maxVal - minVal || 1;
-        yMin = minVal - tam * 0.2;
-        yMax = maxVal + tam * 0.2;
-    }
-
-    window.graficoSensorConfig = new Chart(canvas.getContext("2d"), {
-        type: "line",
-        data: {
-            labels: labels,
-            datasets: [{
-                data: valores,
-                borderColor: "#15803D",
-                backgroundColor: "rgba(21, 128, 61, 0.1)",
-                fill: true,
-                tension: 0.4,
-                pointRadius: 2,
-                pointHoverRadius: 5,
-                pointBackgroundColor: "#15803D",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 1.5,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: "#0F3B26",
-                    padding: 8,
-                    cornerRadius: 6,
-                    displayColors: false,
-                    callbacks: { label: (c) => `${tipo.nombre}: ${c.parsed.y.toFixed(2)}` },
-                },
-            },
-            scales: {
-                y: {
-                    min: yMin,
-                    max: yMax,
-                    ticks: { color: "#9CA3AF", font: { size: 9 }, callback: v => v.toFixed(1) },
-                    grid: { color: "#F3F4F6" },
-                },
-                x: {
-                    ticks: { color: "#9CA3AF", font: { size: 9 }, maxTicksLimit: 6 },
-                    grid: { display: false },
-                },
-            },
-        },
-        plugins: rango ? [{
-            id: "rangoPermitido",
-            beforeDatasetsDraw: (chart) => {
-                const { ctx, chartArea, scales } = chart;
-                const yMinPx = scales.y.getPixelForValue(rango.valor_min);
-                const yMaxPx = scales.y.getPixelForValue(rango.valor_max);
-                if (yMinPx > chartArea.bottom || yMaxPx < chartArea.top) return;
-                ctx.save();
-                ctx.fillStyle = "rgba(34, 197, 94, 0.08)";
-                ctx.fillRect(
-                    chartArea.left,
-                    Math.max(yMinPx, chartArea.top),
-                    chartArea.right - chartArea.left,
-                    Math.min(yMaxPx, chartArea.bottom) - Math.max(yMinPx, chartArea.top)
-                );
-                ctx.restore();
-            },
-        }] : [],
-    });
-}
-
-// ---------- Configurar form ----------
-function configurarFormulario() {
-    // No hace falta nada extra, el form se renderiza dinámicamente
 }
 
 // ---------- Iniciar ----------

@@ -88,3 +88,21 @@ class IntervencionAPITest(APITestCase):
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_no_permite_cambiar_una_cosecha_a_otro_tipo_sin_limpiar_datos(self):
+        creada = self.client.post(reverse("intervencion-list"), {
+            "ciclo": self.ciclo.id_ciclo,
+            "tipo": "cosecha",
+            "observaciones": "Cosecha registrada.",
+            "fecha_cosecha_real": timezone.now().isoformat(),
+            "resultado_cosecha": "exitosa",
+            "cantidad_cosechada_kg": "1.00",
+        }, format="json")
+
+        response = self.client.patch(
+            reverse("intervencion-detail", args=[creada.data["id"]]),
+            {"tipo": "mantenimiento"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

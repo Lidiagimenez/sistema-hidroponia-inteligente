@@ -15,6 +15,16 @@ class DispositivoAutenticado:
     def __init__(self, dispositivo):
         self.dispositivo = dispositivo
 
+    # Los throttles de DRF (UserRateThrottle, ScopedRateThrottle) usan
+    # request.user.pk; exponemos el pk del dispositivo para que no explote.
+    @property
+    def pk(self):
+        return self.dispositivo.pk
+
+    @property
+    def id(self):
+        return self.dispositivo.pk
+
     def __str__(self):
         return f"Dispositivo({self.dispositivo.identificador_hardware})"
 

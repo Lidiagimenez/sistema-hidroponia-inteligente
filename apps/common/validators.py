@@ -23,14 +23,16 @@ def validate_uploaded_image(uploaded_file):
         raise ValidationError("Formato de imagen no permitido.")
 
     position = uploaded_file.tell() if hasattr(uploaded_file, "tell") else None
+    
     try:
+        # Abrimos la imagen solo para leer formato y dimensiones
         with Image.open(uploaded_file) as image:
-            image.verify()
             image_format = image.format
             width, height = image.size
     except (UnidentifiedImageError, OSError):
         raise ValidationError("El archivo subido no es una imagen válida.")
     finally:
+        # Dejar el cursor al inicio para que Django pueda guardar el archivo.
         if hasattr(uploaded_file, "seek"):
             uploaded_file.seek(position or 0)
 
@@ -40,8 +42,8 @@ def validate_uploaded_image(uploaded_file):
     min_width, min_height = MIN_IMAGE_DIMENSIONS
     max_width, max_height = MAX_IMAGE_DIMENSIONS
     if width < min_width or height < min_height:
-        raise ValidationError("La imagen debe medir al menos 100x100 px.")
+        raise ValidationError(f"La imagen debe medir al menos {min_width}x{min_height} px.")
     if width > max_width or height > max_height:
-        raise ValidationError("La imagen no puede superar 4000x4000 px.")
+        raise ValidationError(f"La imagen no puede superar {max_width}x{max_height} px.")
 
     return uploaded_file

@@ -55,9 +55,7 @@
             body.sidebar-open { overflow: hidden; }
         }
 
-        /* ============================================
-           SIDEBAR
-           ============================================ */
+        /* SIDEBAR */
         .sidebar-item {
             display: flex;
             align-items: center;
@@ -84,151 +82,48 @@
             flex-shrink: 0;
         }
         .sidebar-item-badge { justify-content: space-between; }
+        #sidebar-navigation { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.15) transparent; }
+        #sidebar-navigation::-webkit-scrollbar { width: 6px; }
+        #sidebar-navigation::-webkit-scrollbar-track { background: transparent; }
+        #sidebar-navigation::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+        #sidebar-navigation::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35); }
 
-        /* --- Scrollbar personalizada del sidebar --- */
-        /* Firefox */
-        #sidebar-navigation {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-        }
-        /* WebKit (Chrome, Edge, Safari) */
-        #sidebar-navigation::-webkit-scrollbar {
-            width: 6px;
-        }
-        #sidebar-navigation::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #sidebar-navigation::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 3px;
-            transition: background 0.2s;
-        }
-        #sidebar-navigation::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.35);
-        }
-
-        /* --- Botón de colapsar sidebar --- */
         .sidebar-collapse-btn {
-            position: fixed;
-            top: 50%;
-            left: 256px; /* ancho del sidebar expandido */
-            transform: translateY(-50%);
-            width: 24px;
-            height: 48px;
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            border-left: none;
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 40;
+            position: fixed; top: 50%; left: 256px; transform: translateY(-50%);
+            width: 24px; height: 48px; background: #FFFFFF; border: 1px solid #E5E7EB;
+            border-left: none; border-radius: 0 8px 8px 0; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; z-index: 40;
             transition: left 0.2s ease, background 0.15s;
-            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04);
-            color: #4B5563;
-            padding: 0;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.04); color: #4B5563; padding: 0;
         }
-        .sidebar-collapse-btn:hover {
-            background: #F9FAFB;
-            color: #111827;
-        }
-        .sidebar-collapse-btn svg {
-            width: 14px;
-            height: 14px;
-            transition: transform 0.2s ease;
-        }
-        body.dark .sidebar-collapse-btn {
-            background: #1E293B;
-            border-color: #334155;
-            color: #CBD5E1;
-            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.3);
-        }
-        body.dark .sidebar-collapse-btn:hover {
-            background: #334155;
-            color: #F1F5F9;
-        }
+        .sidebar-collapse-btn:hover { background: #F9FAFB; color: #111827; }
+        .sidebar-collapse-btn svg { width: 14px; height: 14px; transition: transform 0.2s ease; }
+        body.dark .sidebar-collapse-btn { background: #1E293B; border-color: #334155; color: #CBD5E1; }
+        body.dark .sidebar-collapse-btn:hover { background: #334155; color: #F1F5F9; }
 
-        /* --- Estado colapsado (solo desktop) --- */
         @media (min-width: 768px) {
-            #sidebar.collapsed {
-                width: 5rem; /* 80px */
-            }
-            /* Ocultar textos de items (excepto el badge de alertas) */
-            #sidebar.collapsed .sidebar-item span:not(#alerta-badge) {
-                display: none;
-            }
-            #sidebar.collapsed .sidebar-item {
-                justify-content: center;
-                padding-left: 0.75rem;
-                padding-right: 0.75rem;
-            }
-            /* Sección de administración: ocultar label y ajustar padding */
-            #sidebar.collapsed nav > div[data-role="admin"] > p {
-                display: none;
-            }
-            #sidebar.collapsed nav > div[data-role="admin"] {
-                padding-top: 1rem;
-            }
-            /* Logo: solo ícono */
-            #sidebar.collapsed .sidebar-brand-text {
-                display: none;
-            }
-            #sidebar.collapsed .sidebar-brand {
-                justify-content: center;
-                padding-left: 0;
-                padding-right: 0;
-            }
-            /* Footer del usuario: solo avatar */
-            #sidebar.collapsed .sidebar-user-info {
-                display: none;
-            }
-            #sidebar.collapsed .sidebar-user-footer > div {
-                justify-content: center;
-            }
-            /* Badge de alertas: posicionado como notificación flotante */
-            #sidebar.collapsed .sidebar-item-badge #alerta-badge {
-                position: absolute;
-                top: 4px;
-                right: 4px;
-                width: 16px;
-                height: 16px;
-                font-size: 9px;
-                border: 2px solid #0F3B26;
-                padding: 0;
-            }
-            /* Main content ajustado */
-            body.sidebar-collapsed .main-wrapper {
-                margin-left: 5rem;
-            }
-            /* Botón de colapsar movido */
-            body.sidebar-collapsed .sidebar-collapse-btn {
-                left: 80px;
-            }
-            body.sidebar-collapsed .sidebar-collapse-btn svg {
-                transform: rotate(180deg);
-            }
+            #sidebar.collapsed { width: 5rem; }
+            #sidebar.collapsed .sidebar-item span:not(#alerta-badge) { display: none; }
+            #sidebar.collapsed .sidebar-item { justify-content: center; padding-left: 0.75rem; padding-right: 0.75rem; }
+            #sidebar.collapsed nav > div[data-role="admin"] > p { display: none; }
+            #sidebar.collapsed nav > div[data-role="admin"] { padding-top: 1rem; }
+            #sidebar.collapsed .sidebar-brand-text { display: none; }
+            #sidebar.collapsed .sidebar-brand { justify-content: center; padding-left: 0; padding-right: 0; }
+            #sidebar.collapsed .sidebar-user-info { display: none; }
+            #sidebar.collapsed .sidebar-user-footer > div { justify-content: center; }
+            #sidebar.collapsed .sidebar-item-badge #alerta-badge { position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; font-size: 9px; border: 2px solid #0F3B26; padding: 0; }
+            body.sidebar-collapsed .main-wrapper { margin-left: 5rem; }
+            body.sidebar-collapsed .sidebar-collapse-btn { left: 80px; }
+            body.sidebar-collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
         }
-        /* En mobile, ocultar el botón de colapsar */
-        @media (max-width: 767px) {
-            .sidebar-collapse-btn { display: none; }
-        }
+        @media (max-width: 767px) { .sidebar-collapse-btn { display: none; } }
 
-        /* ============================================
-           MODO OSCURO — Override global
-           ============================================ */
-        body.dark {
-            background-color: #0F172A !important;
-            color: #E2E8F0;
-        }
-
-        /* Fondos blancos → gris oscuro */
+        /* MODO OSCURO */
+        body.dark { background-color: #0F172A !important; color: #E2E8F0; }
         body.dark .bg-white { background-color: #1E293B !important; }
         body.dark .bg-gray-50 { background-color: #0F172A !important; }
         body.dark .bg-gray-100 { background-color: #1E293B !important; }
         body.dark .bg-cream { background-color: #0F172A !important; }
-
-        /* Fondos de colores en modo oscuro (más apagados) */
         body.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; }
         body.dark .bg-orange-50 { background-color: rgba(249, 115, 22, 0.1) !important; }
         body.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.1) !important; }
@@ -236,294 +131,123 @@
         body.dark .bg-yellow-50 { background-color: rgba(234, 179, 8, 0.1) !important; }
         body.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.1) !important; }
         body.dark .bg-cyan-50 { background-color: rgba(6, 182, 212, 0.1) !important; }
-
-        /* Textos */
         body.dark .text-gray-900 { color: #F1F5F9 !important; }
         body.dark .text-gray-800 { color: #E2E8F0 !important; }
         body.dark .text-gray-700 { color: #CBD5E1 !important; }
         body.dark .text-gray-600 { color: #94A3B8 !important; }
         body.dark .text-gray-500 { color: #94A3B8 !important; }
         body.dark .text-gray-400 { color: #64748B !important; }
-
-        /* Mantener colores de marca en textos */
         body.dark .text-brand { color: #22C55E !important; }
         body.dark .text-brand-dark { color: #DCFCE7 !important; }
-
-        /* Bordes */
         body.dark .border-gray-200 { border-color: #334155 !important; }
         body.dark .border-gray-300 { border-color: #334155 !important; }
         body.dark .border-gray-100 { border-color: #1E293B !important; }
         body.dark .divide-gray-100 > * + * { border-color: #1E293B !important; }
         body.dark .divide-gray-200 > * + * { border-color: #334155 !important; }
-
-        /* Header del layout */
         body.dark header.bg-white { background-color: #1E293B !important; border-color: #334155 !important; }
-
-        /* Inputs, selects, textareas */
-        body.dark input,
-        body.dark select,
-        body.dark textarea {
-            background-color: #0F172A !important;
-            color: #F1F5F9 !important;
-            border-color: #334155 !important;
-        }
-        body.dark input::placeholder,
-        body.dark textarea::placeholder {
-            color: #64748B !important;
-        }
-        body.dark input:focus,
-        body.dark select:focus,
-        body.dark textarea:focus {
-            border-color: #22C55E !important;
-            outline: none;
-        }
-
-        /* Hover states */
+        body.dark input, body.dark select, body.dark textarea { background-color: #0F172A !important; color: #F1F5F9 !important; border-color: #334155 !important; }
+        body.dark input::placeholder, body.dark textarea::placeholder { color: #64748B !important; }
+        body.dark input:focus, body.dark select:focus, body.dark textarea:focus { border-color: #22C55E !important; outline: none; }
         body.dark .hover\:bg-gray-50:hover { background-color: #334155 !important; }
         body.dark .hover\:bg-gray-100:hover { background-color: #334155 !important; }
-
-        /* Tablas */
         body.dark thead tr { border-color: #334155 !important; }
         body.dark tbody tr { border-color: #1E293B !important; }
         body.dark tbody tr:hover { background-color: rgba(51, 65, 85, 0.4) !important; }
-
-        /* Scrollbar global en dark mode */
         body.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
         body.dark ::-webkit-scrollbar-track { background: #0F172A; }
         body.dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
         body.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        /* ============================================
-           FIX MODO OSCURO — Gradientes y detalles
-           ============================================ */
-
-        /* Todos los gradientes → fondo oscuro plano */
-        body.dark .bg-gradient-to-r,
-        body.dark .bg-gradient-to-l,
-        body.dark .bg-gradient-to-b,
-        body.dark .bg-gradient-to-t,
-        body.dark .bg-gradient-to-br,
-        body.dark .bg-gradient-to-bl,
-        body.dark .bg-gradient-to-tr,
-        body.dark .bg-gradient-to-tl {
-            background-image: none !important;
-            background-color: rgba(34, 197, 94, 0.08) !important;
-        }
-
-        /* Banner del dashboard: borde verde suave */
+        body.dark .bg-gradient-to-r, body.dark .bg-gradient-to-l, body.dark .bg-gradient-to-b, body.dark .bg-gradient-to-t, body.dark .bg-gradient-to-br, body.dark .bg-gradient-to-bl, body.dark .bg-gradient-to-tr, body.dark .bg-gradient-to-tl { background-image: none !important; background-color: rgba(34, 197, 94, 0.08) !important; }
         body.dark .border-green-100 { border-color: rgba(34, 197, 94, 0.2) !important; }
         body.dark .border-green-300 { border-color: rgba(34, 197, 94, 0.4) !important; }
-
-        /* Color de marca claro (fondo del ícono sprout) */
         body.dark .bg-brand-light { background-color: rgba(34, 197, 94, 0.15) !important; }
-
-        /* Decoración verde del banner (overlay del gradient) */
-        body.dark .from-green-100\/50 {
-            background-image: none !important;
-            background-color: transparent !important;
-        }
-
-        /* Hover de los badges rojos y verdes */
+        body.dark .from-green-100\/50 { background-image: none !important; background-color: transparent !important; }
         body.dark .hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.15) !important; }
         body.dark .hover\:bg-red-100:hover { background-color: rgba(239, 68, 68, 0.2) !important; }
-
-        /* Tarjetas de alertas en modo oscuro */
         body.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.12) !important; }
         body.dark .bg-orange-50 { background-color: rgba(249, 115, 22, 0.12) !important; }
         body.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.12) !important; }
     </style>
 
-    <!-- Aplicar modo oscuro ANTES de que se pinte la página (evita flash) -->
     <script>
         (function() {
             const tema = localStorage.getItem("tema");
-            if (tema === "dark") {
-                document.documentElement.classList.add("dark");
-            }
-            // Aplicar estado del sidebar ANTES del render (evita flash)
-            if (localStorage.getItem("sidebar-collapsed") === "true") {
-                document.documentElement.classList.add("sidebar-collapsed-init");
-            }
+            if (tema === "dark") { document.documentElement.classList.add("dark"); }
+            if (localStorage.getItem("sidebar-collapsed") === "true") { document.documentElement.classList.add("sidebar-collapsed-init"); }
         })();
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <!-- ==================== SIDEBAR ==================== -->
     <div id="sidebar-backdrop" class="fixed inset-0 z-20 hidden bg-black/50 md:hidden" aria-hidden="true"></div>
     <aside id="sidebar" class="w-64 h-screen min-h-0 bg-brand-dark fixed inset-y-0 left-0 z-30 flex flex-col transform -translate-x-full transition-[transform,width] duration-200 ease-in-out md:translate-x-0">
-
         <div class="shrink-0 px-5 py-6 border-b border-white/10">
             <a href="/dashboard/" class="sidebar-brand flex items-center gap-3">
                 <img src="{% static 'img/logo.png' %}" alt="HidroSensor" class="h-10 w-auto">
-                <span class="sidebar-brand-text font-serif text-lg font-bold text-white tracking-wide">
-                    HIDRO<span class="text-green-400">SENSOR</span>
-                </span>
+                <span class="sidebar-brand-text font-serif text-lg font-bold text-white tracking-wide">HIDRO<span class="text-green-400">SENSOR</span></span>
             </a>
         </div>
 
         <nav id="sidebar-navigation" class="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain space-y-1">
-
-            <a href="/dashboard/" class="sidebar-item">
-                <i data-lucide="home"></i>
-                <span>Inicio</span>
-            </a>
-
-            <a href="/cultivos/" class="sidebar-item">
-                <i data-lucide="leaf"></i>
-                <span>Cultivos</span>
-            </a>
-
-            <a href="/monitoreo/" class="sidebar-item">
-                <i data-lucide="line-chart"></i>
-                <span>Monitoreo</span>
-            </a>
-
+            <a href="/dashboard/" class="sidebar-item"><i data-lucide="home"></i><span>Inicio</span></a>
+            <a href="/cultivos/" class="sidebar-item"><i data-lucide="leaf"></i><span>Cultivos</span></a>
+            <a href="/monitoreo/" class="sidebar-item"><i data-lucide="line-chart"></i><span>Monitoreo</span></a>
             <a href="/alertas/" class="sidebar-item sidebar-item-badge">
-                <div class="flex items-center gap-3">
-                    <i data-lucide="bell"></i>
-                    <span>Alertas</span>
-                </div>
-                <span id="alerta-badge" class="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    3
-                </span>
+                <div class="flex items-center gap-3"><i data-lucide="bell"></i><span>Alertas</span></div>
+                <span id="alerta-badge" class="bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center" style="display: none;">0</span>
             </a>
-
-            <a href="/intervenciones/" class="sidebar-item">
-                <i data-lucide="wrench"></i>
-                <span>Intervenciones</span>
-            </a>
-
-            <a href="/ia/" class="sidebar-item">
-                <i data-lucide="brain-circuit"></i>
-                <span>IA</span>
-            </a>
-
-            <a href="/imagenes/" class="sidebar-item">
-                <i data-lucide="image"></i>
-                <span>Imágenes</span>
-            </a>
-
-            <a href="/reportes/" class="sidebar-item">
-                <i data-lucide="file-text"></i>
-                <span>Reportes</span>
-            </a>
+            <a href="/intervenciones/" class="sidebar-item"><i data-lucide="wrench"></i><span>Intervenciones</span></a>
+            <a href="/ia/" class="sidebar-item"><i data-lucide="brain-circuit"></i><span>IA</span></a>
+            <a href="/imagenes/" class="sidebar-item"><i data-lucide="image"></i><span>Imágenes</span></a>
+            <a href="/reportes/" class="sidebar-item"><i data-lucide="file-text"></i><span>Reportes</span></a>
 
             <div data-role="admin" class="pt-6">
-                <p class="px-3 mb-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider">
-                    Administración
-                </p>
-
-                <a href="/usuarios/" class="sidebar-item">
-                    <i data-lucide="users"></i>
-                    <span>Usuarios</span>
-                </a>
-
-                <a href="/dispositivos/" class="sidebar-item">
-                    <i data-lucide="cpu"></i>
-                    <span>Dispositivos</span>
-                </a>
-
-                <a href="/configuracion-sensores/" class="sidebar-item">
-                    <i data-lucide="settings"></i>
-                    <span>Configuración de sensores</span>
-                </a>
-
-                <a href="/rangos-operacion/" class="sidebar-item">
-                    <i data-lucide="sliders-horizontal"></i>
-                    <span>Rangos de operación</span>
-                </a>
-
-                <a href="/auditoria/" class="sidebar-item">
-                    <i data-lucide="clipboard-list"></i>
-                    <span>Auditoría</span>
-                </a>
+                <p class="px-3 mb-2 text-[10px] font-semibold text-white/40 uppercase tracking-wider">Administración</p>
+                <a href="/usuarios/" class="sidebar-item"><i data-lucide="users"></i><span>Usuarios</span></a>
+                <a href="/dispositivos/" class="sidebar-item"><i data-lucide="cpu"></i><span>Dispositivos</span></a>
+                <a href="/configuracion-sensores/" class="sidebar-item"><i data-lucide="settings"></i><span>Configuración de sensores</span></a>
+                <a href="/rangos-operacion/" class="sidebar-item"><i data-lucide="sliders-horizontal"></i><span>Rangos de operación</span></a>
+                <a href="/auditoria/" class="sidebar-item"><i data-lucide="clipboard-list"></i><span>Auditoría</span></a>
             </div>
-
         </nav>
 
         <div class="sidebar-user-footer mt-auto shrink-0 px-4 py-4 border-t border-white/10">
             <div class="flex items-center gap-3">
-                <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm shrink-0">
-                    A
-                </div>
+                <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm shrink-0">A</div>
                 <div class="sidebar-user-info flex-1 min-w-0">
                     <p id="sidebar-username" class="text-sm font-semibold text-white truncate">Usuario</p>
                     <p id="sidebar-rol" class="text-xs text-white/60 truncate capitalize">rol</p>
                 </div>
             </div>
         </div>
-
     </aside>
 
-    <!-- Botón de colapsar sidebar (solo desktop) -->
-    <button
-        id="btn-collapse-sidebar"
-        type="button"
-        aria-label="Colapsar menú lateral"
-        class="sidebar-collapse-btn"
-    >
-        <i data-lucide="chevron-left"></i>
-    </button>
+    <button id="btn-collapse-sidebar" type="button" aria-label="Colapsar menú lateral" class="sidebar-collapse-btn"><i data-lucide="chevron-left"></i></button>
 
-    <!-- ==================== MAIN ==================== -->
     <div class="main-wrapper min-h-screen min-w-0 flex flex-col md:ml-64 transition-[margin] duration-200 ease-in-out">
-
         <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sticky top-0 z-20">
             <div class="flex items-center justify-between gap-2 sm:gap-4 min-w-0">
-
                 <div class="flex items-center gap-2 min-w-0">
-                    <button
-                        id="btn-sidebar-toggle"
-                        type="button"
-                        aria-label="Abrir menú de navegación"
-                        aria-controls="sidebar"
-                        aria-expanded="false"
-                        class="md:hidden shrink-0 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                    >
-                        <i data-lucide="menu" class="w-5 h-5"></i>
-                    </button>
+                    <button id="btn-sidebar-toggle" type="button" aria-label="Abrir menú de navegación" class="md:hidden shrink-0 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"><i data-lucide="menu" class="w-5 h-5"></i></button>
                     <div class="hidden sm:flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
                         <i data-lucide="calendar" class="w-4 h-4"></i>
                         <span id="topbar-fecha">--</span>
                     </div>
                 </div>
-
                 <div class="flex items-center gap-1 sm:gap-4">
-
-                    <!-- Botón modo oscuro -->
-                    <button
-                        id="btn-tema"
-                        title="Cambiar tema"
-                        class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                    >
-                        <i id="icono-tema" data-lucide="moon" class="w-5 h-5"></i>
-                    </button>
-
-                    <button class="relative p-1 hover:bg-gray-100 rounded-lg transition">
+                    <button id="btn-tema" title="Cambiar tema" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"><i id="icono-tema" data-lucide="moon" class="w-5 h-5"></i></button>
+                    <a href="/alertas/" title="Ver alertas" class="relative p-1 hover:bg-gray-100 rounded-lg transition block">
                         <i data-lucide="bell" class="w-5 h-5 text-gray-700"></i>
-                        <span class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                            3
-                        </span>
-                    </button>
-
+                        <span id="topbar-alerta-badge" class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center" style="display: none;">0</span>
+                    </a>
                     <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
-                        <div id="topbar-avatar" class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">
-                            A
-                        </div>
+                        <div id="topbar-avatar" class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white font-semibold text-sm">A</div>
                         <div class="hidden md:block">
                             <p id="topbar-username" class="text-sm font-semibold text-gray-900 leading-tight">Usuario</p>
                             <p id="topbar-rol" class="text-xs text-gray-500 capitalize leading-tight">rol</p>
                         </div>
-                        <button
-                            id="logout-btn"
-                            title="Cerrar sesión"
-                            class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                        >
-                            <i data-lucide="log-out" class="w-5 h-5"></i>
-                        </button>
+                        <button id="logout-btn" title="Cerrar sesión" class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><i data-lucide="log-out" class="w-5 h-5"></i></button>
                     </div>
-
                 </div>
             </div>
         </header>
@@ -531,26 +255,37 @@
         <main class="flex-1 min-w-0 w-full p-4 sm:p-6">
             {% block content %}{% endblock %}
         </main>
+    </div>
 
+    <!-- MODAL GLOBAL DE CONFIRMACIÓN -->
+    <div id="modal-confirmacion-global" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 transition-all">
+            <div class="flex items-start gap-4 mb-4">
+                <div id="modal-confirmacion-icono-bg" class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i id="modal-confirmacion-icono" data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 id="modal-confirmacion-titulo" class="font-serif text-lg font-bold text-gray-900 mb-1">Confirmar acción</h3>
+                    <p id="modal-confirmacion-mensaje" class="text-sm text-gray-600 leading-relaxed">¿Estás seguro de que deseas realizar esta acción?</p>
+                </div>
+                <button type="button" id="modal-confirmacion-btn-cerrar" class="p-1 hover:bg-gray-100 rounded transition text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" id="modal-confirmacion-btn-cancelar" class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 px-4 rounded-xl text-sm transition">Cancelar</button>
+                <button type="button" id="modal-confirmacion-btn-confirmar" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition shadow-lg shadow-red-600/20">Confirmar</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // ==================== SIDEBAR COLLAPSE ====================
+        // SIDEBAR COLLAPSE
         const sidebarEl = document.getElementById("sidebar");
         const btnCollapse = document.getElementById("btn-collapse-sidebar");
-        const mainWrapper = document.querySelector(".main-wrapper");
-
         function setSidebarCollapsed(isCollapsed) {
             sidebarEl.classList.toggle("collapsed", isCollapsed);
             document.body.classList.toggle("sidebar-collapsed", isCollapsed);
             localStorage.setItem("sidebar-collapsed", String(isCollapsed));
-            btnCollapse.setAttribute(
-                "aria-label",
-                isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral"
-            );
         }
-
-        // Aplicar estado guardado al cargar
         (function initSidebarCollapsed() {
             const saved = localStorage.getItem("sidebar-collapsed");
             if (saved === "true") {
@@ -561,146 +296,187 @@
                 document.documentElement.classList.remove("sidebar-collapsed-init");
             }
         })();
-
         btnCollapse.addEventListener("click", () => {
             const isCollapsed = sidebarEl.classList.contains("collapsed");
             setSidebarCollapsed(!isCollapsed);
         });
 
-        // Atajo de teclado: Ctrl + B (o Cmd + B en Mac)
-        document.addEventListener("keydown", (event) => {
-            if ((event.ctrlKey || event.metaKey) && event.key === "b") {
-                event.preventDefault();
-                const isCollapsed = sidebarEl.classList.contains("collapsed");
-                setSidebarCollapsed(!isCollapsed);
-            }
-        });
-
-        // ==================== SIDEBAR MOBILE ====================
+        // SIDEBAR MOBILE
         const sidebarBackdrop = document.getElementById("sidebar-backdrop");
         const sidebarToggle = document.getElementById("btn-sidebar-toggle");
-        const sidebarNavigation = document.getElementById("sidebar-navigation");
-        const savedSidebarScrollTop = sessionStorage.getItem("sidebarScrollTop");
-        if (savedSidebarScrollTop !== null) {
-            sidebarNavigation.scrollTop = Number(savedSidebarScrollTop);
-            sessionStorage.removeItem("sidebarScrollTop");
-        }
-
         function setSidebarOpen(isOpen) {
             sidebarEl.classList.toggle("-translate-x-full", !isOpen);
             sidebarBackdrop.classList.toggle("hidden", !isOpen);
             document.body.classList.toggle("sidebar-open", isOpen);
-            sidebarToggle.setAttribute("aria-expanded", String(isOpen));
-            sidebarToggle.setAttribute("aria-label", isOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación");
         }
-
-        sidebarToggle.addEventListener("click", () => {
-            setSidebarOpen(sidebarToggle.getAttribute("aria-expanded") !== "true");
-        });
+        sidebarToggle.addEventListener("click", () => setSidebarOpen(sidebarToggle.getAttribute("aria-expanded") !== "true"));
         sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
-        sidebarEl.querySelectorAll(".sidebar-item").forEach(link => {
-            link.addEventListener("click", () => {
-                sessionStorage.setItem("sidebarScrollTop", String(sidebarNavigation.scrollTop));
-                setSidebarOpen(false);
-            });
-        });
-        document.addEventListener("keydown", event => {
-            if (event.key === "Escape" && sidebarToggle.getAttribute("aria-expanded") === "true") {
-                setSidebarOpen(false);
-                sidebarToggle.focus();
-            }
-        });
-        window.matchMedia("(min-width: 768px)").addEventListener("change", event => {
-            if (event.matches) setSidebarOpen(false);
-        });
 
-        // ==================== USUARIO ACTUAL ====================
+        // USUARIO ACTUAL
         let rol = "operador";
         async function cargarUsuarioActual() {
-            const res = await fetch("/api/me/", { credentials: "same-origin" });
-            if (!res.ok) {
-                sessionStorage.clear();
-                window.location.href = "/login/";
-                return;
-            }
-            const usuario = await res.json();
-            rol = usuario.rol || "operador";
-            sessionStorage.setItem("username", usuario.username || "Usuario");
-            sessionStorage.setItem("rol", rol);
-
-            const inicial = (usuario.username || "Usuario").charAt(0).toUpperCase();
-            ["sidebar-avatar", "topbar-avatar"].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = inicial;
-            });
-            document.getElementById("sidebar-username").textContent = usuario.username || "Usuario";
-            document.getElementById("sidebar-rol").textContent = rol;
-            document.getElementById("topbar-username").textContent = usuario.username || "Usuario";
-            document.getElementById("topbar-rol").textContent = rol;
-
-            if (rol !== "administrador") {
-                document.querySelectorAll('[data-role="admin"]').forEach(el => {
-                    el.style.display = "none";
+            try {
+                const res = await fetch("/api/me/", { credentials: "same-origin" });
+                if (!res.ok) { sessionStorage.clear(); window.location.href = "/login/"; return; }
+                const usuario = await res.json();
+                rol = usuario.rol || "operador";
+                sessionStorage.setItem("username", usuario.username || "Usuario");
+                sessionStorage.setItem("rol", rol);
+                const inicial = (usuario.username || "Usuario").charAt(0).toUpperCase();
+                ["sidebar-avatar", "topbar-avatar"].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = inicial;
                 });
-            }
+                document.getElementById("sidebar-username").textContent = usuario.username || "Usuario";
+                document.getElementById("sidebar-rol").textContent = rol;
+                document.getElementById("topbar-username").textContent = usuario.username || "Usuario";
+                document.getElementById("topbar-rol").textContent = rol;
+                if (rol !== "administrador") {
+                    document.querySelectorAll('[data-role="admin"]').forEach(el => { el.style.display = "none"; });
+                }
+            } catch(e) { console.error(e); }
         }
         cargarUsuarioActual();
 
-        // ==================== ITEM ACTIVO ====================
-        const path = window.location.pathname;
-        document.querySelectorAll(".sidebar-item").forEach(link => {
-            const href = link.getAttribute("href");
-            if (href === path) {
-                link.classList.add("active");
-            }
-        });
-
-        // ==================== FECHA ====================
+        // FECHA
         const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
         const ahora = new Date();
         const fechaStr = `${ahora.getDate()} ${meses[ahora.getMonth()]} ${ahora.getFullYear()} ${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`;
         document.getElementById("topbar-fecha").textContent = fechaStr;
 
-        // ==================== LOGOUT ====================
+        // LOGOUT
         document.getElementById("logout-btn").addEventListener("click", async () => {
-            await fetch("/api/logout/", {
-                method: "POST",
-                credentials: "same-origin",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({}),
-            }).catch(() => null);
+            await fetch("/api/logout/", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }).catch(() => null);
             sessionStorage.clear();
             window.location.href = "/login/";
         });
 
-        // ==================== MODO OSCURO ====================
+        // MODO OSCURO
         const btnTema = document.getElementById("btn-tema");
         const iconoTema = document.getElementById("icono-tema");
-
         function aplicarTema(tema) {
-            if (tema === "dark") {
-                document.body.classList.add("dark");
-            } else {
-                document.body.classList.remove("dark");
-            }
+            if (tema === "dark") document.body.classList.add("dark");
+            else document.body.classList.remove("dark");
             setTimeout(() => {
                 iconoTema.setAttribute("data-lucide", tema === "dark" ? "sun" : "moon");
-                lucide.createIcons();
+                if (window.lucide) lucide.createIcons();
             }, 50);
         }
-
-        const temaGuardado = localStorage.getItem("tema") || "light";
-        aplicarTema(temaGuardado);
-
+        aplicarTema(localStorage.getItem("tema") || "light");
         btnTema.addEventListener("click", () => {
-            const temaActual = document.body.classList.contains("dark") ? "dark" : "light";
-            const nuevoTema = temaActual === "dark" ? "light" : "dark";
-            localStorage.setItem("tema", nuevoTema);
-            aplicarTema(nuevoTema);
+            const nuevo = document.body.classList.contains("dark") ? "light" : "dark";
+            localStorage.setItem("tema", nuevo);
+            aplicarTema(nuevo);
         });
 
-        // ==================== ICONOS ====================
-        lucide.createIcons();
+        // BADGES ALERTAS
+        async function actualizarBadgesAlertas() {
+            try {
+                const resp = await fetch("/api/alertas/?estado=activa", { credentials: "same-origin" });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const total = (data.count !== undefined) ? data.count : (data.results || []).length;
+                ["alerta-badge", "topbar-alerta-badge"].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = total > 99 ? "99+" : String(total);
+                        el.style.display = total > 0 ? "" : "none";
+                    }
+                });
+            } catch (e) {}
+        }
+        actualizarBadgesAlertas();
+        setInterval(actualizarBadgesAlertas, 60000);
+
+        // LÓGICA DEL MODAL GLOBAL
+        window.confirmarAccion = function(opcionesOTexto, callbackConfirmar, callbackCancelar) {
+            return new Promise((resolve) => {
+                let opciones = {};
+                if (typeof opcionesOTexto === "string") {
+                    opciones = { mensaje: opcionesOTexto, onConfirm: callbackConfirmar, onCancel: callbackCancelar };
+                } else if (typeof opcionesOTexto === "object" && opcionesOTexto !== null) {
+                    opciones = { ...opcionesOTexto };
+                    if (callbackConfirmar) opciones.onConfirm = callbackConfirmar;
+                    if (callbackCancelar) opciones.onCancel = callbackCancelar;
+                }
+
+                const modal = document.getElementById("modal-confirmacion-global");
+                if (!modal) {
+                    if (window.confirm(opciones.mensaje || "¿Confirmar?")) {
+                        if (opciones.onConfirm) opciones.onConfirm();
+                        resolve(true);
+                    } else {
+                        if (opciones.onCancel) opciones.onCancel();
+                        resolve(false);
+                    }
+                    return;
+                }
+
+                const tituloEl = document.getElementById("modal-confirmacion-titulo");
+                const mensajeEl = document.getElementById("modal-confirmacion-mensaje");
+                const btnConfirmar = document.getElementById("modal-confirmacion-btn-confirmar");
+                const btnCancelar = document.getElementById("modal-confirmacion-btn-cancelar");
+                const btnCerrar = document.getElementById("modal-confirmacion-btn-cerrar");
+                const iconoBg = document.getElementById("modal-confirmacion-icono-bg");
+                const iconoEl = document.getElementById("modal-confirmacion-icono");
+
+                if (tituloEl) tituloEl.textContent = opciones.titulo || "Confirmar acción";
+                if (mensajeEl) mensajeEl.innerHTML = String(opciones.mensaje || "Esta acción no se puede deshacer.").replace(/\n/g, "<br>");
+
+                const esPeligroso = opciones.esPeligroso !== false;
+                if (btnConfirmar) {
+                    btnConfirmar.textContent = opciones.textoConfirmar || "Confirmar";
+                    btnConfirmar.className = esPeligroso
+                        ? "flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition shadow-lg shadow-red-600/20"
+                        : "flex-1 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition shadow-lg shadow-brand/20";
+                }
+                if (iconoBg && iconoEl) {
+                    if (esPeligroso) {
+                        iconoBg.className = "w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0";
+                        iconoEl.className = "w-6 h-6 text-red-600";
+                        iconoEl.setAttribute("data-lucide", "alert-triangle");
+                    } else {
+                        iconoBg.className = "w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0";
+                        iconoEl.className = "w-6 h-6 text-brand";
+                        iconoEl.setAttribute("data-lucide", "help-circle");
+                    }
+                }
+
+                const cleanup = () => {
+                    modal.classList.add("hidden");
+                    modal.classList.remove("flex");
+                };
+
+                const nuevoBtnConfirmar = btnConfirmar.cloneNode(true);
+                const nuevoBtnCancelar = btnCancelar.cloneNode(true);
+                const nuevoBtnCerrar = btnCerrar?.cloneNode(true);
+
+                btnConfirmar.parentNode.replaceChild(nuevoBtnConfirmar, btnConfirmar);
+                btnCancelar.parentNode.replaceChild(nuevoBtnCancelar, btnCancelar);
+                if (btnCerrar && nuevoBtnCerrar) btnCerrar.parentNode.replaceChild(nuevoBtnCerrar, btnCerrar);
+
+                nuevoBtnConfirmar.addEventListener("click", () => {
+                    cleanup();
+                    if (typeof opciones.onConfirm === "function") { try { opciones.onConfirm(); } catch (e) { console.error(e); } }
+                    resolve(true);
+                });
+                nuevoBtnCancelar.addEventListener("click", () => {
+                    cleanup();
+                    if (typeof opciones.onCancel === "function") { try { opciones.onCancel(); } catch (e) { console.error(e); } }
+                    resolve(false);
+                });
+                if (nuevoBtnCerrar) nuevoBtnCerrar.addEventListener("click", () => {
+                    cleanup();
+                    resolve(false);
+                });
+
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+                if (window.lucide) window.lucide.createIcons();
+            });
+        };
+
+        if (window.lucide) lucide.createIcons();
     </script>
 
     {% block extra_js %}{% endblock %}

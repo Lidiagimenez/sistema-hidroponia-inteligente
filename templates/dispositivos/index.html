@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <button class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
+    <button id="btn-agregar-dispositivo" class="flex items-center gap-2 bg-brand hover:bg-brand-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-lg shadow-brand/20">
         <i data-lucide="plus" class="w-4 h-4"></i>
         Agregar dispositivo
     </button>
@@ -27,13 +27,19 @@
     <div class="flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-[200px] relative">
             <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input type="text" placeholder="Buscar dispositivo..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <input type="text" id="input-buscar-dispositivo" placeholder="Buscar dispositivo..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
         </div>
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option>Todos los tipos</option>
+        <select id="filtro-tipo-dispositivo" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option value="">Todos los tipos</option>
+            <option value="sensor">Sensor</option>
+            <option value="bomba">Bomba</option>
+            <option value="otro">Otro</option>
         </select>
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
-            <option>Todos los estados</option>
+        <select id="filtro-estado-dispositivo" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white">
+            <option value="">Todos los estados</option>
+            <option value="activo">Activo (Online)</option>
+            <option value="inactivo">Inactivo (Offline)</option>
+            <option value="mantenimiento">En mantenimiento</option>
         </select>
     </div>
 </div>
@@ -115,6 +121,134 @@
                 <p id="stat-mant-pct" class="text-[10px] text-gray-500 mt-0.5"></p>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL DISPOSITIVO (CREAR / EDITAR) ==================== -->
+<div id="modal-dispositivo" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-light rounded-xl flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-5 h-5 text-brand"></i>
+                </div>
+                <div>
+                    <h2 id="modal-titulo-dispositivo" class="font-serif text-xl font-bold text-gray-900">Agregar dispositivo</h2>
+                    <p id="modal-subtitulo-dispositivo" class="text-xs text-gray-500">Configura los datos del dispositivo IoT.</p>
+                </div>
+            </div>
+            <button type="button" id="btn-cerrar-modal-dispositivo" class="p-1 hover:bg-gray-100 rounded transition text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="form-dispositivo" class="space-y-4">
+            <input type="hidden" id="dispositivo-id-editar" value="">
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Nombre del dispositivo <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="input-dispositivo-nombre"
+                    required
+                    placeholder="Ej: ESP32 Invernadero 1"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                >
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                        Tipo de dispositivo <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="select-dispositivo-tipo"
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"
+                    >
+                        <option value="sensor">Sensor</option>
+                        <option value="bomba">Bomba</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                        Estado <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="select-dispositivo-estado"
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"
+                    >
+                        <option value="activo">Activo (Online)</option>
+                        <option value="inactivo">Inactivo (Offline)</option>
+                        <option value="mantenimiento">En mantenimiento</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Identificador de Hardware <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="input-dispositivo-hardware"
+                    required
+                    placeholder="Ej: ESP32-DEV-001"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                >
+                <p class="text-[11px] text-gray-400 mt-1">Identificador único del chip o microcontrolador.</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Cultivo asignado <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="select-dispositivo-cultivo"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none bg-white"
+                >
+                    <option value="">Selecciona un cultivo...</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    IP Local (ESP32)
+                </label>
+                <input
+                    type="text"
+                    id="input-dispositivo-ip"
+                    placeholder="Ej: 192.168.1.50"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                >
+            </div>
+
+            <div id="error-dispositivo" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg"></div>
+
+            <div class="flex gap-2 pt-2">
+                <button
+                    type="button"
+                    id="btn-cancelar-dispositivo"
+                    class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    id="btn-guardar-dispositivo"
+                    class="flex-1 bg-brand hover:bg-brand-dark text-white font-semibold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-brand/20"
+                >
+                    <i id="icono-guardar-dispositivo" data-lucide="plus" class="w-4 h-4"></i>
+                    <span id="texto-guardar-dispositivo">Agregar dispositivo</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

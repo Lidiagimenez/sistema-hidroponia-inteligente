@@ -19,72 +19,166 @@
 
 <!-- ==================== TABS + FILTROS ==================== -->
 <div class="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
-
     <!-- Tabs -->
-    <div class="flex items-center gap-2 mb-4 overflow-x-auto">
-        <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap" data-tab="todas">
+    <div id="tabs-alertas" class="flex items-center gap-2 mb-4 overflow-x-auto">
+        <button class="tab-alerta active px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition" data-tab="todas">
             Todas (<span id="tab-todas-count">0</span>)
         </button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="criticas">
+        <button class="tab-alerta px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition" data-tab="criticas">
             Críticas (<span id="tab-criticas-count">0</span>)
         </button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="advertencias">
+        <button class="tab-alerta px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition" data-tab="advertencias">
             Advertencias (<span id="tab-advertencias-count">0</span>)
         </button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="informativas">
+        <button class="tab-alerta px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition" data-tab="informativas">
             Informativas (<span id="tab-info-count">0</span>)
         </button>
-        <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap" data-tab="resueltas">
+        <button class="tab-alerta px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition" data-tab="resueltas">
             Resueltas (<span id="tab-resueltas-count">0</span>)
         </button>
     </div>
 
     <!-- Filtros -->
     <div class="flex flex-wrap items-center gap-3">
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
-            <option>Todos los cultivos</option>
+        <select id="filtro-cultivo" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <option value="">Todos los cultivos</option>
         </select>
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
-            <option>Todos los tipos</option>
-        </select>
-        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
-            <option>Todos los estados</option>
+        <select id="filtro-origen" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <option value="">Todos los orígenes</option>
+            <option value="medicion">Por medición</option>
+            <option value="evento">Por evento</option>
         </select>
         <div class="flex-1 min-w-[200px] relative">
             <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input type="text" placeholder="Buscar alertas..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
+            <input type="text" id="buscador-alertas" placeholder="Buscar alertas..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none">
         </div>
     </div>
-
 </div>
 
-<!-- ==================== CONTENIDO ==================== -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    <!-- LISTA DINÁMICA -->
-    <div class="lg:col-span-2 space-y-3" id="lista-alertas">
+<!-- ==================== CONTENIDO (LISTA DINÁMICA) ==================== -->
+<div class="grid grid-cols-1 gap-6">
+    <div class="col-span-full space-y-3" id="lista-alertas">
+        <!-- El JS inyectará las alertas aquí -->
         <div class="text-center py-8 text-gray-400 text-sm">
             <i data-lucide="loader" class="w-6 h-6 mx-auto mb-2 animate-spin"></i>
             Cargando alertas...
         </div>
     </div>
-
-    <!-- PANEL DETALLE DINÁMICO -->
-    <div class="lg:col-span-1">
-        <div id="detalle-alerta" class="bg-white rounded-2xl border border-gray-200 p-5 lg:sticky lg:top-24">
-            <div class="text-center py-8 text-gray-400 text-sm">
-                <i data-lucide="loader" class="w-6 h-6 mx-auto mb-2 animate-spin"></i>
-                Cargando...
-            </div>
-        </div>
-    </div>
-
 </div>
 
 {% endblock %}
 
-
 {% block extra_js %}
+<!-- Estilos personalizados para las Tabs -->
+<style>
+    .tab-alerta {
+        background-color: #F3F4F6;
+        color: #4B5563;
+    }
+    .tab-alerta:hover {
+        background-color: #E5E7EB;
+    }
+    .tab-alerta.active {
+        background-color: #15803D;
+        color: white;
+    }
+    body.dark .tab-alerta {
+        background-color: #334155;
+        color: #CBD5E1;
+    }
+    body.dark .tab-alerta:hover {
+        background-color: #475569;
+    }
+    body.dark .tab-alerta.active {
+        background-color: #15803D;
+        color: white;
+    }
+</style>
+
+<!-- ==================== MODAL INTERVENCIÓN ==================== -->
+<div id="modal-intervencion" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                    <i data-lucide="wrench" class="w-5 h-5 text-green-600"></i>
+                </div>
+                <h2 class="font-serif text-xl font-bold text-gray-900">Registrar intervención</h2>
+            </div>
+            <button id="btn-cerrar-modal-intervencion" class="p-1 hover:bg-gray-100 rounded transition">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500"></i>
+            </button>
+        </div>
+
+        <form id="form-intervencion" class="space-y-4">
+            <input type="hidden" id="intervencion-alerta-id" value="">
+
+            <div class="bg-gray-50 rounded-lg p-3 mb-2 border border-gray-100">
+                <p class="text-xs font-semibold text-gray-700 mb-1">Alerta a resolver:</p>
+                <p id="intervencion-alerta-titulo" class="text-sm text-gray-900 font-medium"></p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Tipo de intervención <span class="text-red-500">*</span>
+                </label>
+                <select id="intervencion-tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="ajuste_parametros">Ajuste de parámetros</option>
+                    <option value="tratamiento">Tratamiento</option>
+                    <option value="siembra">Siembra</option>
+                    <option value="cosecha">Cosecha</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    ¿Qué hiciste? <span class="text-red-500">*</span>
+                </label>
+                <textarea id="intervencion-descripcion" required rows="3" placeholder="Ej: Agregué 5 ml de solución ácida para bajar el pH..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none resize-none"></textarea>
+            </div>
+
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="intervencion-resolver" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                <span class="text-sm text-gray-700">Marcar la alerta como resuelta</span>
+            </label>
+
+            <div id="error-intervencion" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg"></div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" id="btn-cancelar-intervencion" class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition">
+                    Cancelar
+                </button>
+                <button type="submit" id="btn-guardar-intervencion" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMAR RESOLVER SIN INTERVENCIÓN -->
+<div id="modal-confirmar-resolver" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="alert-circle" class="w-8 h-8 text-orange-600"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-2">¿Resolver alerta?</h3>
+        <p class="text-sm text-gray-600 mb-6">¿Marcar la alerta como resuelta sin registrar una intervención? Podrás agregarla después desde el módulo de Intervenciones.</p>
+        <div class="flex gap-3">
+            <button type="button" id="btn-cancelar-resolver" class="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2 rounded-xl text-sm transition">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-resolver" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-xl text-sm transition">
+                Sí, resolver
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
 <script src="/static/js/api.js"></script>
 <script src="/static/js/alertas.js"></script>
 {% endblock %}

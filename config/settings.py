@@ -37,9 +37,15 @@ DEBUG = False if IS_PRODUCTION else os.environ.get("DJANGO_DEBUG", "1") == "1"
 if IS_PRODUCTION and DEBUG:
     raise RuntimeError("DEBUG debe estar desactivado en produccion.")
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")
-if IS_PRODUCTION and not ALLOWED_HOSTS:
-    raise RuntimeError("DJANGO_ALLOWED_HOSTS es obligatorio en produccion.")
+# 👇 CAMBIO AQUÍ: Permitir cualquier host en desarrollo para que el ESP32 se conecte 👇
+if IS_PRODUCTION:
+    ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")
+    if not ALLOWED_HOSTS:
+        raise RuntimeError("DJANGO_ALLOWED_HOSTS es obligatorio en produccion.")
+else:
+    # En desarrollo permitimos todo (*) o la IP específica si lo preferís
+    ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS") or ['*']
+# 👆 FIN DEL CAMBIO 👆
 
 
 # Application definition
@@ -60,6 +66,7 @@ INSTALLED_APPS = [
     'apps.dispositivos',
     'apps.monitoreo', 
     'apps.eventos',
+    'apps.auditoria',
     'apps.alertas',
     'apps.intervenciones',
     'apps.inteligencia',
@@ -84,6 +91,7 @@ REST_FRAMEWORK = {
         "login": "5/min",
         "refresh": "10/min",
         "iot_ingesta": "60/min",
+        "iot_imagenes": "60/min",
         "reportes_create": "10/min",
     },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -187,7 +195,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -1,5 +1,6 @@
 from django.conf import settings
-from rest_framework import status, permissions, viewsets
+from rest_framework import viewsets, status, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
@@ -7,6 +8,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from apps.auditoria.mixins import AuditableSerializerMixin
+from apps.auditoria.models import RegistroAuditoria
+from apps.auditoria.services import registrar_auditoria
 from apps.usuarios.models import Usuario
 from apps.usuarios.permissions import EsAdministrador
 from apps.usuarios.serializers import (
@@ -62,6 +66,16 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        # Cierre de sesión: se audita siempre que haya usuario identificado,
+        # aunque el token a eliminar ya no exista (double log-out).
+        if getattr(request.user, "is_authenticated", False):
+            registrar_auditoria(
+                request,
+                RegistroAuditoria.Accion.LOGOUT,
+                "Usuario",
+                objeto_id=request.user.pk,
+                detalles={"username": request.user.username},
+            )
         try:
             refresh_token = request.data.get("refresh") or request.COOKIES.get(settings.JWT_REFRESH_COOKIE)
             if refresh_token:
@@ -82,14 +96,71 @@ class MeView(APIView):
         return Response(UsuarioMeSerializer(request.user).data)
 
 
-class UsuarioViewSet(viewsets.ModelViewSet):
+class UsuarioViewSet(AuditableSerializerMixin, viewsets.ModelViewSet):
     """
     Solo el administrador puede gestionar usuarios (RF-02).
     El operador no tiene acceso a nada de acá.
     """
+    auditar_entidad = "Usuario"
     queryset = Usuario.objects.all().order_by("pk")
     serializer_class = UsuarioSerializer
     permission_classes = [EsAdministrador]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        incluir_inactivos = self.request.query_params.get("incluir_inactivos") in ("1", "true", "True")
+        if self.action == "list" and not incluir_inactivos:
+            qs = qs.filter(is_active=True)
+        return qs
+
+    def perform_destroy(self, instance):
+        # No permitir auto-desactivación
+        if self.request.user.pk == instance.pk:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError({"detail": "No podés desactivar tu propia cuenta."})
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
+        # Borrado lógico: la auditoría lo marca como "eliminar (desactivación)".
+        self._registrar_accion(
+            RegistroAuditoria.Accion.ELIMINAR,
+            instance,
+            detalles={"modo": "desactivacion", "nota": "No se borra: queda desactivado para conservar el historial."},
+        )
+
+    @action(detail=True, methods=["post"])
+    def desactivar(self, request, pk=None):
+        usuario = self.get_object()
+        if request.user.pk == usuario.pk:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError({"detail": "No podés desactivar tu propia cuenta."})
+        if usuario.rol == Usuario.Rol.ADMINISTRADOR:
+            admins_activos = Usuario.objects.filter(rol=Usuario.Rol.ADMINISTRADOR, is_active=True).count()
+            if admins_activos <= 1:
+                from rest_framework.exceptions import ValidationError
+
+                raise ValidationError({"detail": "No podés desactivar al último administrador activo."})
+        usuario.is_active = False
+        usuario.save(update_fields=["is_active"])
+        self._registrar_accion(
+            RegistroAuditoria.Accion.EDITAR,
+            usuario,
+            detalles={"modo": "desactivar", "campos_modificados": ["is_active"]},
+        )
+        return Response(self.get_serializer(usuario).data)
+
+    @action(detail=True, methods=["post"])
+    def activar(self, request, pk=None):
+        usuario = self.get_object()
+        usuario.is_active = True
+        usuario.save(update_fields=["is_active"])
+        self._registrar_accion(
+            RegistroAuditoria.Accion.EDITAR,
+            usuario,
+            detalles={"modo": "activar", "campos_modificados": ["is_active"]},
+        )
+        return Response(self.get_serializer(usuario).data)
 
 
 def _set_jwt_cookies(response, access, refresh):

@@ -43,20 +43,45 @@ async function apiRequest(url, options = {}, retry = true) {
     }
 
     if (res.status === 401) {
+        console.error(
+            "%c[API] SEVERO — 401 final: token expirado y refresh falló. " +
+            "apiGet devolvió null. " +
+            `Endpoint: ${url} | Redirigiendo a /login/…`,
+            "background:#b91c1c;color:#fff;font-size:14px;font-weight:bold;padding:6px 10px;border-radius:4px;"
+        );
         sessionStorage.clear();
         window.location.href = "/login/";
         return null;
     }
 
     if (!res.ok) {
-        const message = res.status === 403
-            ? "No tenés permisos para realizar esta acción."
-            : "No se pudo completar la operación. Intentá de nuevo.";
-        throw new Error(message);
+        let detalle = "";
+        try {
+            const errData = await res.json();
+            if (typeof errData === "object" && errData !== null) {
+                detalle = JSON.stringify(errData);
+            } else if (typeof errData === "string") {
+                detalle = errData;
+            }
+        } catch (_) {}
+
+        if (res.status === 403) {
+            throw new Error("No tenés permisos para realizar esta acción.");
+        }
+        if (detalle) {
+            throw new Error(`Error en el servidor: ${detalle}`);
+        }
+        throw new Error("No se pudo completar la operación. Intentá de nuevo.");
     }
 
     if (res.status === 204 || res.status === 205) return null;
-    return res.json();
+    const text = await res.text();
+    if (!text || !text.trim()) return null;
+    try {
+        return JSON.parse(text);
+    } catch (_) {
+        return null;
+    }
 }
 
 async function apiGet(url) {

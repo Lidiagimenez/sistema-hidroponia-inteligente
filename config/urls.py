@@ -37,6 +37,7 @@ urlpatterns = [
     path("api/", include("apps.dispositivos.urls")),
     path("api/", include("apps.monitoreo.urls")),
     path("api/", include("apps.eventos.urls")),
+    path("api/", include("apps.auditoria.urls")),
     path("api/", include("apps.alertas.urls")),
     path("api/", include("apps.intervenciones.urls")),
     path("api/", include("apps.inteligencia.urls")),
